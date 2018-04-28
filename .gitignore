@@ -1,0 +1,5 @@
+# Python virtual environment
+/.venv
+
+# The Django installation
+/django
