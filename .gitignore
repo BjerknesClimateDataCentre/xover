@@ -3,3 +3,6 @@
 
 # The Django installation
 /django
+
+# Cache files
+__pycache__/
