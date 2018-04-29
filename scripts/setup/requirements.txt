@@ -1,2 +1,4 @@
 -e git+https://github.com/django/django.git@483cc1c430e038d7d16342f76761d18b989c3eed#egg=Django
+mysqlclient==1.3.12
+PyMySQL==0.8.0
 pytz==2018.4
