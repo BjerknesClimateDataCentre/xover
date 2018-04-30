@@ -1,8 +1,7 @@
 # Python virtual environment
 /.env
-
-# The Django installation
-/django
+/.env_vagrant
 
 # Cache files
 __pycache__/
+/.vagrant
