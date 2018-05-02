@@ -11,6 +11,7 @@
 cd /vagrant
 
 apt-get update
+apt-get upgrade -y
 
 # Database setup
 apt-get install -y mariadb-server
@@ -26,6 +27,11 @@ apt-get install -y python-pip
 apt-get install -y python-dev
 apt-get install -y libmysqlclient-dev
 apt-get install -y python3-dev
+
+# Install apache and mod_wsgi
+apt-get install -y apache2 apache2-utils libexpat1 ssl-cert
+apt-get install libapache2-mod-wsgi-py3
+service apache2 restart
 
 # Upgrade pip to latest version
 pip install --upgrade pip
