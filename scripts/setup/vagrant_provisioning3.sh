@@ -12,9 +12,9 @@ cd /vagrant
 
 # Apache configuration:
 read -r -d '' apache <<'EOF'
-WSGIScriptAlias / /vagrant/d2qc/d2qc/wsgi.py
-WSGIPythonHome /vagrant/.env_vagrant
-WSGIPythonPath /vagrant/d2qc
+WSGIDaemonProcess django2qc python-home=/vagrant/.env_vagrant python-path=/vagrant/d2qc
+WSGIProcessGroup django2qc
+WSGIScriptAlias / /vagrant/d2qc/d2qc/wsgi.py process-group=django2qc
 
 <Directory /vagrant/d2qc/d2qc>
 <Files wsgi.py>
