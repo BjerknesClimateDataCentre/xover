@@ -18,6 +18,8 @@ way to get started is to use the Vagrant setup:
   * git clone git@git.app.uib.no:Jonas.Henriksen/django2qc.git
 3. `cd django2qc`
 4. vagrant up
+5. `cp d2qc/d2qc/setup/sample.production.py d2qc/d2qc/setup/production.py`
+  * Update `production.py` with correct details
 
 This should start up a new instance of an Ubuntu server. You can access the
 system on http://localhost:8081
