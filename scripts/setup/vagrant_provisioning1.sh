@@ -15,7 +15,7 @@ apt-get upgrade -y
 
 # Database setup
 apt-get install -y mariadb-server
-
+echo "SET GLOBAL sql_mode='STRICT_ALL_TABLES'" |mysql -uroot
 echo "CREATE USER 'd2qc'@'localhost';" |mysql -uroot
 echo "GRANT ALL PRIVILEGES ON d2qc.* To 'd2qc'@'localhost' IDENTIFIED BY 'd2qc';" \
     |mysql -uroot
