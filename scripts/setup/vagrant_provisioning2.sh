@@ -36,3 +36,7 @@ pip install -r scripts/setup/requirements.txt
 # Activate shortcut:
 echo "alias a='source .env_vagrant/bin/activate'" >> ~/.profile
 source ~/.profile
+
+# Run django migrations
+cd d2qc
+python manage.py migrate
