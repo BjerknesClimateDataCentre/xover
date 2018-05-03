@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class MockupdataConfig(AppConfig):
-    name = 'mockupdata'
+    name = 'd2qc.mockup'

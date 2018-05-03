@@ -18,6 +18,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('mockup/', include('mockup.urls')),
-    path('data/', include('data.urls')),
+    path('mockup/', include('d2qc.mockup.urls')),
+    path('data/', include('d2qc.data.urls')),
+
 ]

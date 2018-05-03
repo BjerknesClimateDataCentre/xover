@@ -23,7 +23,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'data.apps.DataConfig',
+    'd2qc.data.apps.DataConfig',
+    'd2qc.mockup.apps.MockupdataConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
