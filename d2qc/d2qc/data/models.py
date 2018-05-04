@@ -2,13 +2,13 @@ from django.db import models
 
 class DataSet(models.Model):
     class Meta:
-        db_table = 'datasets'
+        db_table = 'd2qc_datasets'
     id = models.AutoField(primary_key=True)
     expocode = models.CharField(max_length=255)
 
 class DataType(models.Model):
     class Meta:
-        db_table = 'datatypes'
+        db_table = 'd2qc_datatypes'
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     unit = models.CharField(max_length=255)
@@ -17,7 +17,7 @@ class DataType(models.Model):
 
 class DataPoint(models.Model):
     class Meta:
-        db_table = 'datapoints'
+        db_table = 'd2qc_datapoints'
     id = models.AutoField(primary_key=True)
     data_set = models.ForeignKey('DataSet', on_delete=models.CASCADE)
     latitude = models.DecimalField(max_digits=10, decimal_places=8)
@@ -27,7 +27,7 @@ class DataPoint(models.Model):
 
 class DataValue(models.Model):
     class Meta:
-        db_table = 'datavalues'
+        db_table = 'd2qc_datavalues'
     id = models.AutoField(primary_key=True)
     data_point = models.ForeignKey('DataPoint', on_delete=models.CASCADE)
     data_type = models.ForeignKey('DataType', on_delete=models.CASCADE)
