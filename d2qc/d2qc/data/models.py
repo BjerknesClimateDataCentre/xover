@@ -5,6 +5,7 @@ class DataSet(models.Model):
         db_table = 'd2qc_datasets'
     id = models.AutoField(primary_key=True)
     expocode = models.CharField(max_length=255)
+    is_reference = models.BooleanField(default=False)
 
 class DataType(models.Model):
     class Meta:
@@ -24,6 +25,7 @@ class DataPoint(models.Model):
     longitude = models.DecimalField(max_digits=11, decimal_places=8)
     depth = models.DecimalField(max_digits=8, decimal_places=3)
     unix_time_millis = models.BigIntegerField()
+    station_number = models.IntegerField()
 
 class DataValue(models.Model):
     class Meta:

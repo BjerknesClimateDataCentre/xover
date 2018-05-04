@@ -20,6 +20,7 @@ class Migration(migrations.Migration):
                 ('longitude', models.DecimalField(decimal_places=8, max_digits=11)),
                 ('depth', models.DecimalField(decimal_places=3, max_digits=8)),
                 ('unix_time_millis', models.BigIntegerField()),
+                ('station_number', models.IntegerField()),
             ],
             options={
                 'db_table': 'd2qc_datapoints',
@@ -30,6 +31,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False)),
                 ('expocode', models.CharField(max_length=255)),
+                ('is_reference', models.BooleanField(default=False)),
             ],
             options={
                 'db_table': 'd2qc_datasets',
