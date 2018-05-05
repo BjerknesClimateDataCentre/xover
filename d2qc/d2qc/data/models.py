@@ -42,3 +42,6 @@ class DataValue(models.Model):
     value = models.DecimalField(max_digits=19, decimal_places=10)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    def save(self, *args, **kwargs):
+        if int(float(self.value)) != -999:
+            super(DataValue, self).save(*args, **kwargs)
