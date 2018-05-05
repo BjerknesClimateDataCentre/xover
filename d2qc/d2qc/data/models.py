@@ -6,6 +6,8 @@ class DataSet(models.Model):
     id = models.AutoField(primary_key=True)
     expocode = models.CharField(max_length=255)
     is_reference = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
 class DataType(models.Model):
     class Meta:
@@ -14,6 +16,8 @@ class DataType(models.Model):
     name = models.CharField(max_length=255)
     unit = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
 
 class DataPoint(models.Model):
@@ -26,6 +30,8 @@ class DataPoint(models.Model):
     depth = models.DecimalField(max_digits=8, decimal_places=3)
     unix_time_millis = models.BigIntegerField()
     station_number = models.IntegerField()
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
 class DataValue(models.Model):
     class Meta:
@@ -34,3 +40,5 @@ class DataValue(models.Model):
     data_point = models.ForeignKey('DataPoint', on_delete=models.CASCADE)
     data_type = models.ForeignKey('DataType', on_delete=models.CASCADE)
     value = models.DecimalField(max_digits=19, decimal_places=10)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
