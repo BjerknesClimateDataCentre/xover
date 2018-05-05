@@ -1,3 +1,15 @@
+############################################
+#
+# Simple import script. Run like this:
+# cd project-folder
+# Activate python environment
+# cd d2qc
+# python manage.py shell
+# import d2qc.data.mockimport
+# d2qc.data.mockimport.importMockup()
+#
+############################################
+
 import d2qc.data.models
 import datetime
 import urllib.request
