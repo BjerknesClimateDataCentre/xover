@@ -15,10 +15,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.conf.urls import url, include
+from d2qc.data.views import DataSetViewSet
+from d2qc.data.models import *
+from rest_framework import routers, serializers, viewsets
 
+
+# Routers provide an easy way of automatically determining the URL conf.
+router = routers.DefaultRouter()
+router.register(r'data', DataSetViewSet)
+
+# Wire up our API using automatic URL routing.
+# Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('mockup/', include('d2qc.mockup.urls')),
-    path('data/', include('d2qc.data.urls')),
-    url(r'^api-auth/', include('rest_framework.urls')),
+    url(r'^', include(router.urls)),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]
