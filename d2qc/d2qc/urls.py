@@ -20,5 +20,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('mockup/', include('d2qc.mockup.urls')),
     path('data/', include('d2qc.data.urls')),
-
+    url(r'^api-auth/', include('rest_framework.urls')),
 ]
