@@ -5,12 +5,12 @@
 # Activate python environment
 # cd d2qc
 # python manage.py shell
-# import d2qc.data.mockimport
-# d2qc.data.mockimport.importMockup()
+# import d2qc.data.mockimport; d2qc.data.mockimport.importMockup()
 #
 ############################################
 
 import d2qc.data.models
+from d2qc.data.data_type_dict import DataTypeDict
 import datetime
 import urllib.request
 import json
@@ -47,14 +47,20 @@ def importMockup():
         # First get Data Types
         data_types = {}
         for param in data['data']:
+            data_unit = None
+            if data['data'][param]['unit']:
+                data_unit =  d2qc.data.models.DataUnit.objects.get_or_create(
+                    identifier = DataTypeDict.getIdentFromVar(data['data'][param]['unit']),
+                    original_label = data['data'][param]['unit'],
+                )
+                data_unit = data_unit[0]
+
             data_type = d2qc.data.models.DataType.objects.get_or_create(
-                    name = param,
-                    unit = data['data'][param]['unit']
+                identifier = DataTypeDict.getIdentFromVar(param),
+                original_label = param,
+                data_unit = data_unit,
             )
-            data_type = data_type[0]
-            #dir(data_type)
-            data_type.save()
-            data_types[param] = data_type
+            data_types[param] = data_type[0]
 
         count = 0
         for date in data['data']['DATE']['values']:

@@ -12,13 +12,33 @@ class DataSet(models.Model):
 class DataType(models.Model):
     class Meta:
         db_table = 'd2qc_datatypes'
+        unique_together = ('identifier', 'original_label')
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
-    unit = models.CharField(max_length=255)
-    description = models.CharField(max_length=255)
+    data_unit = models.ForeignKey(
+        'DataUnit',
+        on_delete = models.CASCADE,
+        blank = True,
+        null = True,
+    )
+    identifier = models.CharField(max_length=255, default='', blank=True)
+    prefLabel = models.CharField(max_length=255, default='', blank=True)
+    altLabel = models.CharField(max_length=255, default='', blank=True)
+    definition = models.CharField(max_length=255, default='', blank=True)
+    original_label = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
+class DataUnit(models.Model):
+    class Meta:
+        db_table = 'd2qc_dataunits'
+    id = models.AutoField(primary_key=True)
+    identifier = models.CharField(max_length=255, default='', blank=True)
+    prefLabel = models.CharField(max_length=255, default='', blank=True)
+    altLabel = models.CharField(max_length=255, default='', blank=True)
+    definition = models.CharField(max_length=255, default='', blank=True)
+    original_label = models.CharField(max_length=255)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
 class DataPoint(models.Model):
     class Meta:

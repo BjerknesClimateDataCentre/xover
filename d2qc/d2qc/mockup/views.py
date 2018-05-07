@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound
 import os.path
 import csv
 import collections
@@ -58,8 +58,5 @@ def index(request):
             response = JsonResponse(data)
     else:
         response = HttpResponseNotFound()
-        retval = 'No such dataset'
-
-
 
     return response
