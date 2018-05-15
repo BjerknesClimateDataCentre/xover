@@ -27,8 +27,9 @@ def index(request):
             counter = 0
             data = collections.OrderedDict()
             for row in datareader:
-                if row[0].strip() == 'END_DATA':
-                    break
+                if len(row) == 0:
+                    counter += 1
+                    continue;
                 elif counter == 0:
                     # Create column headers
                     for name in row:
@@ -42,6 +43,8 @@ def index(request):
                         if unit:
                             data[name]['unit'] = unit
                         i += 1
+                elif row[0].strip() == 'END_DATA':
+                    break
                 else:
                     # Add data to each column
                     i = 0
