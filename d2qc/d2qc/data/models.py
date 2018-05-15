@@ -19,7 +19,6 @@ class DataSetForm(ModelForm):
 class DataType(models.Model):
     class Meta:
         db_table = 'd2qc_datatypes'
-        unique_together = ('identifier', 'original_label')
     id = models.AutoField(primary_key=True)
     data_unit = models.ForeignKey(
         'DataUnit',
@@ -56,7 +55,7 @@ class DataPoint(models.Model):
     longitude = models.DecimalField(max_digits=11, decimal_places=8)
     depth = models.DecimalField(max_digits=8, decimal_places=3)
     unix_time_millis = models.BigIntegerField()
-    station_number = models.IntegerField()
+    station_number = models.IntegerField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
