@@ -39,16 +39,29 @@ for i = 1:size(ref_expocodes)
     if ~file_exists
         fprintf(fid, '# REFDATA\n');
         fprintf(fid, '# This data is reference data for 2QC\n');
-        fprintf(fid, strcat(strjoin(ref_vars, ','), '\n\n'));
+        head = {
+            'EXPOCODE';'';'';'';'';'';'DATE';'TIME';'LATITUDE';...
+            'LONGITUDE';'';'';'';'CTDPRS';'DEPTH';'CTDTMP';'THETA';...
+            'SALNTY';'';'OXYGEN';'NITRAT';'SILCAT';'PHSPHT';'TCARBN';...
+            'ALKALI';'';'CFC_11';'CFC_12'
+        };
+        printhead = head(~cellfun('isempty', head));
+        fprintf(fid, strcat(strjoin(printhead, ','), '\n\n'));
     end
 
     % Get the right data slice from the huge ref_data matrix
     data = ref_data(find(ref_data(:,1) == i), :);
     [len, cols] = size(data);
     for j = 1:len
-        % Print each line as commaseparated values
-        line = sprintf('%d,', data(j, :));
-        fprintf(fid, strcat(line(1:end-1), '\n'));
+        fprintf(fid, expo);
+        fprintf(fid, ',%04d%02d%02d',data(j, 4), data(j, 5), data(j, 6));
+        fprintf(fid, ',%02d%02d', data(j, 7), data(j, 8));
+        for k=9:length(head)
+            if ~strcmp(head{k}, '')
+                fprintf(fid, ',%0.5f',data(j, k));
+            end
+        end
+        fprintf(fid, '\n');
     end
     fclose(fid);
 end
