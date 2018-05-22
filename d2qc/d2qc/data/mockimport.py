@@ -42,10 +42,10 @@ def importSingleMockup(expocode):
         'DEPTH': 1,
     }
     datastructure = urllib.request.urlopen('http://127.0.0.1:8000/mockup/?ident=' + expocode)
-    str = ''
+    tmpstr = ''
     for line in datastructure.readlines():
-        str += line.decode('utf8')
-    data = json.loads(str)
+        tmpstr += line.decode('utf8')
+    data = json.loads(tmpstr)
     data_set = d2qc.data.models.DataSet(
         expocode = data['info']['EXPOCODE'],
         is_reference = False)
@@ -73,15 +73,36 @@ def importSingleMockup(expocode):
     for date in data['data']['DATE']['values']:
         time = data['data']['TIME']['values'][count]
         # Oops: Line 1683 in 316N20050821.exc.csv has time = 2400
-        if (time[0:2] == '24'):
-            time = '00' + time[2:4]
-        unix_time_millis = datetime.datetime(
-            int(date[0:4]),
-            int(date[4:6]),
-            int(date[6:8]),
-            int(time[0:2]),
-            int(time[2:4]),
-        ).timestamp()
+        # Date errors in file 318M19940327: 31 days in april.
+        # (Lines 3435,3436,3437,3438,3439,3440,3441,3442,3443,3444,3445,3446,
+        # 3447,3448,3449,3450,3451,3452,3453,3454,3455,3456,3457,3458)
+        # Date errors in 318M20091121, lines 1424,1543,2779,5360
+        # Date errors in 320620000000, lines 18134,18472,18804,18134,18472,
+        # 18804,18134,18472,18804,18134,18472,18804,18134,18472,18804,18134,
+        # 18472,18804,18134,18472,18804,18134,18472,18804,18134,18472,18804
+        # Date errors in 33RR20080204, lines 561,660
+        # Date errors in 33RR20090320, lines 265,607,1293,1780,1957,2105,3667,
+        # 6240
+        # Date errors in 64PE20050907, lines 591,592,593,594,595,596,597,598,
+        # 599,600,601,602,603,604,605,606,607,608
+        # Date errors in 74DI20041103, lines 830,831,832,833,834,835,836,837,
+        # 838,839,840,841,842,843,844,845,846,847,848,849,850,851,852,853
+        # Date errors in IcelandSea, lines 885,886,887,888,889,890,891,892,893,
+        # 894,895,896,897,898,899,900,901,902,903,904,905,906
+
+
+        try:
+            unix_time_millis = datetime.datetime(
+                int(date[0:4]),
+                int(date[4:6]),
+                int(date[6:8]),
+                int(time[0:2]),
+                int(time[2:4]),
+            ).timestamp()
+        except:
+            print('Timestamp error: ' + expocode + ' - line: ' + str(count))
+            count += 1
+            continue
         latitude = data['data']['LATITUDE']['values'][count]
         longitude = data['data']['LONGITUDE']['values'][count]
         depth = data['data']['DEPTH']['values'][count]
