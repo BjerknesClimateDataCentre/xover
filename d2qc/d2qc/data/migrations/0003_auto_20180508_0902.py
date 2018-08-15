@@ -15,22 +15,17 @@ class Migration(migrations.Migration):
             name='DataUnit',
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('identifier', models.CharField(blank=True, default='', max_length=255)),
+                ('identifier', models.CharField(blank=True, default='', max_length=20)),
                 ('prefLabel', models.CharField(blank=True, default='', max_length=255)),
                 ('altLabel', models.CharField(blank=True, default='', max_length=255)),
                 ('definition', models.CharField(blank=True, default='', max_length=255)),
-                ('original_label', models.CharField(max_length=255)),
+                ('original_label', models.CharField(default='', max_length=20)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
             ],
             options={
                 'db_table': 'd2qc_dataunits',
             },
-        ),
-        migrations.RenameField(
-            model_name='datatype',
-            old_name='name',
-            new_name='original_label',
         ),
         migrations.AddField(
             model_name='datatype',
@@ -45,7 +40,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='datatype',
             name='identifier',
-            field=models.CharField(blank=True, default='', max_length=255),
+            field=models.CharField(blank=True, default='', max_length=20),
+        ),
+        migrations.AddField(
+            model_name='datatype',
+            name='original_label',
+            field=models.CharField(default='', max_length=20),
         ),
         migrations.AddField(
             model_name='datatype',
@@ -55,6 +55,10 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='datatype',
             name='description',
+        ),
+        migrations.RemoveField(
+            model_name='datatype',
+            name='name',
         ),
         migrations.RemoveField(
             model_name='datatype',
