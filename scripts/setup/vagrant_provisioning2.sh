@@ -15,11 +15,14 @@ if [ ! -d django ]
 then
   # Django is cloned from https://github.com/django/django.git
   git submodule init
-  gti submodule update
+  git submodule update
 fi
-
+# Install Virtualenv
 python -m pip install --user virtualenv
 
+# Add Virtualenv install folder to path:
+echo 'PATH="$PATH:/home/vagrant/.local/bin"' >> ~/.profile
+source ~/.profile
 
 if [ ! -d .env_vagrant ]
 then
@@ -29,6 +32,9 @@ fi
 
 source .env_vagrant/bin/activate
 
+
+# Upgrade pip
+pip install --upgrade pip
 
 # Initialize pip with requirements
 pip install -r scripts/setup/requirements.txt

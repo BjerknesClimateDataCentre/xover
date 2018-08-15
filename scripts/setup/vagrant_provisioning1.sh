@@ -10,6 +10,9 @@
 # Go to the dev folder
 cd /vagrant
 
+# Prevent errors trying to access stdin
+export DEBIAN_FRONTEND=noninteractive
+
 apt-get update
 apt-get upgrade -y
 

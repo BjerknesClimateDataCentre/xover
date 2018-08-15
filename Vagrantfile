@@ -13,6 +13,9 @@ Vagrant.configure(2) do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "ubuntu/xenial64"
+  # Prevent TTY Errors (copied from laravel/homestead: "homestead.rb" file)...
+  # By default this is "bash -l".
+  config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
   config.vm.provision "shell", path: 'scripts/setup/vagrant_provisioning1.sh'
   config.vm.provision "shell", path: 'scripts/setup/vagrant_provisioning2.sh', privileged: false
   config.vm.provision "shell", path: 'scripts/setup/vagrant_provisioning3.sh'
