@@ -17,12 +17,13 @@ then
   git submodule init
   git submodule update
 fi
-# Install Virtualenv
-python -m pip install --user virtualenv
-
 # Add Virtualenv install folder to path:
 echo 'PATH="$PATH:/home/vagrant/.local/bin"' >> ~/.profile
 source ~/.profile
+
+# Install Virtualenv
+python -m pip install --user virtualenv
+
 
 if [ ! -d .env_vagrant ]
 then
