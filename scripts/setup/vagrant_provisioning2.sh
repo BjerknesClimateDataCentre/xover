@@ -40,8 +40,9 @@ pip install --upgrade pip
 # Initialize pip with requirements
 pip install -r scripts/setup/requirements.txt
 
-# Activate shortcut:
+# Shortcuts:
 echo "alias a='source .env_vagrant/bin/activate'" >> ~/.profile
+echo "alias m='python manage.py'" >> ~/.profile
 source ~/.profile
 
 # Run django migrations
