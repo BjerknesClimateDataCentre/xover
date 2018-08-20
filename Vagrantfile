@@ -19,6 +19,9 @@ Vagrant.configure(2) do |config|
   config.vm.provision "shell", path: 'scripts/setup/vagrant_provisioning1.sh'
   config.vm.provision "shell", path: 'scripts/setup/vagrant_provisioning2.sh', privileged: false
   config.vm.provision "shell", path: 'scripts/setup/vagrant_provisioning3.sh'
+  if ENV['DEV']
+    config.vm.provision "shell", path: 'scripts/setup/vagrant_dev_provisioning.sh', privileged: false
+  end
 
   # Forward Django dev server port
   config.vm.network "forwarded_port", guest: 8000, host: 8001
