@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from d2qc.data.models import DataSet, DataPoint, DataType, DataValue
+from d2qc.data.models import DataSet, DataPoint, DataType, DataValue, DataUnit
 from rest_framework import viewsets
 from d2qc.data.serializers import *
 
@@ -17,3 +17,6 @@ class DataTypeViewSet(viewsets.ModelViewSet):
 class DataValueViewSet(viewsets.ModelViewSet):
     queryset = DataValue.objects.all().order_by('-created')
     serializer_class = DataValueSerializer
+class DataUnitViewSet(viewsets.ModelViewSet):
+    queryset = DataUnit.objects.all().order_by('-created')
+    serializer_class = DataUnitSerializer

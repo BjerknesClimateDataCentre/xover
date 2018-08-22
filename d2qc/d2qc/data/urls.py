@@ -12,6 +12,7 @@ router.register(r'set', DataSetViewSet)
 router.register(r'type', DataTypeViewSet)
 router.register(r'point', DataPointViewSet)
 router.register(r'value', DataValueViewSet)
+router.register(r'unit', DataUnitViewSet)
 
 
 urlpatterns = [
