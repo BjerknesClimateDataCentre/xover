@@ -34,7 +34,7 @@ def importMockup():
 
 
     for ident in identifiers:
-        datastructure = urllib.request.urlopen('http://127.0.0.1:8000/mockup/?ident=' + ident)
+        datastructure = urllib.request.urlopen('http://localhost/mockup/?ident=' + ident)
         str = ''
         for line in datastructure.readlines():
             str += line.decode('utf8')
