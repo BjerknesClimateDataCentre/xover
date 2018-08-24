@@ -2,29 +2,24 @@ from d2qc.data.models import DataSet, DataType, DataPoint, DataValue, DataUnit
 from rest_framework import serializers
 
 # Serializers define the API representation.
-class DataSetSerializer(serializers.HyperlinkedModelSerializer):
+class DataValueSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DataSet
+        model = DataValue
         fields = (
             'id',
-            'expocode',
-            'is_reference'
+            'data_point',
+            'data_type',
+            'value'
         )
-
-class DataTypeSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = DataType
+class NestedDataValueSerializer(DataValueSerializer):
+    class Meta(DataValueSerializer.Meta):
         fields = (
             'id',
-            'identifier',
-            'prefLabel',
-            'altLabel',
-            'definition',
-            'original_label',
-            'data_unit'
+            'data_type',
+            'value'
         )
 
-class DataPointSerializer(serializers.HyperlinkedModelSerializer):
+class DataPointSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataPoint
         fields = (
@@ -34,20 +29,42 @@ class DataPointSerializer(serializers.HyperlinkedModelSerializer):
             'longitude',
             'depth',
             'unix_time_millis',
-            'station_number'
+            'station_number',
         )
-
-class DataValueSerializer(serializers.HyperlinkedModelSerializer):
+class NestedDataPointSerializer(serializers.ModelSerializer):
+    values = NestedDataValueSerializer(read_only=True, many=True)
     class Meta:
-        model = DataValue
+        model = DataPoint
         fields = (
             'id',
-            'data_point',
-            'data_type',
-            'value'
+            'latitude',
+            'longitude',
+            'depth',
+            'unix_time_millis',
+            'station_number',
+            'values',
+        )
+class DataSetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DataSet
+        fields = (
+            'id',
+            'expocode',
+            'is_reference',
         )
 
-class DataUnitSerializer(serializers.HyperlinkedModelSerializer):
+class NestedDataSetSerializer(serializers.ModelSerializer):
+    points = NestedDataPointSerializer(read_only=True, many=True)
+    class Meta:
+        model = DataSet
+        fields = (
+            'id',
+            'expocode',
+            'is_reference',
+            'points',
+        )
+
+class DataUnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataUnit
         fields = (
@@ -56,4 +73,18 @@ class DataUnitSerializer(serializers.HyperlinkedModelSerializer):
             'prefLabel',
             'altLabel',
             'definition'
+        )
+
+class DataTypeSerializer(serializers.ModelSerializer):
+    data_unit = DataUnitSerializer(read_only=True)
+    class Meta:
+        model = DataType
+        fields = (
+            'id',
+            'identifier',
+            'prefLabel',
+            'altLabel',
+            'definition',
+            'original_label',
+            'data_unit',
         )

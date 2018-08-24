@@ -9,8 +9,10 @@ from rest_framework import routers, serializers, viewsets
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
 router.register(r'set', DataSetViewSet)
+router.register(r'nested/set', NestedDataSetViewSet)
 router.register(r'type', DataTypeViewSet)
 router.register(r'point', DataPointViewSet)
+router.register(r'nested/point', NestedDataPointViewSet)
 router.register(r'value', DataValueViewSet)
 router.register(r'unit', DataUnitViewSet)
 

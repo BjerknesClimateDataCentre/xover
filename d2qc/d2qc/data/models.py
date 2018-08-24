@@ -44,7 +44,7 @@ class DataPoint(models.Model):
     class Meta:
         db_table = 'd2qc_datapoints'
     id = models.AutoField(primary_key=True)
-    data_set = models.ForeignKey('DataSet', on_delete=models.CASCADE)
+    data_set = models.ForeignKey('DataSet', related_name='points', on_delete=models.CASCADE)
     latitude = models.DecimalField(max_digits=10, decimal_places=8)
     longitude = models.DecimalField(max_digits=11, decimal_places=8)
     depth = models.DecimalField(max_digits=8, decimal_places=3)
@@ -57,7 +57,7 @@ class DataValue(models.Model):
     class Meta:
         db_table = 'd2qc_datavalues'
     id = models.AutoField(primary_key=True)
-    data_point = models.ForeignKey('DataPoint', on_delete=models.CASCADE)
+    data_point = models.ForeignKey('DataPoint', related_name='values', on_delete=models.CASCADE)
     data_type = models.ForeignKey('DataType', on_delete=models.CASCADE)
     value = models.DecimalField(max_digits=19, decimal_places=10)
     created = models.DateTimeField(auto_now_add=True)
