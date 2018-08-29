@@ -43,6 +43,7 @@ pip install -r scripts/setup/requirements.txt
 # Shortcuts:
 echo "alias a='source .env_vagrant/bin/activate'" >> ~/.profile
 echo "alias m='python manage.py'" >> ~/.profile
+echo "alias dev='python manage.py runserver 0.0.0.0:8000'" >> ~/.profile
 source ~/.profile
 
 # Run django migrations
