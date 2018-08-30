@@ -19,7 +19,7 @@ class DataPointViewSet(viewsets.ModelViewSet):
     queryset = DataPoint.objects.all().order_by('-created')
     serializer_class = DataPointSerializer
 class NestedDataPointViewSet(viewsets.ModelViewSet):
-    queryset = DataPoint.objects.all().order_by('-created')
+    queryset = DataPoint.objects.all().order_by('-unix_time_millis')
     serializer_class = NestedDataPointSerializer
 class DataTypeViewSet(viewsets.ModelViewSet):
     queryset = DataType.objects.all().order_by('-created')
@@ -46,14 +46,15 @@ def dataSet(request, data_set_id=0, types=""):
     where = " WHERE dp.data_set_id = %s"
     if len(types) > 0:
         for type in types:
-            px = re.sub('[^a-zA-Z]', '', type)
+            px = re.sub('[^a-zA-Z0-9]', '', type)
             sql   += ", {}.value AS {}_value".format(px, px)
             join  += " INNER JOIN d2qc_datavalues {}".format(px)
             join  += " ON (dp.id = {}.data_point_id)".format(px)
             join  += " INNER JOIN d2qc_datatypes dt_{}".format(px)
             join  += " ON (dt_{}.id = {}.data_type_id)".format(px, px)
             where += " AND dt_{}.original_label = '{}'".format(px, type)
-    cursor.execute(sql + frm + join + where, [data_set_id])
+    order = " ORDER BY dp.unix_time_millis ASC, dp.depth ASC "
+    cursor.execute(sql + frm + join + where + order, [data_set_id])
     result['data_columns'] = [col[0] for col in cursor.description]
     result['data_points'] = cursor.fetchall()
 
