@@ -1,4 +1,6 @@
 from django.db import models
+from django.forms import ModelForm
+
 
 class DataSet(models.Model):
     class Meta:
@@ -8,6 +10,11 @@ class DataSet(models.Model):
     is_reference = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+class DataSetForm(ModelForm):
+    class Meta:
+        model = DataSet
+        fields = ['expocode']
 
 class DataType(models.Model):
     class Meta:
