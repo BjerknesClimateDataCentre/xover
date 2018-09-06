@@ -18,20 +18,21 @@ from django.conf import settings
 
 
 
-def importMockup():
+def importMockup(reference = False):
     identifiers = [
         '06MT20091026',
         '45CE20110103',
         '58GS20090528',
     ]
-    with open(settings.BASE_DIR + '/d2qc/data/refdata_cruises.json') as cruises:
-        identifiers = json.load(cruises)
+    if reference:
+        with open(settings.BASE_DIR + '/d2qc/data/refdata_cruises.json') as cruises:
+            identifiers = json.load(cruises)
 
     for expocode in identifiers:
         importSingleMockup(expocode)
 
 
-def importSingleMockup(expocode):
+def importSingleMockup(expocode, reference = False):
     ignore = {
         'EXPOCODE': 1,
         'SECT_ID': 1,
@@ -48,7 +49,7 @@ def importSingleMockup(expocode):
     data = json.loads(tmpstr)
     data_set = d2qc.data.models.DataSet(
         expocode = data['info']['EXPOCODE'],
-        is_reference = False)
+        is_reference = reference)
     data_set.save()
 
     # First get Data Types
