@@ -99,7 +99,7 @@ def importSingleMockup(expocode, reference = False):
                 int(date[6:8]),
                 int(time[0:2]),
                 int(time[2:4]),
-            ).timestamp()
+            ).timestamp() * 1000 # multiply to get milliseconds
         except:
             print('Timestamp error: ' + expocode + ' - line: ' + str(count))
             count += 1
