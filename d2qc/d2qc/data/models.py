@@ -11,11 +11,6 @@ class DataSet(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-class DataSetForm(ModelForm):
-    class Meta:
-        model = DataSet
-        fields = ['expocode']
-
 class DataType(models.Model):
     class Meta:
         db_table = 'd2qc_datatypes'
