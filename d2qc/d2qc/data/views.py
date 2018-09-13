@@ -31,6 +31,9 @@ class DataUnitViewSet(viewsets.ModelViewSet):
 
 
 @api_view()
-def dataSet(request, data_set_id=0, types=""):
-    result=getDataSetData(data_set_id, types)
+def dataSet(
+        request, data_set_ids=[0], types="CTDTMP", bounds=[], min_depth=0,
+        max_depth=0
+):
+    result=getDataSetData(data_set_ids, types, bounds, min_depth, max_depth)
     return Response(result)
