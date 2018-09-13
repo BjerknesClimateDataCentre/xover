@@ -5,9 +5,16 @@ from django.forms import ModelForm
 class DataSet(models.Model):
     class Meta:
         db_table = 'd2qc_datasets'
+        indexes = [
+            models.Index(fields=['min_lat', 'max_lat', 'min_lon', 'max_lon']),
+        ]
     id = models.AutoField(primary_key=True)
     expocode = models.CharField(max_length=255)
     is_reference = models.BooleanField(default=False)
+    min_lat = models.DecimalField(max_digits=10, decimal_places=8, null=True)
+    max_lat = models.DecimalField(max_digits=10, decimal_places=8, null=True)
+    min_lon = models.DecimalField(max_digits=11, decimal_places=8, null=True)
+    max_lon = models.DecimalField(max_digits=11, decimal_places=8, null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -44,6 +51,10 @@ class DataUnit(models.Model):
 class DataPoint(models.Model):
     class Meta:
         db_table = 'd2qc_datapoints'
+        indexes = [
+            models.Index(fields=['depth']),
+            models.Index(fields=['latitude', 'longitude']),
+        ]
     id = models.AutoField(primary_key=True)
     data_set = models.ForeignKey('DataSet', related_name='points', on_delete=models.CASCADE)
     latitude = models.DecimalField(max_digits=10, decimal_places=8)
