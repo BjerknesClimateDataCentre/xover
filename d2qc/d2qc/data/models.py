@@ -21,6 +21,7 @@ class DataSet(models.Model):
 class DataType(models.Model):
     class Meta:
         db_table = 'd2qc_datatypes'
+        unique_together = ('identifier', 'original_label')
     id = models.AutoField(primary_key=True)
     data_unit = models.ForeignKey(
         'DataUnit',
