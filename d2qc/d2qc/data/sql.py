@@ -125,3 +125,21 @@ def get_data_set_data(data_set_ids=[0], types="", bounds=[], min_depth=0, max_de
         result.append(data_set)
 
     return result
+
+def dataset_extends(data_set_id, min_depth = 0):
+    cursor = connection.cursor()
+    select = """
+            SELECT min(latitude - 2) as min_lat, max(latitude + 2) as max_lat,
+            min(longitude - 2) as min_lon, max(longitude + 2) as max_lon
+            from d2qc_datapoints
+    """
+    args = []
+    where = ' where '
+    if min_depth > 0:
+        where += 'depth > %s'
+        args.append(min_depth)
+    where += 'data_set_id = %s'
+    args.append(data_set_id)
+
+    cursor.execute(select + where, args)
+    return cursor.fetchone()
