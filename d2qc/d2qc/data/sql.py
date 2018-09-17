@@ -59,13 +59,21 @@ def get_data_set_data(data_set_ids=[0], types="", bounds=[], min_depth=0, max_de
 
     cursor = connection.cursor()
     result = []
+    select = """
+        SELECT original_label, id from d2qc_datatypes where data_unit_id is not null
+    """
+    cursor.execute(select)
+    typelist = dict([(type[0], type[1]) for type in cursor.fetchall()])
 
-    select = "SELECT dp.data_set_id, ds.expocode, dp.id AS data_point_id, "
-    select += "dp.latitude, dp.longitude, dp.depth, dp.unix_time_millis"
+    select = """
+        SELECT dp.data_set_id, ds.expocode, ds.min_lat, ds.max_lat,
+        ds.min_lon, ds.max_lon, dp.id AS data_point_id,
+        dp.latitude, dp.longitude, dp.depth, dp.unix_time_millis
+    """
     frm = " FROM  d2qc_datasets ds"
     join = " INNER JOIN d2qc_datapoints dp ON (ds.id = dp.data_set_id)"
     ids = ','.join([str(i) for i in data_set_ids])
-    where = " WHERE dp.data_set_id in (" + ids + ") "
+    where = " WHERE ds.id in (" + ids + ") "
     args = []
     if len(types) > 0:
         for type in types:
@@ -73,9 +81,7 @@ def get_data_set_data(data_set_ids=[0], types="", bounds=[], min_depth=0, max_de
             select += ", {}.value AS {}_value".format(px, px)
             join += " INNER JOIN d2qc_datavalues {}".format(px)
             join += " ON (dp.id = {}.data_point_id)".format(px)
-            join += " INNER JOIN d2qc_datatypes dt_{}".format(px)
-            join += " ON (dt_{}.id = {}.data_type_id)".format(px, px)
-            where += " AND dt_{}.original_label = '{}'".format(px, type)
+            where += " AND {}.data_type_id = '{}'".format(px, typelist[type])
         if len(bounds) == 4:
             where += """
             AND dp.latitude between %s and %s
@@ -104,11 +110,15 @@ def get_data_set_data(data_set_ids=[0], types="", bounds=[], min_depth=0, max_de
                 data_points = []
                 result.append(data_set)
             data_set = {}
-            data_set['data_columns'] = [col[0] for col in cursor.description][2:]
+            data_set['data_columns'] = [col[0] for col in cursor.description][6:]
             data_set['data_set_id'] = row[0]
             data_set['expocode'] = row[1]
+            data_set['min_lat'] = row[2]
+            data_set['max_lat'] = row[3]
+            data_set['min_lon'] = row[4]
+            data_set['max_lon'] = row[5]
             data_set_id = row[0]
-        data_points.append(row[2:])
+        data_points.append(row[6:])
 
     if data_set_id != -1:
         data_set['data_points'] = data_points
