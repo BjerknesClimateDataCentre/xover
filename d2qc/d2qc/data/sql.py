@@ -1,7 +1,7 @@
 import re
 from django.db import connection
 
-def getDataSetData(data_set_ids=[0], types="", bounds=[], min_depth=0, max_depth=0):
+def get_data_set_data(data_set_ids=[0], types="", bounds=[], min_depth=0, max_depth=0):
     """
     Get data for a multiple datasets as a list of hierachical objects.
 
@@ -9,7 +9,7 @@ def getDataSetData(data_set_ids=[0], types="", bounds=[], min_depth=0, max_depth
     data_set_ids -- The database id of the datasetself.
     types       -- Commaseparated string, data types from the data_types table.
 
-    Example: getDataSetData(724, "CTDTMP,SALNTY")
+    Example: get_data_set_data(724, "CTDTMP,SALNTY")
 
     Returns:
     [

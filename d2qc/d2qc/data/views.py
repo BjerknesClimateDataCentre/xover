@@ -35,5 +35,5 @@ def dataSet(
         request, data_set_ids=[0], types="CTDTMP", bounds=[], min_depth=0,
         max_depth=0
 ):
-    result=getDataSetData(data_set_ids, types, bounds, min_depth, max_depth)
+    result=get_data_set_data(data_set_ids, types, bounds, min_depth, max_depth)
     return Response(result)
