@@ -22,7 +22,9 @@ register_converter(LatLonBoundsConverter, 'bounds')
 register_converter(NumberListConverter, 'numbers')
 
 px = 'join/dataset'
+cx = 'crossover'
 ids = '/<numbers:data_set_ids>'
+id = '/<int:data_set_id>'
 types = '/<datatypes:types>'
 bounds = '/<bounds:bounds>'
 min_depth = '/<int:min_depth>'
@@ -35,6 +37,6 @@ urlpatterns = [
     path(px + ids + types + bounds + min_depth + max_depth, views.dataSet),
     path(px + ids + types + min_depth, views.dataSet),
     path(px + ids + types + min_depth + max_depth, views.dataSet),
-    path('crossover/<int:data_set_id>/<datatypes:types>', views.crossover),
+    path(cx + id + types, views.crossover),
     url(r'^', include(router.urls)),
 ]

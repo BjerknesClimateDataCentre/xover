@@ -1,10 +1,13 @@
 from django.http import HttpResponse
+from django.db.models import Max, Min, Count, Q
 from d2qc.data.models import DataSet, DataPoint, DataType, DataValue, DataUnit
 from rest_framework import viewsets
 from d2qc.data.serializers import *
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from d2qc.data.sql import *
+from lib.d2qc_py.crossover import *
+import json
 
 
 class DataSetViewSet(viewsets.ModelViewSet):
@@ -37,3 +40,26 @@ def dataSet(
 ):
     result=get_data_set_data(data_set_ids, types, bounds, min_depth, max_depth)
     return Response(result)
+
+@api_view()
+def crossover(request, data_set_id=0, types=""):
+    """
+    Calculate crossover for this dataset.
+    """
+
+    min_depth = 1000
+    dataset = get_data_set_data([data_set_id], types, min_depth=min_depth)
+    bounds = dataset_extends(data_set_id)
+
+    ref_ids = DataSet.objects.filter(
+            Q(min_lat__lte=bounds[1]) & Q(max_lat__gte=bounds[0]) &
+            Q(min_lon__lte=bounds[3]) & Q(max_lon__gte=bounds[2])
+    ).values_list('id', flat=True).distinct()
+    refdata = get_data_set_data(ref_ids, types, bounds, min_depth)
+
+
+    #dataset = dataset.filter(points.lat)
+    # print(refdata)
+    #print(dataset[1].id)
+    #refs = DataSet.objects.filter()
+    return Response(dataset)
