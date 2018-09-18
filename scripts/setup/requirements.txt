@@ -7,3 +7,9 @@ pytz==2018.4
 gsw==3.2.1
 numpy==1.15.1
 scipy==1.1.0
+cycler==0.10.0
+kiwisolver==1.0.1
+matplotlib==2.2.3
+pyparsing==2.2.1
+python-dateutil==2.7.3
+six==1.11.0
