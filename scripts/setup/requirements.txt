@@ -6,3 +6,4 @@ pytz==2018.4
 ## The following requirements were added by pip freeze:
 gsw==3.2.1
 numpy==1.15.1
+scipy==1.1.0
