@@ -40,6 +40,13 @@ pip install --upgrade pip
 # Initialize pip with requirements
 pip install -r scripts/setup/requirements.txt
 
+# Install basemap separately
+pip install https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz
+
+# Set backend to default Agg by commenting line
+sed -i 's/^\( *backend *:.*\)$/# \1/' \
+    /vagrant/.env_vagrant/lib/python3.5/site-packages/matplotlib/mpl-data/matplotlibrc
+
 # Shortcuts:
 echo "alias a='source .env_vagrant/bin/activate'" >> ~/.profile
 echo "alias m='python manage.py'" >> ~/.profile
