@@ -67,7 +67,7 @@ def get_data_set_data(data_set_ids=[0], types="", bounds=[], min_depth=0, max_de
 
     select = """
         SELECT dp.data_set_id, ds.expocode, ds.min_lat, ds.max_lat,
-        ds.min_lon, ds.max_lon, dp.id AS data_point_id,
+        ds.min_lon, ds.max_lon, dp.id AS data_point_id, dp.station_number,
         dp.latitude, dp.longitude, dp.depth, dp.unix_time_millis
     """
     frm = " FROM  d2qc_datasets ds"
@@ -75,13 +75,15 @@ def get_data_set_data(data_set_ids=[0], types="", bounds=[], min_depth=0, max_de
     ids = ','.join([str(i) for i in data_set_ids])
     where = " WHERE ds.id in (" + ids + ") "
     args = []
+    not_all_nulls = []
     if len(types) > 0:
         for type in types:
             px = re.sub('[^a-zA-Z0-9]', '', type)
             select += ", {}.value AS {}_value".format(px, px)
-            join += " INNER JOIN d2qc_datavalues {}".format(px)
-            join += " ON (dp.id = {}.data_point_id)".format(px)
-            where += " AND {}.data_type_id = '{}'".format(px, typelist[type])
+            join += " LEFT OUTER JOIN d2qc_datavalues {}".format(px)
+            join += " ON (dp.id = {}.data_point_id".format(px)
+            join += " AND {}.data_type_id = '{}')".format(px, typelist[type])
+            not_all_nulls.append("{}.value".format(px))
         if len(bounds) == 4:
             where += """
             AND dp.latitude between %s and %s
@@ -95,6 +97,10 @@ def get_data_set_data(data_set_ids=[0], types="", bounds=[], min_depth=0, max_de
             where += 'AND dp.depth < %s'
             args.append(max_depth)
 
+    # Dont include if all values are null
+    where += " AND ("
+    where += ' IS NOT NULL OR '.join(not_all_nulls)
+    where += ")"
 
 
     order = " ORDER BY dp.data_set_id ASC, dp.unix_time_millis ASC, dp.depth ASC "
