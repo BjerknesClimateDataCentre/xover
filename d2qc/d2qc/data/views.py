@@ -3,6 +3,7 @@ import os.path
 import os
 from django.http import HttpResponse
 from django.db.models import Max, Min, Count, Q
+from django.template import loader
 from d2qc.data.models import DataSet, DataPoint, DataType, DataValue, DataUnit
 from rest_framework import viewsets
 from d2qc.data.serializers import *
@@ -97,4 +98,6 @@ def crossover(request, data_set_id=0, types=[]):
         links.append(l)
         os.remove(path + m)
         os.remove(path + overview[k])
-    return Response(links)
+    template = loader.get_template('data/index.html')
+    context = {'links': links,}
+    return HttpResponse(template.render(context, request))
