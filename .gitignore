@@ -8,3 +8,4 @@ __pycache__/
 
 # Ignore prod setup file
 d2qc/d2qc/setup/production.py
+/backup
