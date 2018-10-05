@@ -4,7 +4,7 @@ from django.forms import ModelForm
 
 class DataSet(models.Model):
     class Meta:
-        db_table = 'd2qc_datasets'
+        db_table = 'd2qc_data_sets'
         indexes = [
             models.Index(fields=['min_lat', 'max_lat', 'min_lon', 'max_lon']),
         ]
@@ -20,7 +20,7 @@ class DataSet(models.Model):
 
 class DataType(models.Model):
     class Meta:
-        db_table = 'd2qc_datatypes'
+        db_table = 'd2qc_data_types'
         unique_together = ('identifier', 'original_label')
     id = models.AutoField(primary_key=True)
     data_unit = models.ForeignKey(
@@ -39,7 +39,7 @@ class DataType(models.Model):
 
 class DataUnit(models.Model):
     class Meta:
-        db_table = 'd2qc_dataunits'
+        db_table = 'd2qc_data_units'
     id = models.AutoField(primary_key=True)
     identifier = models.CharField(max_length=20, default='', blank=True)
     prefLabel = models.CharField(max_length=255, default='', blank=True)
@@ -51,7 +51,7 @@ class DataUnit(models.Model):
 
 class DataPoint(models.Model):
     class Meta:
-        db_table = 'd2qc_datapoints'
+        db_table = 'd2qc_data_points'
         indexes = [
             models.Index(fields=['depth']),
             models.Index(fields=['latitude', 'longitude']),
@@ -68,7 +68,7 @@ class DataPoint(models.Model):
 
 class DataValue(models.Model):
     class Meta:
-        db_table = 'd2qc_datavalues'
+        db_table = 'd2qc_data_values'
     id = models.AutoField(primary_key=True)
     data_point = models.ForeignKey('DataPoint', related_name='values', on_delete=models.CASCADE)
     data_type = models.ForeignKey('DataType', on_delete=models.CASCADE)

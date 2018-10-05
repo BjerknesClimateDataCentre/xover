@@ -60,7 +60,7 @@ def get_data_set_data(data_set_ids=[0], types="", bounds=[], min_depth=0, max_de
     cursor = connection.cursor()
     result = []
     select = """
-        SELECT original_label, id from d2qc_datatypes where data_unit_id is not null
+        SELECT original_label, id from d2qc_data_types where data_unit_id is not null
     """
     cursor.execute(select)
     typelist = dict([(type[0], type[1]) for type in cursor.fetchall()])
@@ -70,8 +70,8 @@ def get_data_set_data(data_set_ids=[0], types="", bounds=[], min_depth=0, max_de
         ds.min_lon, ds.max_lon, dp.id AS data_point_id, dp.station_number,
         dp.latitude, dp.longitude, dp.depth, dp.unix_time_millis
     """
-    frm = " FROM  d2qc_datasets ds"
-    join = " INNER JOIN d2qc_datapoints dp ON (ds.id = dp.data_set_id)"
+    frm = " FROM  d2qc_data_sets ds"
+    join = " INNER JOIN d2qc_data_points dp ON (ds.id = dp.data_set_id)"
     ids = ','.join([str(i) for i in data_set_ids])
     where = " WHERE ds.id in (" + ids + ") "
     args = []
@@ -80,7 +80,7 @@ def get_data_set_data(data_set_ids=[0], types="", bounds=[], min_depth=0, max_de
         for type in types:
             px = re.sub('[^a-zA-Z0-9]', '', type)
             select += ", {}.value AS {}_value".format(px, px)
-            join += " LEFT OUTER JOIN d2qc_datavalues {}".format(px)
+            join += " LEFT OUTER JOIN d2qc_data_values {}".format(px)
             join += " ON (dp.id = {}.data_point_id".format(px)
             join += " AND {}.data_type_id = '{}')".format(px, typelist[type])
             not_all_nulls.append("{}.value".format(px))
@@ -137,7 +137,7 @@ def dataset_extends(data_set_id, min_depth = 0):
     select = """
             SELECT min(latitude - 2) as min_lat, max(latitude + 2) as max_lat,
             min(longitude - 2) as min_lon, max(longitude + 2) as max_lon
-            from d2qc_datapoints
+            from d2qc_data_points
     """
     args = []
     where = ' where '
