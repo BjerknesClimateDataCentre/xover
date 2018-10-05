@@ -24,7 +24,7 @@ ALLOWED_HOSTS = []
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'd2qc',
         'USER': 'd2qc',
         'PASSWORD': 'd2qc', # ADD CORRECT PASSWORD

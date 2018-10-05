@@ -24,15 +24,12 @@ DEBUG = True
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'd2qc',
         'USER': 'd2qc',
         'PASSWORD': 'd2qc',
         'HOST': 'localhost',
-        'PORT': '3306',
-        'OPTIONS': {
-            'init_command': 'SET storage_engine=INNODB',
-        },
+        'PORT': '',
     }
 }
 

@@ -15,3 +15,19 @@ six==1.11.0
 pyproj==1.9.5.1
 pyshp==1.2.12
 Pillow==5.2.0
+psycopg2-binary==2.7.5
+basemap==1.1.0
+cftime==1.0.1
+filelock==3.0.8
+
+# Seawater lib
+gsw==3.2.1
+
+#cotede?
+cotede==0.19.2
+netCDF4==1.4.1
+Click==7.0
+oceansdb==0.8.4
+pyArgo==0.0.4
+seabird==0.10.5
+supportdata==0.1.2
