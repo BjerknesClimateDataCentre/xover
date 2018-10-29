@@ -43,6 +43,18 @@ class DataTypeDict():
         'UMOL/KG'    : 'SDN:P06::KGUM',
         'PMOL/KG'    : 'SDN:P06::KGPM',
         'FMOL/KG'    : 'SDN:P06::FGKG',
+        'tco2'     : 'SDN:P01::TCO2MSXX',
+        'talk'     : 'SDN:P01::MDMAP014',
+        'oxygen'   : 'SDN:P01::DOKGWITX',
+        'nitrate'  : 'SDN:P01::MDMAP005',
+        'phosphate': 'SDN:P01::MDMAP906',
+        'silicate' : 'SDN:P01::MDMAP012',
+        'salinity' : 'SDN:P01::PSLTZZ01',
+        'phts25p0' : 'SDN:P01::PHTLSX25',
+        'theta'    : 'SDN:P01::POTMCV01',
+        'doc'      : 'SDN:P01::COCOKGXX',
+        'cfc11'    : 'SDN:P01::FR11GCKG',
+        'cfc12'    : 'SDN:P01::FR12GCKG',
     }
 
     @classmethod
