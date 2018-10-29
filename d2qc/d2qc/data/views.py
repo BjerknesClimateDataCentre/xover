@@ -4,7 +4,7 @@ import os
 from django.http import HttpResponse
 from django.db.models import Max, Min, Count, Q
 from django.template import loader
-from d2qc.data.models import DataSet, DataPoint, DataType, DataValue, DataUnit
+from d2qc.data.models import *
 from rest_framework import viewsets
 from d2qc.data.serializers import *
 from rest_framework.decorators import api_view
@@ -14,25 +14,48 @@ from lib.d2qc_py.crossover import *
 import json
 
 
+class DataFileViewSet(viewsets.ModelViewSet):
+
+    queryset = DataFile.objects.all()
+    serializer_class = DataFileSerializer
+
+class StationViewSet(viewsets.ModelViewSet):
+
+    queryset = Station.objects.all()
+    serializer_class = StationSerializer
+
+class CastViewSet(viewsets.ModelViewSet):
+
+    queryset = Cast.objects.all()
+    serializer_class = CastSerializer
+
+class DepthViewSet(viewsets.ModelViewSet):
+
+    queryset = Depth.objects.all()
+    serializer_class = DepthSerializer
+
 class DataSetViewSet(viewsets.ModelViewSet):
+
     queryset = DataSet.objects.all().order_by('-created')
     serializer_class = DataSetSerializer
+
 class NestedDataSetViewSet(viewsets.ModelViewSet):
+
     queryset = DataSet.objects.all().order_by('-created')
     serializer_class = NestedDataSetSerializer
-class DataPointViewSet(viewsets.ModelViewSet):
-    queryset = DataPoint.objects.all().order_by('-created')
-    serializer_class = DataPointSerializer
-class NestedDataPointViewSet(viewsets.ModelViewSet):
-    queryset = DataPoint.objects.all().order_by('-unix_time_millis')
-    serializer_class = NestedDataPointSerializer
+
 class DataTypeViewSet(viewsets.ModelViewSet):
+
     queryset = DataType.objects.all().order_by('-created')
     serializer_class = DataTypeSerializer
+
 class DataValueViewSet(viewsets.ModelViewSet):
+
     queryset = DataValue.objects.all().order_by('-created')
     serializer_class = DataValueSerializer
+
 class DataUnitViewSet(viewsets.ModelViewSet):
+
     queryset = DataUnit.objects.all().order_by('-created')
     serializer_class = DataUnitSerializer
 
