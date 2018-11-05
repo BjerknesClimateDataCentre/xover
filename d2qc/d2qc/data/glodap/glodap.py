@@ -557,6 +557,23 @@ class Glodap:
                                         tzinfo=datetime.timezone.utc
                                 )
                                 thetime += datetime.timedelta(days=mon_days)
+                            elif int(data[idents['minute']]) == 81:
+                                # Random error, set minute to 0
+                                print(
+                                        "Error minute {}, line {}" . format(
+                                                data[idents['minute']],
+                                                line_count
+                                        )
+                                )
+                                thetime = datetime.datetime(
+                                        year=int(data[idents['year']]),
+                                        month=int(data[idents['month']]),
+                                        day=int(data[idents['day']]),
+                                        hour=int(data[idents['hour']]),
+                                        minute=0,
+                                        second=0,
+                                        tzinfo=datetime.timezone.utc
+                                )
                             else:
                                 print("UNHANDLED ERROR, line {}".format(
                                         line_count
