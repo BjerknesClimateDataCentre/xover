@@ -74,7 +74,7 @@ def crossover(request, data_set_id=0, types=[]):
     Calculate crossover for this dataset.
     """
     # Always include CTDTMP and SALNTY
-    types.extend(['CTDTMP', 'SALNTY', 'CTDSAL'])
+    types.extend(['temperature', 'salinity'])
     types = list(set(types))
     min_depth = 1000
     dataset = get_data_set_data([data_set_id], types, min_depth=min_depth)
