@@ -2,7 +2,6 @@ drop table d2qc_data_values          ;
 drop table d2qc_depths               ;
 drop table d2qc_casts                ;
 drop table d2qc_stations             ;
-drop table d2qc_data_sets_data_types ;
 drop table d2qc_data_types           ;
 drop table d2qc_data_sets            ;
 drop table d2qc_data_units           ;
