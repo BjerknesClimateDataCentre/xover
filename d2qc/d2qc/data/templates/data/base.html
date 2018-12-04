@@ -1,0 +1,38 @@
+<!doctype html>
+
+<html lang="en">
+    <head>
+    <meta charset="utf-8">
+
+    <title>
+        {% block title %}GLODAP Cross-over{% endblock %}
+    </title>
+    </head>
+    <body>
+        <header>
+            <h1>
+                {% block page_header %}
+                {{ SITE_HEADER }}
+                {% endblock %}
+            </h1>
+            <h2>
+                {% block page_subheader %}
+                Deep water cross-over analysis
+                {% endblock %}
+            </h2>
+        </header>
+        <nav>
+            <ul>
+                <li>
+                    <a href="{% url 'data_file-list' %}">Files</a>
+                </li>
+                <li>
+                    <a href="{% url 'data_file-create' %}">Add file</a>
+                </li>
+            </ul>
+        </nav>
+        {% block content %} No content yet
+        {% endblock %}
+    </body>
+</html>
+

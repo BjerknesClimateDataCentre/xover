@@ -1,0 +1,19 @@
+{% extends "data/base.html" %}
+{% block content %}
+    <h3>Your data files</h3>
+    <p>Below are the data files.
+        <a href="{%url 'data_file-create'%}">Upload more files</a>
+    </p>
+    {% if object_list %}
+        <ul>
+        {% for obj in object_list %}
+            <li>
+                <a href="{% url 'data_file-detail' obj.id %}">{{ obj.name }}</a>
+                <a href="{% url 'data_file-delete' obj.id %}">[Delete file]</a>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No crossovers available</p>
+    {% endif %}
+{% endblock %}
