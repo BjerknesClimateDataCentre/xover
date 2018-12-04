@@ -1,22 +1,62 @@
 from django.contrib.gis.db import models
 from django.forms import ModelForm
+from django.contrib.auth.models import User
+from django.conf import settings
+import os.path
 import datetime
 import logging
+import re
 from decimal import Decimal
 
 class DataFile(models.Model):
     class Meta:
         db_table = 'd2qc_data_files'
 
+    # Make sure files get unique filenames
+    def file_store_path(self, filename):
+        # clear filename of illegal characters
+        filename = re.sub('[^a-zA-Z0-9\.\-\_]', '', filename)
+        id = self.owner.id
+        path = os.path.join(
+                settings.DATA_FOLDER,
+                'UID_{}'.format(id)
+        )
+        i = 0
+        name = '{}__{}'.format(i, filename)
+        while os.path.isfile(os.path.join(path, name)):
+            i += 1
+            name = '{}__{}'.format(i, filename)
+        return os.path.join(path, name)
+
     id = models.AutoField(primary_key=True)
-    filename = models.CharField(max_length=255)
+    filepath = models.FileField(
+            upload_to=file_store_path,
+            blank=True,
+            null=True
+    )
     name = models.CharField(max_length=255, blank=True)
     description = models.CharField(max_length=255, blank=True)
     headers = models.TextField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    owner = models.ForeignKey(
+            User,
+            on_delete = models.PROTECT,
+            blank=True,
+            null=True,
+            editable=False
+    )
+
     def __str__(self):
         return self.name if self.name else self.filename
+
+    # Delete files as object is deleted
+    def delete(self):
+        # Dont delete file if file has related data set(s)
+        if not DataSet.objects.filter(data_file_id=self.id).exists():
+            self.filepath.delete()
+        super().delete()
+
 
 class DataSet(models.Model):
     class Meta:
@@ -29,7 +69,7 @@ class DataSet(models.Model):
     data_file = models.ForeignKey(
         'DataFile',
         related_name='data_sets',
-        on_delete = models.CASCADE,
+        on_delete = models.PROTECT,
         blank=True,
         null=True
     )
