@@ -73,6 +73,13 @@ class DataSet(models.Model):
         blank=True,
         null=True
     )
+    owner = models.ForeignKey(
+            User,
+            on_delete = models.PROTECT,
+            blank=True,
+            null=True,
+            editable=False
+    )
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     def __str__(self):
