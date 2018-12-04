@@ -18,7 +18,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # Backup folder
 BACKUP_FOLDER = os.path.dirname(BASE_DIR) + '/backup'
 
+# Data folder
+DATA_FOLDER = 'user_data'
+
 ALLOWED_HOSTS = []
+
 
 
 # Application definition
