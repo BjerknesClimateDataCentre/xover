@@ -1,0 +1,19 @@
+{% extends "data/base.html" %}
+{% block content %}
+    <div>
+        <h3>ID: {{ object.id }} - {{ object.name }}</h3>
+        <dl>
+            <dt>Filepath</dt>
+            <dd>{{ object.filepath }}</dd>
+            <dt>Owner</dt>
+            <dd>(user: {{ owner.username }})</dd>
+            <dd>{{ owner.first_name }} {{ owner.last_name }}</dd>
+            <dt>Description</dt>
+            <dd>{{ object.description }}</dd>
+            <dt>Header</dt>
+            <dd>{{ object.headers }}</dd>
+        </dl>
+        <a href="{% url 'data_file-update' object.id %}">[Edit]</a>
+        <a href="{% url 'data_file-delete' object.id %}">[Delete]</a>
+    </div>
+{% endblock %}

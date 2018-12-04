@@ -4,6 +4,14 @@ import os
 from django.http import HttpResponse
 from django.db.models import Max, Min, Count, Q
 from django.template import loader
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.views.generic import ListView
+from django.views.generic import DetailView
+from django.views.generic.edit import CreateView
+from django.views.generic.edit import UpdateView
+from django.views.generic.edit import DeleteView
+from django.urls import reverse, reverse_lazy
 from d2qc.data.models import *
 from rest_framework import viewsets
 from d2qc.data.serializers import *
@@ -124,3 +132,49 @@ def crossover(request, data_set_id=0, types=[]):
     template = loader.get_template('data/index.html')
     context = {'links': links,}
     return HttpResponse(template.render(context, request))
+
+
+class DataFileList(ListView):
+    model = DataFile
+    context_object_name = 'data_file_list'
+    def get_queryset(self, *args, **kwargs):
+        queryset = DataFile.objects.none()
+        if self.request.user.is_authenticated:
+            queryset = DataFile.objects.filter(owner_id=self.request.user.id)
+        return queryset
+
+class DataFileCreate(CreateView):
+    model = DataFile
+    fields = ['filepath','name','description']
+    def get_success_url(self):
+        return reverse('data_file-detail', kwargs={'pk':self.object.id})
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+
+class DataFileUpdate(UpdateView):
+    model = DataFile
+    fields = ['filepath','name','description','headers']
+    def get_success_url(self):
+        return reverse('data_file-detail', kwargs={'pk':self.object.id})
+
+class DataFileDelete(DeleteView):
+    model = DataFile
+    success_url = reverse_lazy('data_file-list')
+
+class DataFileDetail(DetailView):
+    model = DataFile
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Load data_file owner data:
+        try:
+            owner = User.objects.get(pk=context['object'].owner_id)
+            context['owner'] = {
+                    'username': owner.username,
+                    'first_name': owner.first_name,
+                    'last_name': owner.last_name,
+            }
+        except:
+            pass
+        return context

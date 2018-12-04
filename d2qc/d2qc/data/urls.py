@@ -31,6 +31,11 @@ types = '/<datatypes:types>'
 bounds = '/<bounds:bounds>'
 min_depth = '/<int:min_depth>'
 max_depth = '/<int:max_depth>'
+file = 'data_file'
+add = '/add/'
+detail = '/detail'
+update = '/update'
+delete = '/delete'
 urlpatterns = [
     path(px + ids, views.dataSet),
     path(px + ids + types, views.dataSet),
@@ -40,5 +45,31 @@ urlpatterns = [
     path(px + ids + types + min_depth, views.dataSet),
     path(px + ids + types + min_depth + max_depth, views.dataSet),
     path(cx + id + types, views.crossover),
-    url(r'^', include(router.urls)),
+    #url(r'^', include(router.urls)),
+    path(
+            file + detail + '/<int:pk>/',
+            DataFileDetail.as_view(),
+            name='data_file-detail'
+    ),
+    path(
+            file + update + '/<int:pk>/',
+            DataFileUpdate.as_view(),
+            name='data_file-update'
+    ),
+    path(
+            file + '/',
+            DataFileList.as_view(),
+            name='data_file-list'
+    ),
+    path(
+            file + add,
+            DataFileCreate.as_view(),
+            name='data_file-create'
+    ),
+    path(
+            file + delete + '/<int:pk>',
+            DataFileDelete.as_view(),
+            name='data_file-delete'
+    ),
+
 ]
