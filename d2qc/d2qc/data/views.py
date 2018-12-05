@@ -1,6 +1,7 @@
 import d2qc.data as data
 import os.path
 import os
+import re
 from django.http import HttpResponse
 from django.db.models import Max, Min, Count, Q
 from django.template import loader
@@ -12,6 +13,7 @@ from django.views.generic.edit import CreateView
 from django.views.generic.edit import UpdateView
 from django.views.generic.edit import DeleteView
 from django.urls import reverse, reverse_lazy
+from django.contrib import messages
 from d2qc.data.models import *
 from rest_framework import viewsets
 from d2qc.data.serializers import *
@@ -150,6 +152,12 @@ class DataFileCreate(CreateView):
         return reverse('data_file-detail', kwargs={'pk':self.object.id})
     def form_valid(self, form):
         form.instance.owner = self.request.user
+        messages.success(
+            self.request,
+            "Data file {} was created".format(
+                    form.cleaned_data['name']
+            )
+        )
         return super().form_valid(form)
 
 class DataFileUpdate(UpdateView):
@@ -157,10 +165,27 @@ class DataFileUpdate(UpdateView):
     fields = ['filepath','name','description','headers']
     def get_success_url(self):
         return reverse('data_file-detail', kwargs={'pk':self.object.id})
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            "Data file {} was updated".format(
+                    form.cleaned_data['name']
+            )
+        )
+        return super().form_valid(form)
 
 class DataFileDelete(DeleteView):
     model = DataFile
     success_url = reverse_lazy('data_file-list')
+    def delete(self, request, *args, **kwargs):
+        rex = re.compile('^[a-zA-Z_/]+delete/([0-9]+)')
+        messages.success(
+            self.request,
+            "Data file #{} was deleted".format(
+                    rex.findall(request.path)[0]
+            )
+        )
+        return super().delete(request, *args, **kwargs)
 
 class DataFileDetail(DetailView):
     model = DataFile
