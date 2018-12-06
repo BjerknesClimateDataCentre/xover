@@ -142,7 +142,7 @@ class Station(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     def __str__(self):
-        label = self.station_number
+        label = str(self.station_number)
         return label
 
 class Cast(models.Model):
