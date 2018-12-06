@@ -10,5 +10,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL('DROP TABLE d2qc_data_sets_data_types;')
+        migrations.RemoveField(
+            model_name='dataset',
+            name='data_types',
+        ),
     ]

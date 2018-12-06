@@ -24,11 +24,6 @@ class DataSet(models.Model):
         ordering = ['expocode']
 
     id = models.AutoField(primary_key=True)
-    data_types = models.ManyToManyField(
-        'DataType',
-        related_name='data_sets',
-        blank=True
-    )
     is_reference = models.BooleanField(default=False)
     expocode = models.CharField(max_length=255, unique=True)
     data_file = models.ForeignKey(
