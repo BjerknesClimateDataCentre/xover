@@ -1,0 +1,14 @@
+{% if request.user.id > 0 %}
+  <script type="text/javascript">
+    window.location.replace("/data");
+  </script>
+{% else %}
+  <h2>Login</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Login</button>
+  </form>
+  Forgot your password?
+  <a href="/account/password_reset">Click here to reset it!</a>
+{% endif %}
