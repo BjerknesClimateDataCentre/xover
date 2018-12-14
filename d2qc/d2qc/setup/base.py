@@ -30,6 +30,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'd2qc.data.apps.DataConfig',
     'd2qc.mockup.apps.MockupdataConfig',
+    'd2qc.account.apps.AccountConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -119,3 +120,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100,
 
 }
+
+LOGIN_REDIRECT_URL = '/data'
+LOGOUT_REDIRECT_URL = '/data'
