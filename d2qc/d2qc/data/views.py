@@ -14,6 +14,7 @@ from django.views.generic.edit import UpdateView
 from django.views.generic.edit import DeleteView
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
+from django.contrib.auth import login
 from d2qc.data.models import *
 from rest_framework import viewsets
 from d2qc.data.serializers import *
@@ -23,6 +24,12 @@ from d2qc.data.sql import *
 from lib.d2qc_py.crossover import *
 import json
 
+
+def redirect_login(request):
+    if request.user.is_authenticated():
+        return HttpResponseRedirect('/data')
+    else:
+        return login(request)
 
 class DataFileViewSet(viewsets.ModelViewSet):
 
