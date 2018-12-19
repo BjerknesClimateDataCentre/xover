@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.views.generic import ListView
 from django.views.generic import DetailView
+from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView
 from django.views.generic.edit import UpdateView
 from django.views.generic.edit import DeleteView
@@ -210,3 +211,6 @@ class DataFileDetail(DetailView):
         except:
             pass
         return context
+
+class IndexPage(TemplateView):
+    template_name = 'index.html'

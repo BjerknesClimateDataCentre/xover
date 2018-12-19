@@ -4,10 +4,11 @@ from django.contrib import messages
 from d2qc.account.forms import SignupForm
 from d2qc.account.tokens import account_activation_token
 from django.contrib.auth.models import User
-from django.contrib.auth import login
+from django.contrib.auth.views import LoginView
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from django.views.generic import CreateView
+from django.views.generic import UpdateView
 from django.core.mail import EmailMessage
 from django.conf import settings
 
@@ -38,20 +39,43 @@ class SignUp(CreateView):
             )
         return super().form_valid(form)
 
-def activate(request, uid, token):
-    try:
-        user = User.objects.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-    if user is not None and account_activation_token.check_token(user, token):
-        user.is_active = True
-        user.save()
-        login(request, user)
-        # return redirect('home')
+class UpdateUser(UpdateView):
+    model = User
+    fields = (
+            'first_name',
+            'last_name',
+            'email',
+    )
+    template_name = 'registration/update.html'
+    success_url = reverse_lazy('data')
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
         messages.success(
-            request,
-            "Confirm your email to complete the registration."
+            self.request,
+            "Updated user {}.".format(self.object.first_name)
         )
-        return HttpResponse('Thank you for your email confirmation. Now you can login your account.')
-    else:
-        return HttpResponse('Activation link is invalid!')
+        return super().form_valid(form)
+
+class Login(LoginView):
+    def get_context_data(self, **kwargs):
+        try:
+            user = User.objects.get(pk=self.kwargs.get('uid'))
+        except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+        token = self.kwargs.get('token')
+        if (
+                user is not None and
+                account_activation_token.check_token(user, token)
+        ):
+            user.is_active = True
+            user.save()
+            messages.success(
+                    self.request,
+                    'Account activated, log in to continue'
+            )
+        elif token:
+            messages.error(
+                    self.request,
+                    'Activation link is invalid'
+            )
+        return super().get_context_data(**kwargs)

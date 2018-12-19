@@ -71,5 +71,9 @@ urlpatterns = [
             DataFileDelete.as_view(),
             name='data_file-delete'
     ),
-
+    path(
+            '',
+            IndexPage.as_view(),
+            name='data'
+    ),
 ]
