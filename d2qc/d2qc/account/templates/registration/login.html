@@ -1,4 +1,6 @@
-{% if request.user.id > 0 %}
+{% extends "base.html" %}
+{% block content %}
+{% if request.user.is_authenticated %}
   <script type="text/javascript">
     window.location.replace("/data");
   </script>
@@ -9,6 +11,13 @@
     {{ form.as_p }}
     <button type="submit">Login</button>
   </form>
-  Forgot your password?
-  <a href="/account/password_reset">Click here to reset it!</a>
+  <div>
+    Forgot your password?
+    <a href="{% url 'account-reset' %}">Click here to reset it!</a>
+  </div>
+  <div>
+    Or you can
+    <a href="{% url 'account-signup' %}">Sign up for an account!</a>
+  </div>
 {% endif %}
+{% endblock %}
