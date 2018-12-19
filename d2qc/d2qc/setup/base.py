@@ -14,6 +14,7 @@ import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+NAMESPACE_DIR = os.path.join(BASE_DIR, 'd2qc')
 
 # Backup folder
 BACKUP_FOLDER = os.path.dirname(BASE_DIR) + '/backup'
@@ -56,7 +57,7 @@ ROOT_URLCONF = 'd2qc.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(NAMESPACE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
