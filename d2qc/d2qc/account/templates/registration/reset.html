@@ -1,9 +1,9 @@
-<div>
+{% extends "base.html" %}
+{% block content %}
   <h2>Password reset</h2>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Reset my password</button>
   </form>
-  <a href="/account/login">Login instead</a>
-</div>
+{% endblock %}

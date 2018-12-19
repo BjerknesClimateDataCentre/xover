@@ -1,0 +1,67 @@
+<!doctype html>
+
+<html lang="en">
+    <head>
+    <meta charset="utf-8">
+
+    <title>
+        {% block title %}GLODAP Cross-over{% endblock %}
+    </title>
+    </head>
+    <body>
+        <header>
+            <h1>
+                {% block page_header %}
+                {{ SITE_HEADER }}
+                {% endblock %}
+            </h1>
+            <h2>
+                {% block page_subheader %}
+                Deep water cross-over analysis
+                {% endblock %}
+            </h2>
+        </header>
+        {% if request.user.is_authenticated %}
+        <aside>
+            User:  {{ request.user.first_name }}
+            <div><a href="{% url 'account-update' request.user.pk %}">[Edit user]</a></div>
+        </aside>
+        {% endif %}
+        <nav>
+            <ul>
+                <li>
+                    <a href="{% url 'data' %}">Home</a>
+                </li>
+                {% if request.user.is_authenticated %}
+                <li>
+                    <a href="{% url 'data_file-list' %}">Files</a>
+                </li>
+                <li>
+                    <a href="{% url 'data_file-create' %}">Add file</a>
+                </li>
+                <li>
+                    <a href="{% url 'account-logout' %}">Logout</a>
+                </li>
+                {% else %}
+                <li>
+                    <a href="{% url 'account-login' %}">Login</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% if messages %}
+        <div class="messages">
+            <ul class="messages">
+                {% for message in messages %}
+                <li class="{{ message.tags|default:'message' }}">
+                    {{ message }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        {% block content %} No content yet
+        {% endblock %}
+    </body>
+</html>
+
