@@ -17,6 +17,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.contrib.auth import login
 from d2qc.data.models import *
+from d2qc.data.forms import DataFileForm
 from rest_framework import viewsets
 from d2qc.data.serializers import *
 from rest_framework.decorators import api_view
@@ -155,17 +156,41 @@ class DataFileList(ListView):
 
 class DataFileCreate(CreateView):
     model = DataFile
-    fields = ['filepath','name','description']
+    form_class = DataFileForm
+
     def get_success_url(self):
         return reverse('data_file-detail', kwargs={'pk':self.object.id})
+
     def form_valid(self, form):
         form.instance.owner = self.request.user
-        messages.success(
-            self.request,
-            "Data file {} was created".format(
-                    form.cleaned_data['name']
-            )
-        )
+        line_count = 0
+        headers = []
+        if 'filepath' in self.request.FILES:
+            for chunk in self.request.FILES['filepath'].chunks():
+                line = ''
+                try:
+                    chunk = chunk.decode('iso-8859-1')
+                except:
+                    try:
+                        chunk = chunk.decode('utf-8')
+                    except Exception as e:
+                        messages.error(
+                            self.request,
+                            "Unknown encoding for file {}".format(
+                                str(self.request.FILES['filepath'])
+                            )
+                        )
+                        messages.error(self.request, "ERROR: ".format(str(e)))
+
+                for line in chunk.splitlines():
+                    line_count += 1
+                    if line_count > 1 and line.strip()[0] != '#' :
+                        break
+                    headers.append(line)
+                if line_count > 1 and line.strip()[0] != '#' :
+                    break
+        self.object = form.save(commit=False)
+        self.object.headers = "\n".join(headers)
         return super().form_valid(form)
 
 class DataFileUpdate(UpdateView):
