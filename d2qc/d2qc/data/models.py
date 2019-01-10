@@ -48,7 +48,7 @@ class DataFile(models.Model):
     )
 
     def __str__(self):
-        return self.name if self.name else self.filename
+        return self.name if self.name else self.filepath
 
     # Delete files as object is deleted
     def delete(self):
