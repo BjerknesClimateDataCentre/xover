@@ -48,7 +48,7 @@ sed -i 's/^\( *backend *:.*\)$/# \1/' \
     /vagrant/.env_vagrant/lib/python3.5/site-packages/matplotlib/mpl-data/matplotlibrc
 
 # Shortcuts:
-echo "alias a='source .env_vagrant/bin/activate'" >> ~/.profile
+echo "alias a='source /vagrant/.env_vagrant/bin/activate'" >> ~/.profile
 echo "alias m='python manage.py'" >> ~/.profile
 echo "alias dev='python manage.py runserver 0.0.0.0:8000'" >> ~/.profile
 source ~/.profile
