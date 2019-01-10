@@ -406,9 +406,9 @@ class Glodap:
 
             with open(path) as infile:
                 filename = os.path.basename(path)
-                if DataFile.objects.filter(filename=filename).exists():
+                if DataFile.objects.filter(filepath=filename).exists():
                     print('File already exists')
-                    #return
+                    return
                 else:
                     print('Import file ' + filename)
 
@@ -426,7 +426,7 @@ class Glodap:
                     return
 
                 current_data_file, created = DataFile.objects.get_or_create(
-                                filename = filename,
+                                filepath = filename,
                                 name = name,
                                 headers = headers
                         )
