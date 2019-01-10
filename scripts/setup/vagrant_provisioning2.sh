@@ -10,10 +10,10 @@
 # Go to the dev folder
 cd /vagrant
 
-# get django repo if not exists
+# get submodule repositories if not present
 if [ ! -d django ]
 then
-  # Django is cloned from https://github.com/django/django.git
+  # Submodules are defined in .submodules
   git submodule init
   git submodule update
 fi
