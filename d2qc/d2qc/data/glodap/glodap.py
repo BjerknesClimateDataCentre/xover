@@ -1,5 +1,5 @@
 from d2qc.data.models  import *
-from d2qc.data.data_type_dict import DataTypeDict
+from glodap.util.data_type_dict import DataTypeDict
 import datetime
 import calendar
 from django.contrib.gis.geos import Point
