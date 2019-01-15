@@ -62,10 +62,12 @@ class DataSet(models.Model):
     class Meta:
         db_table = 'd2qc_data_sets'
         ordering = ['expocode']
+        unique_together = ('expocode', 'owner')
+
 
     id = models.AutoField(primary_key=True)
     is_reference = models.BooleanField(default=False)
-    expocode = models.CharField(max_length=255, unique=True)
+    expocode = models.CharField(max_length=255)
     data_file = models.ForeignKey(
         'DataFile',
         related_name='data_sets',
