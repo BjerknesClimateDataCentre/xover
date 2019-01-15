@@ -35,6 +35,7 @@ file = 'data_file'
 add = '/add/'
 detail = '/detail'
 update = '/update'
+import_ = '/import'
 delete = '/delete'
 urlpatterns = [
     path(px + ids, views.dataSet),
@@ -55,6 +56,16 @@ urlpatterns = [
             file + update + '/<int:pk>/',
             DataFileUpdate.as_view(),
             name='data_file-update'
+    ),
+    path(
+            file + detail + '/<int:pk>' + import_,
+            DataFileDetail.as_view(),
+            name='data_file-import'
+    ),
+    path(
+            file + detail + '/<int:pk>' + import_ + '/exec',
+            DataFileDetail.as_view(),
+            name='data_file-import-exec'
     ),
     path(
             file + '/',

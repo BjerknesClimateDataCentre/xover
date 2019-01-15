@@ -57,6 +57,34 @@ class DataFile(models.Model):
             self.filepath.delete()
         super().delete()
 
+    def is_imported(self):
+        return self.data_sets.count() > 0
+
+    def read_file(self):
+        filearray = []
+        if self.filepath:
+            path = os.path.join(
+                settings.BASE_DIR,
+                str(self.filepath),
+            )
+            try:
+                with open(path, encoding="utf-8") as excfile:
+                    filearray = excfile.readlines()
+            except:
+                try:
+                    with open(path, encoding="iso-8859-1") as excfile:
+                        filearray = excfile.readlines()
+                except:
+                    messages.error(
+                            self.request,
+                            'Could not read file {}'.format(
+                                    path
+                            )
+                    )
+                    messages.error(self.request, 'ERROR: {}'.format(str(err)))
+        return filearray
+
+
 
 class DataSet(models.Model):
     class Meta:

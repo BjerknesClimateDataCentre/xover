@@ -1,19 +1,48 @@
 {% extends "base.html" %}
 {% block content %}
     <div>
-        <h3>ID: {{ object.id }} - {{ object.name }}</h3>
+        <h3>
+            ID: {{ object.id }} -
+            {% if object.name %}
+            {{ object.name }}
+            {% else %}
+            {{ object.filepath }}
+            {% endif %}
+        </h3>
+        {% if import_mode and not imported %}
+        <h1>Click here to import file</h1>
+        {% endif %}
         <dl>
             <dt>Filepath</dt>
             <dd>{{ object.filepath }}</dd>
             <dt>Owner</dt>
             <dd>(user: {{ owner.username }})</dd>
             <dd>{{ owner.first_name }} {{ owner.last_name }}</dd>
+            {% if object.description %}
             <dt>Description</dt>
             <dd>{{ object.description }}</dd>
+            {% endif %}
             <dt>Header</dt>
-            <dd>{{ object.headers }}</dd>
+            <dd>{{ object.headers | linebreaks }}</dd>
+            <dt>Line count</dt>
+            <dd>{{ count }}</dd>
+            <dt>Imported</dt>
+            <dd>{{ imported }}</dd>
         </dl>
         <a href="{% url 'data_file-update' object.id %}">[Edit]</a>
+        {% if not imported %}
+        <a href="{% url 'data_file-import-exec' object.id %}">[Import file]</a>
+        {% endif %}
         <a href="{% url 'data_file-delete' object.id %}">[Delete]</a>
+        {% if filehead and not imported %}
+        <div class="scrollable">
+            <h3>First lines of file</h3>
+            <p>
+                {% for line in filehead %}
+                    {{ line }}<br/>
+                {% endfor %}
+            </p>
+        </div>
+        {% endif %}
     </div>
 {% endblock %}
