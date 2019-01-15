@@ -2,6 +2,7 @@ import d2qc.data as data
 import os.path
 import os
 import re
+from glodap.util import excread
 from django.http import HttpResponse
 from django.db.models import Max, Min, Count, Q
 from django.template import loader
@@ -24,8 +25,15 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from d2qc.data.sql import *
 from lib.d2qc_py.crossover import *
+from django.contrib.gis.geos import Point
 import json
 
+
+class MissingColumnException(KeyError):
+    pass
+
+class DataSetExistsException(Exception):
+    pass
 
 def redirect_login(request):
     if request.user.is_authenticated():
@@ -180,7 +188,7 @@ class DataFileCreate(CreateView):
                                 str(self.request.FILES['filepath'])
                             )
                         )
-                        messages.error(self.request, "ERROR: ".format(str(e)))
+                        messages.error(self.request, "ERROR: {}".format(str(e)))
 
                 for line in chunk.splitlines():
                     line_count += 1
@@ -224,7 +232,9 @@ class DataFileDetail(DetailView):
     model = DataFile
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
+        fileobject = DataFile.objects.get(pk=self.kwargs.get('pk'))
+        context['imported'] = fileobject.is_imported()
+        context['import_mode'] = self.request.path.endswith('import')
         # Load data_file owner data:
         try:
             owner = User.objects.get(pk=context['object'].owner_id)
@@ -235,7 +245,156 @@ class DataFileDetail(DetailView):
             }
         except:
             pass
+
+        # Load file head:
+        filecontent = fileobject.read_file()
+        context['filehead'] = filecontent[:50]
+        context['count'] = len(filecontent)
         return context
+    def get(self, *args, **kwargs):
+        exec = re.search('\/(exec)\/?$', args[0].path)
+        if exec:
+            data_file = DataFile.objects.get(pk=kwargs['pk'])
+            try:
+                self._doImport(data_file)
+            except Exception as ex:
+                messages.error(
+                    self.request,
+                    "An error occured importing the file {}".format(
+                        str(data_file.filepath)
+                    )
+                )
+                messages.error(self.request, "ERROR: {}".format(str(ex)))
+
+        return super().get(*args, **kwargs)
+
+    def _doImport(self, data_file):
+        datagrid = excread.excread(str(data_file.filepath))
+        mandatory_vars = (
+            'EXPOCODE', 'EXC_DATETIME', 'DEPTH', 'STNNBR', 'LATITUDE',
+            'LONGITUDE',
+        )
+
+        # Variables not to be treated as data variables
+        ignore = [
+            'EXPOCODE', 'EXC_DATETIME', 'DEPTH', 'STNNBR', 'SECT_ID', 'DATE',
+            'TIME', 'LATITUDE', 'LONGITUDE', 'BTLNBR', 'BTLNBR_FLAG_W',
+            'SAMPNO', 'CASTNO',
+        ]
+
+        qc_suffix = '_FLAG_W'
+
+
+        # Check all mandatory variables are there
+        datetime = ''
+        depth = ''
+        stnnbr = ''
+        castno = ''
+        data_set = None
+        station = None
+        cast = None
+        depth = None
+        # Raise an exception if mandatory columns are missing
+        if not all(key in datagrid.columns for key in mandatory_vars):
+            raise MissingColumnException(
+                "Data file missing some mandatory column: {}".format(
+                    ', '.join(mandatory_vars)
+                )
+            )
+
+        # Import data types
+        missing_vars = []
+        data_types = {str(type_):type_ for type_ in DataType.objects.all()}
+        for var in datagrid.columns:
+            if var in ignore:
+                continue
+            if var.endswith(qc_suffix):
+                continue
+            if var not in data_types:
+                missing_vars.append(var)
+
+        if missing_vars:
+            messages.warning(
+                self.request,
+                """There where variables in the dataset that are not defined in
+                the system. These cannot be handled. An administrator has to add
+                the variables as data types for them to be treated. Unhandled
+                variables in the data set: {}
+                """.format(
+                    ', '.join(missing_vars)
+                )
+            )
+
+        for i, expo in enumerate(datagrid['EXPOCODE']):
+            if not data_set or expo != data_set.expocode:
+                # Add new dataset
+                data_set = DataSet(
+                    expocode=expo,
+                    is_reference = False,
+                    data_file = data_file,
+                    owner = data_file.owner
+                )
+                if DataSet.objects.filter(
+                            expocode=expo,
+                            owner=data_file.owner
+                ).exists():
+                    raise DataSetExistsException(
+                        'Dataset {} already exists for this user'. format(
+                            expo
+                        )
+                    )
+                data_set.save()
+                station = None
+                cast = None
+                depth = None
+                return
+            if not station or datagrid['STNNBR'][i] != station.station_number:
+                # Add new station
+                longitude = datagrid['LONGITUDE'][i]
+                latitude = datagrid['LATITUDE'][i]
+                station = Station(
+                        data_set = data_set,
+                        position = Point(longitude, latitude),
+                        station_number = datagrid['STNNBR'][i]
+                )
+                station.save()
+                cast = None
+                depth = None
+            if (
+                    not cast or
+                    ('CASTNO' in datagrid and datagrid['CASTNO'][i] != cast.cast)
+            ):
+                # Add new cast
+                cast = Cast(
+                        station = station,
+                        cast = datagrid['CASTNO'][i]
+                )
+                cast.save()
+                depth = None
+            if not depth or depth.depth != datagrid['DEPTH'][i]:
+                # Add new depth
+                btlnbr = datagrid.get('BTLNBR', False)
+                depth = Depth(
+                        cast = cast,
+                        depth = depth,
+                        bottle = btlnbr if not btlnbr else btlnbr[i],
+                        date_and_time = datagrid['EXC_DATETIME'][i],
+                )
+                depth.save()
+            for key in datagrid.columns:
+                if key in ignore:
+                    continue
+
+                qc_flag = None
+                if key + qc_suffix in datagrid:
+                    qc_flag = int(datagrid[key + qc_suffix])
+                value = DataValue(
+                        depth = depth,
+                        value = datagrid[key],
+                        qc_flag = qc_flag,
+                        data_type = data_types[key]
+                )
+                value.save()
 
 class IndexPage(TemplateView):
     template_name = 'index.html'

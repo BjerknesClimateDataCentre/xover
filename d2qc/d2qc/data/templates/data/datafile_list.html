@@ -10,6 +10,11 @@
             <li>
                 <a href="{% url 'data_file-detail' obj.id %}">{{ obj.name }}</a>
                 <a href="{% url 'data_file-delete' obj.id %}">[Delete file]</a>
+                {% if obj.data_sets.count == 0 %}
+                    <a href="{% url 'data_file-import' obj.id %}">
+                        [Import file]
+                    </a>
+                {% endif %}
             </li>
         {% endfor %}
         </ul>

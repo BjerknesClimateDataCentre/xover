@@ -11,16 +11,23 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 """
 
 import os
+import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 NAMESPACE_DIR = os.path.join(BASE_DIR, 'd2qc')
+PROJECT_DIR = os.path.dirname(BASE_DIR)
+
+# Other libraries
+sys.path.insert(0, os.path.join(PROJECT_DIR, 'lib'))
 
 # Backup folder
-BACKUP_FOLDER = os.path.dirname(BASE_DIR) + '/backup'
+BACKUP_FOLDER = os.path.join(PROJECT_DIR, 'backup')
 
 # Data folder
-DATA_FOLDER = 'user_data'
+DATA_FOLDER = os.path.join(BASE_DIR, 'user_data')
+
+
 
 ALLOWED_HOSTS = []
 
