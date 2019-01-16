@@ -22,6 +22,14 @@ Vagrant.configure(2) do |config|
   if ENV['DEV']
     config.vm.provision "shell", path: 'scripts/setup/vagrant_dev_provisioning.sh', privileged: false
   end
+  
+  # Relocate the log file to the temp folder
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize [
+        "modifyvm", :id, "--uartmode1", "file",
+        File.join(Dir.pwd, "temp/ubuntu-xenial-16.04-cloudimg-console.log")
+    ]
+  end
 
   # Forward Django dev server port
   config.vm.network "forwarded_port", guest: 8000, host: 8001
