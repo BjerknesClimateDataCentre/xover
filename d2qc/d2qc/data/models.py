@@ -7,6 +7,7 @@ import datetime
 import logging
 import re
 from decimal import Decimal
+import math
 
 class DataFile(models.Model):
     class Meta:
@@ -223,5 +224,5 @@ class DataValue(models.Model):
             v = Decimal(self.value)
         except ValueError:
             logger.error('Data Value ' + self.value + ' is not a float value')
-        if int(v) != -9999:
+        if not math.isnan(v) and int(v) != -9999:
             super(DataValue, self).save(*args, **kwargs)
