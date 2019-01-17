@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+    <h3>Your data sets</h3>
+    <p>Below are the data sets.</p>
+    {% if object_list %}
+        <ul>
+        {% for obj in object_list %}
+            <li>{{ obj.expocode }}
+                <a href="{% url 'data_set-detail' obj.id %}">{{ obj.expocode }}</a>
+                <a href="{% url 'data_set-delete' obj.id %}">[Delete data set]</a>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No crossovers available</p>
+    {% endif %}
+{% endblock %}

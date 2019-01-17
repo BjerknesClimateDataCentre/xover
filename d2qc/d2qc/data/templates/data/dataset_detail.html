@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+    <div>
+        <h3>
+            ID: {{ object.id }} - {{ object.expocode }}
+        </h3>
+        {% if object.is_reference %}
+        <h4>
+            This data set is a reference data set
+        </h4>
+        {% endif %}
+        <dl>
+            <dt>ID</dt>
+            <dd>{{ object.id }}</dd>
+            <dt>Expocode</dt>
+            <dd>{{ object.expocode }}</dd>
+            <dt>Parent file</dt>
+            <dd>{{ object.data_file.name }}</dd>
+        </dl>
+        <a href="{% url 'data_set-delete' object.id %}">[Delete]</a>
+    </div>
+{% endblock %}

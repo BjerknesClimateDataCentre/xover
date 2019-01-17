@@ -37,6 +37,7 @@ detail = '/detail'
 update = '/update'
 import_ = '/import'
 delete = '/delete'
+data_set = 'data_set'
 urlpatterns = [
     path(px + ids, views.dataSet),
     path(px + ids + types, views.dataSet),
@@ -81,6 +82,21 @@ urlpatterns = [
             file + delete + '/<int:pk>',
             DataFileDelete.as_view(),
             name='data_file-delete'
+    ),
+    path(
+            data_set + '/',
+            DataSetList.as_view(),
+            name='data_set-list'
+    ),
+    path(
+            data_set + detail + '/<int:pk>',
+            DataSetDetail.as_view(),
+            name='data_set-detail'
+    ),
+    path(
+            data_set + delete + '/<int:pk>',
+            DataSetDelete.as_view(),
+            name='data_set-delete'
     ),
     path(
             '',
