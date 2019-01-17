@@ -452,6 +452,11 @@ class DataSetList(ListView):
 
 class DataSetDetail(DetailView):
     model = DataSet
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['data_types'] = self.get_object().get_data_types()
+        return context
+
 
 class DataSetDelete(DeleteView):
     model = DataSet
