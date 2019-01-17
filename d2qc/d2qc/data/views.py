@@ -440,3 +440,28 @@ class DataFileDetail(DetailView):
 
 class IndexPage(TemplateView):
     template_name = 'index.html'
+
+class DataSetList(ListView):
+    model = DataSet
+    context_object_name = 'data_set_list'
+    def get_queryset(self, *args, **kwargs):
+        queryset = DataSet.objects.none()
+        if self.request.user.is_authenticated:
+            queryset = DataSet.objects.filter(owner_id=self.request.user.id)
+        return queryset
+
+class DataSetDetail(DetailView):
+    model = DataSet
+
+class DataSetDelete(DeleteView):
+    model = DataSet
+    success_url = reverse_lazy('data_set-list')
+    def delete(self, request, *args, **kwargs):
+        rex = re.compile('^[a-zA-Z_/]+delete/([0-9]+)')
+        messages.success(
+            self.request,
+            "Data set #{} was deleted".format(
+                    rex.findall(request.path)[0]
+            )
+        )
+        return super().delete(request, *args, **kwargs)
