@@ -8,6 +8,8 @@ import logging
 import re
 from decimal import Decimal
 import math
+from django.db import connection
+
 
 class DataFile(models.Model):
     class Meta:
@@ -92,7 +94,7 @@ class DataSet(models.Model):
         db_table = 'd2qc_data_sets'
         ordering = ['expocode']
         unique_together = ('expocode', 'owner')
-
+    _datatypes = {}
 
     id = models.AutoField(primary_key=True)
     is_reference = models.BooleanField(default=False)
@@ -115,6 +117,27 @@ class DataSet(models.Model):
     updated = models.DateTimeField(auto_now=True)
     def __str__(self):
         return self.expocode
+
+    def get_data_types(self):
+        """Fetch all data types in this data set from the database"""
+
+        # If this has been called before:
+        if self._datatypes:
+            return self._datatypes
+
+        sql = """select distinct dt.original_label, dt.identifier
+            from d2qc_data_types dt
+            inner join d2qc_data_values dv on dv.data_type_id = dt.id
+            inner join d2qc_depths d on d.id=dv.depth_id
+            inner join d2qc_casts c on c.id=d.cast_id
+            inner join d2qc_stations s on c.station_id=s.id
+            where s.data_set_id = {};""".format(self.id)
+
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        typelist = dict([(type[0], type[1]) for type in cursor.fetchall()])
+        self._datatypes = typelist
+        return typelist
 
 class DataType(models.Model):
     class Meta:
