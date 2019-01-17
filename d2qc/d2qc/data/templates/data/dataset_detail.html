@@ -16,6 +16,27 @@
             <dd>{{ object.expocode }}</dd>
             <dt>Parent file</dt>
             <dd>{{ object.data_file.name }}</dd>
+            <dt>Variables in this data set</dt>
+            <dd>
+                <table border="1" cellpadding="5">
+                    <thead>
+                        <tr>
+                                <th>Variable name</th>
+                                <th>Identifier from BODC vocabulary</th>
+                            </tr>
+                    </thead>
+                    <tbody>
+                        {% for variable, identifier in data_types.items %}
+                        <tr>
+                            <td>{{ variable }}</td>
+                            <td>{{ identifier }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <ul>
+                </ul>
+            </dd>
         </dl>
         <a href="{% url 'data_set-delete' object.id %}">[Delete]</a>
     </div>
