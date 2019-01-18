@@ -11,12 +11,9 @@
 cd /vagrant
 
 # get submodule repositories if not present
-if [ ! -d django ]
-then
-  # Submodules are defined in .submodules
-  git submodule init
-  git submodule update
-fi
+git submodule init
+git submodule update
+
 # Add Virtualenv install folder to path:
 echo 'PATH="$PATH:/home/vagrant/.local/bin"' >> ~/.profile
 source ~/.profile
