@@ -5,7 +5,6 @@
 # Cache/temp files
 __pycache__/
 /.vagrant
-/temp
 
 # Ignore prod setup file
 d2qc/d2qc/setup/production.py
