@@ -3,4 +3,4 @@
 	url = https://github.com/jonasfh/django.git
 [submodule "lib/glodap"]
 	path = lib/glodap
-	url = https://github.com/jonasfh/glodap.git
+	url = https://github.com/BjerknesClimateDataCentre/glodap.git
