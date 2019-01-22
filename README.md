@@ -46,7 +46,7 @@ process. Frequently used commands are added as aliases on the vagrant box:
   * `a` alias for `source ./env_vagrant/bin/activate` # Run from any folder
 * `manage.py` is the Django script for running scripts etc bootstrapped with
     the Django environment.
-  * `m` alias for `manage.py` # Run from /vagrant/d2qc
+  * `m` alias for `./manage.py` # Run from /vagrant/d2qc
 * Start the Django development server:
   * `dev` alias for `d2qc/manage.py runserver 0.0.0.0:8000` # From /vagrant/d2qc
 
@@ -59,9 +59,11 @@ To use the Django development server on the vagrant machine:
   * `source ./env_vagrant/bin/activate`
 4. Start the Django development server
   * `cd /vagrant/d2qc # project folder`
-  * `d2qc/manage.py runserver 0.0.0.0:8000`
+  * `./manage.py runserver 0.0.0.0:8000`
 5. Access the dev server on http://localhost:8001
 6. PS: You need to keep the terminal running with the server
+7. To import some reference data, run
+  * `./manage.py import_testdata `
 
 
 
