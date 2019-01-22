@@ -1,6 +1,6 @@
 [submodule "django"]
 	path = django
-	url = https://github.com/django/django.git
+	url = https://github.com/jonasfh/django.git
 [submodule "lib/glodap"]
 	path = lib/glodap
 	url = https://github.com/jonasfh/glodap.git
