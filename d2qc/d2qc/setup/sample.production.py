@@ -16,7 +16,7 @@ from .base import *
 SECRET_KEY = 'REPLACE THIS WITH RANDOM KEY!!!!!'
 
 # ALLOWED_HOSTS must be added here
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost']
 
 
 # Database
@@ -29,10 +29,7 @@ DATABASES = {
         'USER': 'd2qc',
         'PASSWORD': 'd2qc', # ADD CORRECT PASSWORD
         'HOST': 'localhost',
-        'PORT': '3306',
-        'OPTIONS': {
-            'init_command': 'SET storage_engine=INNODB',
-        },
+        'PORT': '',
     }
 }
 
