@@ -15,7 +15,7 @@ way to get started is to use the Vagrant setup:
 1. Install Vagrant on your machine
   * (https://www.vagrantup.com/intro/getting-started/)
 2. Checkout the project
-  * git clone git@github.com:jonasfh/xover.git
+  * `git clone git@github.com:jonasfh/xover.git`
 3. `cd xover`
 4. The project has a couple of submodules. To fetch these, run:
   * `git submodule init`
@@ -43,12 +43,12 @@ process. Frequently used commands are added as aliases on the vagrant box:
 
 ### Aliases ###
 * Activate the correct python environment and setup in the current terminal:
-  * `a` alias for `source ./env_vagrant/bin/activate` # Run from any folder
+  * `a` alias for `source /vagrant/.env_vagrant/bin/activate` # Run from any folder
 * `manage.py` is the Django script for running scripts etc bootstrapped with
     the Django environment.
   * `m` alias for `./manage.py` # Run from /vagrant/d2qc
 * Start the Django development server:
-  * `dev` alias for `d2qc/manage.py runserver 0.0.0.0:8000` # From /vagrant/d2qc
+  * `dev` alias for `./manage.py runserver 0.0.0.0:8000` # From /vagrant/d2qc
 
 ### Development server ###
 To use the Django development server on the vagrant machine:
@@ -56,7 +56,7 @@ To use the Django development server on the vagrant machine:
 1. Log in to the dev server
   * `vagrant ssh`
 3. Activate the virtual python environment for the terminal
-  * `source ./env_vagrant/bin/activate`
+  * `source /vagrant/.env_vagrant/bin/activate`
 4. Start the Django development server
   * `cd /vagrant/d2qc # project folder`
   * `./manage.py runserver 0.0.0.0:8000`
