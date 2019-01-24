@@ -273,15 +273,15 @@ class DataFileDetail(DetailView):
     def _doImport(self, data_file):
         datagrid = excread.excread(str(data_file.filepath))
         mandatory_vars = (
-            'EXPOCODE', 'EXC_DATETIME', 'CTDDEPTH', 'STNNBR', 'LATITUDE',
+            'EXPOCODE', 'EXC_DATETIME', 'EXC_CTDDEPTH', 'STNNBR', 'LATITUDE',
             'LONGITUDE',
         )
 
         # Variables not to be treated as data variables
         ignore = [
-            'EXPOCODE', 'EXC_DATETIME', 'CTDDEPTH', 'STNNBR', 'SECT_ID', 'DATE',
+            'EXPOCODE', 'EXC_DATETIME', 'EXC_CTDDEPTH', 'STNNBR', 'SECT_ID', 'DATE',
             'TIME', 'LATITUDE', 'LONGITUDE', 'BTLNBR', 'BTLNBR_FLAG_W',
-            'SAMPNO', 'CASTNO',
+            'SAMPNO', 'CASTNO', 'CTDDEPTH', 'CTDDEP'
         ]
 
         qc_suffix = '_FLAG_W'
@@ -392,13 +392,13 @@ class DataFileDetail(DetailView):
 
             if (
                     not depth
-                    or depth.depth != datagrid['CTDDEPTH'][i]
+                    or depth.depth != datagrid['EXC_CTDDEPTH'][i]
                     or (
                         'BTLNBR' in datagrid
                         and depth.bottle != datagrid['BTLNBR'][i]
                     )
             ):
-                if math.isnan(datagrid['CTDDEPTH'][i]):
+                if math.isnan(datagrid['EXC_CTDDEPTH'][i]):
                     if missing_depth_warning:
                         continue
                     # Warning and dont insert if depth is NaN
@@ -416,7 +416,7 @@ class DataFileDetail(DetailView):
                 btlnbr = datagrid.get('BTLNBR', False)
                 depth = Depth(
                         cast = cast,
-                        depth = datagrid['CTDDEPTH'][i],
+                        depth = datagrid['EXC_CTDDEPTH'][i],
                         bottle = 1 if btlnbr is False else btlnbr[i],
                         date_and_time = datagrid['EXC_DATETIME'][i],
                 )
