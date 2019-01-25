@@ -155,6 +155,16 @@ class DataSet(models.Model):
         self._datatypes = typelist
         return typelist
 
+    def get_stations(self):
+        """Get the stations in the data set"""
+
+        sql = """select st_astext(st_collect(position))
+                from d2qc_stations
+                where data_set_id={};""".format(self.id)
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        return cursor.fetchall()[0][0]
+
 class DataType(models.Model):
     class Meta:
         db_table = 'd2qc_data_types'
