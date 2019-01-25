@@ -1,4 +1,19 @@
 {% extends "base.html" %}
+{% block css %}
+<link rel="stylesheet" type="text/css"
+href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/css/ol.css">
+<style>
+    #map {
+        height: 300px;
+        width: 300px;
+    }
+</style>
+{% endblock %}
+{% block js %}
+<script type="text/javascript"
+src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/build/ol.js">
+</script>
+{% endblock%}
 {% block content %}
     <div>
         <h3>
@@ -38,6 +53,39 @@
                 </ul>
             </dd>
         </dl>
+        <div id="map">
+        </div>
+        <script type="text/javascript">
+
+            var raster = new ol.layer.Tile({
+                source: new ol.source.OSM()
+            });
+            var wkt = '{{ stations }}';
+
+            var format = new ol.format.WKT();
+
+            var feature = format.readFeature(wkt, {
+                dataProjection: 'EPSG:4326',
+                featureProjection: 'EPSG:3857'
+            });
+            var source = new ol.source.Vector({
+                features: [feature]
+            })
+            var vector = new ol.layer.Vector({
+                source: source
+            });
+
+            var map = new ol.Map({
+                layers: [raster, vector],
+                target: 'map',
+                view: new ol.View({
+                center: [2952104.0199, -3277504.823],
+                zoom: 4
+                })
+            });
+            map.getView().fit(source.getExtent(), map.getSize())
+          </script>
+
         <a href="{% url 'data_set-delete' object.id %}">[Delete]</a>
     </div>
 {% endblock %}
