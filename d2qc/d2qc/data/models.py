@@ -141,7 +141,7 @@ class DataSet(models.Model):
         if self._datatypes:
             return self._datatypes
 
-        sql = """select distinct dt.original_label, dt.identifier
+        sql = """select distinct dt.original_label, dt.identifier, dt.id
             from d2qc_data_types dt
             inner join d2qc_data_values dv on dv.data_type_id = dt.id
             inner join d2qc_depths d on d.id=dv.depth_id
@@ -151,16 +151,31 @@ class DataSet(models.Model):
 
         cursor = connection.cursor()
         cursor.execute(sql)
-        typelist = dict([(type[0], type[1]) for type in cursor.fetchall()])
+        typelist = dict([(type[0], {
+            'original_label': type[0],
+            'identifier': type[1],
+            'id': type[2],
+        }) for type in cursor.fetchall()])
         self._datatypes = typelist
         return typelist
 
-    def get_stations(self):
+    def get_stations(self, parameter_id = None):
         """Get the stations in the data set"""
 
         sql = """select st_astext(st_collect(position))
                 from d2qc_stations
                 where data_set_id={};""".format(self.id)
+        if parameter_id:
+            sql = """select st_astext(st_collect(points.position)) from
+                (select distinct s.id, position
+                from d2qc_stations s
+                inner join d2qc_casts c on c.station_id = s.id
+                inner join d2qc_depths d on d.cast_id = c.id
+                inner join d2qc_data_values dv on dv.depth_id = d.id
+                where data_set_id={}
+                and dv.data_type_id={}) points
+                """.format(self.id, parameter_id)
+
         cursor = connection.cursor()
         cursor.execute(sql)
         return cursor.fetchall()[0][0]

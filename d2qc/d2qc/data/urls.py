@@ -39,6 +39,7 @@ import_ = '/import'
 delete = '/delete'
 data_set = 'data_set'
 profile = 'profile'
+parameter = 'parameter'
 urlpatterns = [
     path(px + ids, views.dataSet),
     path(px + ids + types, views.dataSet),
@@ -93,6 +94,12 @@ urlpatterns = [
             data_set + detail + '/<int:pk>',
             DataSetDetail.as_view(),
             name='data_set-detail'
+    ),
+    path(
+        data_set + detail + '/<int:pk>/'
+                + parameter + '/<int:parameter_id>',
+        DataSetDetail.as_view(),
+        name='data_set_parameter-detail'
     ),
     path(
             data_set + delete + '/<int:pk>',
