@@ -4,8 +4,13 @@
 href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/css/ol.css">
 <style>
     #map {
-        height: 300px;
-        width: 300px;
+        height: 500px;
+        width: 500px;
+    }
+    .dataset.data{
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
     }
 </style>
 {% endblock %}
@@ -24,36 +29,40 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
             This data set is a reference data set
         </h4>
         {% endif %}
-        <dl>
-            <dt>ID</dt>
-            <dd>{{ object.id }}</dd>
-            <dt>Expocode</dt>
-            <dd>{{ object.expocode }}</dd>
-            <dt>Parent file</dt>
-            <dd>{{ object.data_file.name }}</dd>
-            <dt>Variables in this data set</dt>
-            <dd>
-                <table border="1" cellpadding="5">
-                    <thead>
-                        <tr>
-                                <th>Variable name</th>
-                                <th>Identifier from BODC vocabulary</th>
+        <div class="dataset data">
+            <dl>
+                <dt>ID</dt>
+                <dd>{{ object.id }}</dd>
+                <dt>Expocode</dt>
+                <dd>{{ object.expocode }}</dd>
+                <dt>Parent file</dt>
+                <dd>{{ object.data_file.name }}</dd>
+                <dt>Variables in this data set</dt>
+                <dd>
+                    <table border="1" cellpadding="5">
+                        <thead>
+                            <tr>
+                                    <th>Variable name</th>
+                                    <th>Identifier from BODC vocabulary</th>
+                                </tr>
+                        </thead>
+                        <tbody>
+                            {% for variable, data in data_types.items %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'data_set_parameter-detail' object.id data.id %}">
+                                            {{ variable }}
+                                    </a>
+                                </td>
+                                <td>{{ data.identifier }}</td>
                             </tr>
-                    </thead>
-                    <tbody>
-                        {% for variable, identifier in data_types.items %}
-                        <tr>
-                            <td>{{ variable }}</td>
-                            <td>{{ identifier }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <ul>
-                </ul>
-            </dd>
-        </dl>
-        <div id="map">
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </dd>
+            </dl>
+            <div id="map">
+            </div>
         </div>
         <script type="text/javascript">
 
@@ -84,6 +93,7 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 })
             });
             map.getView().fit(source.getExtent(), map.getSize())
+            map.getView().setZoom(map.getView().getZoom() - 2)
           </script>
 
         <a href="{% url 'data_set-delete' object.id %}">[Delete]</a>
