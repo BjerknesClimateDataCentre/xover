@@ -147,15 +147,16 @@ class DataSet(models.Model):
             inner join d2qc_depths d on d.id=dv.depth_id
             inner join d2qc_casts c on c.id=d.cast_id
             inner join d2qc_stations s on c.station_id=s.id
-            where s.data_set_id = {};""".format(self.id)
+            where s.data_set_id = {}
+            order by dt.original_label;""".format(self.id)
 
         cursor = connection.cursor()
         cursor.execute(sql)
-        typelist = dict([(type[0], {
+        typelist = [{
             'original_label': type[0],
             'identifier': type[1],
             'id': type[2],
-        }) for type in cursor.fetchall()])
+        } for type in cursor.fetchall()]
         self._datatypes = typelist
         return typelist
 
