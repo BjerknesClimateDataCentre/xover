@@ -12,6 +12,12 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
         justify-content: space-around;
         align-items: center;
     }
+    .dataset.data .selected,
+    .dataset.data .selected a {
+        background-color: black;
+        color: white;
+        font-weight: bold;
+    }
 </style>
 {% endblock %}
 {% block js %}
@@ -37,7 +43,8 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 <dd>{{ object.expocode }}</dd>
                 <dt>Parent file</dt>
                 <dd>{{ object.data_file.name }}</dd>
-                <dt>Variables in this data set</dt>
+                <dt>Variables in this data set
+                </dt>
                 <dd>
                     <table border="1" cellpadding="5">
                         <thead>
@@ -47,21 +54,39 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                                 </tr>
                         </thead>
                         <tbody>
-                            {% for variable, data in data_types.items %}
-                            <tr>
+                            {% for data_type in data_types %}
+                            <tr
+                            {% if parameter.id == data_type.id %}
+                            class="selected"
+                            {% endif %}
+                            >
                                 <td>
-                                    <a href="{% url 'data_set_parameter-detail' object.id data.id %}">
-                                            {{ variable }}
+                                    <a
+                                        href="{% url 'data_set_parameter-detail' object.id data_type.id %}"
+                                    >
+                                        {{ data_type.original_label }}
                                     </a>
                                 </td>
-                                <td>{{ data.identifier }}</td>
+                                <td>{{ data_type.identifier }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </dd>
             </dl>
-            <div id="map">
+            <div>
+                <h4>
+                    {% if parameter %}
+                    Stations with {{ parameter.original_label }} sampling
+                    {% else %}
+                    All stations
+                    {% endif %}
+                </h4>
+                <div id="map">
+                </div>
+                <a href="{% url 'data_set-detail' object.id %}">
+                        [Show all stations]
+                </a>
             </div>
         </div>
         <script type="text/javascript">
