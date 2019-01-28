@@ -181,6 +181,31 @@ class DataSet(models.Model):
         cursor.execute(sql)
         return cursor.fetchall()[0][0]
 
+    def get_crossover_stations(self, parameter_id):
+        stations = """
+            select distinct s.position
+            from d2qc_stations s
+            inner join d2qc_casts c on c.station_id = s.id
+            inner join d2qc_depths d on d.cast_id = c.id
+            inner join d2qc_data_values dv on dv.depth_id = d.id
+            where data_set_id={} and dv.data_type_id={}""".format(
+                self.id, parameter_id
+            )
+        radius = 200000 # radius in meters around points
+        buffer = """
+            select
+            st_buffer(st_union(stat.position)::geography, {})::geometry
+            from ({}) stat
+        """.format(radius, stations)
+        sql = """
+            select st_astext(st_union(st.position)) from d2qc_stations st
+            where st.data_set_id<>{}  and st_contains(({}), st.position)
+        """.format(self.id, buffer)
+
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        return cursor.fetchall()[0][0]
+
 class DataType(models.Model):
     class Meta:
         db_table = 'd2qc_data_types'
