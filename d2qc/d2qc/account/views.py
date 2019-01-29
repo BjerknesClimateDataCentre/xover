@@ -11,6 +11,7 @@ from django.views.generic import CreateView
 from django.views.generic import UpdateView
 from django.core.mail import EmailMessage
 from django.conf import settings
+from d2qc.data.models import Profile
 
 class SignUp(CreateView):
     form_class = SignupForm
@@ -21,6 +22,8 @@ class SignUp(CreateView):
         self.object = form.save(commit=False)
         self.object.is_active = False
         self.object.save()
+        self.object.profile = Profile(user=self.object)
+        self.object.profile.save()
         if settings.EMAIL_HOST: # Email is set up
             current_site = get_current_site(self.request)
             mail_subject = 'Activate account for GLODAP Crossover'

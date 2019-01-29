@@ -38,6 +38,7 @@ update = '/update'
 import_ = '/import'
 delete = '/delete'
 data_set = 'data_set'
+profile = 'profile'
 urlpatterns = [
     path(px + ids, views.dataSet),
     path(px + ids + types, views.dataSet),
@@ -102,5 +103,10 @@ urlpatterns = [
             '',
             IndexPage.as_view(),
             name='data'
+    ),
+    path(
+            profile + update,
+            ProfileUpdate.as_view(),
+            name='profile-update'
     ),
 ]
