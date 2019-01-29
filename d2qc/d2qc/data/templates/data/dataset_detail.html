@@ -96,6 +96,24 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
             });
             var wkt = '{{ stations }}';
             var crossovers = '{{ crossovers }}';
+            var features = []
+            red = new ol.style.Style({
+                image: new ol.style.Circle({
+                    fill: new ol.style.Fill({
+                        color: [255,0,0,.4]
+                    }),
+                    radius: 3,
+                })
+            });
+            blue = new ol.style.Style({
+                image: new ol.style.Circle({
+                    fill: new ol.style.Fill({
+                        color: [0,0,255,1]
+                    }),
+                    radius: 3,
+                })
+            });
+
 
             var format = new ol.format.WKT();
 
@@ -103,8 +121,20 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 dataProjection: 'EPSG:4326',
                 featureProjection: 'EPSG:3857'
             });
+            feature.setStyle(blue)
+            var cross_feature = null
+            if (crossovers) {
+                cross_feature = format.readFeature(crossovers, {
+                    dataProjection: 'EPSG:4326',
+                    featureProjection: 'EPSG:3857'
+                });
+                cross_feature.setStyle(red);
+                features.push(cross_feature)
+            }
+            // Add stations from data set on top of crossovers
+            features.push(feature)
             var source = new ol.source.Vector({
-                features: [feature]
+                features: features
             })
             var vector = new ol.layer.Vector({
                 source: source
@@ -119,7 +149,7 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 })
             });
             map.getView().fit(source.getExtent(), map.getSize())
-            map.getView().setZoom(map.getView().getZoom() - 2)
+            map.getView().setZoom(map.getView().getZoom() - 1)
           </script>
 
         <a href="{% url 'data_set-delete' object.id %}">[Delete]</a>
