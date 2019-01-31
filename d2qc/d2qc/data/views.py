@@ -231,6 +231,7 @@ class DataFileDelete(DeleteView):
 
 class DataFileDetail(DetailView):
     model = DataFile
+    exec = False
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         fileobject = DataFile.objects.get(pk=self.kwargs.get('pk'))
@@ -253,8 +254,7 @@ class DataFileDetail(DetailView):
         context['count'] = len(filecontent)
         return context
     def get(self, *args, **kwargs):
-        exec = re.search('\/(exec)\/?$', args[0].path)
-        if exec:
+        if self.exec:
             data_file = DataFile.objects.get(pk=kwargs['pk'])
             try:
                 self._doImport(data_file)

@@ -67,7 +67,7 @@ urlpatterns = [
     ),
     path(
             file + detail + '/<int:pk>' + import_ + '/exec',
-            DataFileDetail.as_view(),
+            DataFileDetail.as_view(exec=True),
             name='data_file-import-exec'
     ),
     path(
