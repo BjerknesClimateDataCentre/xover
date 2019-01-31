@@ -10,13 +10,16 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
     .dataset.data{
         display: flex;
         justify-content: space-around;
-        align-items: center;
+        align-items: flex-start;
     }
     .dataset.data .selected,
     .dataset.data .selected a {
         background-color: black;
         color: white;
         font-weight: bold;
+    }
+    .dataset.data td {
+        vertical-align: top;
     }
 </style>
 {% endblock %}
@@ -46,30 +49,59 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 <dt>Variables in this data set
                 </dt>
                 <dd>
-                    <table border="1" cellpadding="5">
+                    <table border="1" cellpadding="10" cellspacing="0">
                         <thead>
                             <tr>
-                                    <th>Variable name</th>
-                                    <th>Identifier from BODC vocabulary</th>
-                                </tr>
+                                <th>Variable name</th>
+                                <th>Data sets {{ parameter.original_label }}</th>
+                            </tr>
                         </thead>
                         <tbody>
-                            {% for data_type in data_types %}
-                            <tr
-                            {% if parameter.id == data_type.id %}
-                            class="selected"
-                            {% endif %}
-                            >
+                            <tr>
                                 <td>
-                                    <a
-                                        href="{% url 'data_set_parameter-detail' object.id data_type.id %}"
-                                    >
-                                        {{ data_type.original_label }}
-                                    </a>
+                                    <table border="0" cellpadding="5">
+                                        <tbody>
+                                            {% for data_type in data_types %}
+                                            <tr
+                                            {% if parameter.id == data_type.id %}
+                                            class="selected"
+                                            {% endif %}
+                                            >
+                                                <td>
+                                                    <a
+                                                        href="{% url 'data_set_parameter-detail' object.id data_type.id %}"
+                                                    >
+                                                        {{ data_type.original_label }}
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
                                 </td>
-                                <td>{{ data_type.identifier }}</td>
+                                <td>
+                                    {% if crossover_datasets %}
+                                    <table border="0" cellpadding="5">
+                                        <tbody>
+                                            {% for data_set in crossover_datasets %}
+                                            <tr
+                                            {% if parameter.id == data_type.id %}
+                                            class="selected"
+                                            {% endif %}
+                                            >
+                                                <td>
+                                                    <a href="#">
+                                                        {{data_set.1}}, {{data_set.2}} stations,
+                                                        starting {{data_set.3|date:"M d. Y"}}
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                    {% endif%}
+                                </td>
                             </tr>
-                            {% endfor %}
                         </tbody>
                     </table>
                 </dd>
