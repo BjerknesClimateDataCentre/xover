@@ -143,10 +143,6 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
             var map = new ol.Map({
                 layers: [raster, vector],
                 target: 'map',
-                view: new ol.View({
-                center: [2952104.0199, -3277504.823],
-                zoom: 4
-                })
             });
             map.getView().fit(source.getExtent(), map.getSize())
             map.getView().setZoom(map.getView().getZoom() - 1)
