@@ -272,19 +272,19 @@ class DataFileDetail(DetailView):
 
     def _doImport(self, data_file):
         datagrid = excread.excread(str(data_file.filepath))
-        mandatory_vars = (
+        MANDATORY_VARS = (
             'EXPOCODE', 'EXC_DATETIME', 'EXC_CTDDEPTH', 'STNNBR', 'LATITUDE',
             'LONGITUDE',
         )
 
         # Variables not to be treated as data variables
-        ignore = [
+        IGNORE = (
             'EXPOCODE', 'EXC_DATETIME', 'EXC_CTDDEPTH', 'STNNBR', 'SECT_ID', 'DATE',
             'TIME', 'LATITUDE', 'LONGITUDE', 'BTLNBR', 'BTLNBR_FLAG_W',
             'SAMPNO', 'CASTNO', 'CTDDEPTH', 'CTDDEP'
-        ]
+        )
 
-        qc_suffix = '_FLAG_W'
+        QC_SUFFIX = '_FLAG_W'
 
 
         # Check all mandatory variables are there
@@ -297,10 +297,10 @@ class DataFileDetail(DetailView):
         cast = None
         depth = None
         # Raise an exception if mandatory columns are missing
-        if not all(key in datagrid.columns for key in mandatory_vars):
+        if not all(key in datagrid.columns for key in MANDATORY_VARS):
             raise MissingColumnException(
                 "Data file missing some mandatory column: {}".format(
-                    ', '.join(mandatory_vars)
+                    ', '.join(MANDATORY_VARS)
                 )
             )
 
@@ -308,9 +308,9 @@ class DataFileDetail(DetailView):
         missing_vars = []
         data_types = {str(type_):type_ for type_ in DataType.objects.all()}
         for var in datagrid.columns:
-            if var in ignore:
+            if var in IGNORE:
                 continue
-            if var.endswith(qc_suffix):
+            if var.endswith(QC_SUFFIX):
                 continue
             if var not in data_types:
                 missing_vars.append(var)
@@ -422,14 +422,14 @@ class DataFileDetail(DetailView):
                 )
                 depth.save()
             for key in datagrid.columns:
-                if key in ignore:
+                if key in IGNORE:
                     continue
                 if not key in data_types:
                     # Variable not found in database
                     continue
                 qc_flag = None
-                if key + qc_suffix in datagrid:
-                    qc_flag = int(datagrid[key + qc_suffix][i])
+                if key + QC_SUFFIX in datagrid:
+                    qc_flag = int(datagrid[key + QC_SUFFIX][i])
                 value = DataValue(
                         depth = depth,
                         value = datagrid[key][i],
