@@ -180,7 +180,7 @@ class DataSet(models.Model):
         cursor = connection.cursor()
         cursor.execute(sql)
         return cursor.fetchall()[0][0]
-    def _get_crossover_sql(self, parameter_id):
+    def _get_data_set_polygon_sql(self, parameter_id):
         radius = 200000 # radius in meters around points
         min_depth = 1500
         stations = """
@@ -206,11 +206,30 @@ class DataSet(models.Model):
             st_astext(st_union(st.position))
             from d2qc_stations st
             where st.data_set_id<>{}  and st_contains(({}), st.position)
-        """.format(self.id, self._get_crossover_sql(parameter_id))
+        """.format(self.id, self._get_data_set_polygon_sql(parameter_id))
 
         cursor = connection.cursor()
         cursor.execute(sql)
         return cursor.fetchall()[0][0]
+
+    def get_crossover_data_sets(self, parameter_id):
+        sql = """
+            select ds.id, ds.expocode,
+            count(st.id) as station_count,
+            min(depth.date_and_time) as first_station
+            from d2qc_stations st
+            inner join d2qc_data_sets ds on (st.data_set_id = ds.id)
+            inner join d2qc_casts ct on (st.id = ct.station_id)
+            inner join d2qc_depths depth on (ct.id = depth.cast_id)
+            where st.data_set_id<>{}  and st_contains(({}), st.position)
+            group by ds.id
+            order by first_station
+        """.format(self.id, self._get_data_set_polygon_sql(parameter_id))
+
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        return cursor.fetchall()
+
 
 class DataType(models.Model):
     class Meta:
