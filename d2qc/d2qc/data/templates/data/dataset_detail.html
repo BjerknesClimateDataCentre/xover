@@ -22,11 +22,13 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
         vertical-align: top;
     }
 </style>
+<link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
 {% endblock %}
 {% block js %}
 <script type="text/javascript"
 src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/build/ol.js">
 </script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 {% endblock%}
 {% block content %}
     <div>
@@ -53,7 +55,14 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                         <thead>
                             <tr>
                                 <th>Variable name</th>
-                                <th>Data sets {{ parameter.original_label }}</th>
+                                <th>Crossover data sets
+                                {% if parameter.original_label %}
+                                : {{ parameter.original_label }}
+                                {% endif %}
+                                </th>
+                                <th>
+                                    Profiles
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -85,14 +94,13 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                                         <tbody>
                                             {% for data_set in crossover_datasets %}
                                             <tr
-                                            {% if parameter.id == data_type.id %}
+                                            {% if data_set_id == data_set.0 %}
                                             class="selected"
                                             {% endif %}
                                             >
                                                 <td>
-                                                    <a href="#">
-                                                        {{data_set.1}}, {{data_set.2}} stations,
-                                                        starting {{data_set.3|date:"M d. Y"}}
+                                                    <a href="{% url 'data_set_crossover' object.id parameter.id data_set.0 %}">
+                                                        {{data_set.1}}, {{data_set.2}} stations
                                                     </a>
                                                 </td>
                                             </tr>
@@ -100,6 +108,11 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                                         </tbody>
                                     </table>
                                     {% endif%}
+                                </td>
+                                <td>
+                                    <div id="profiles"
+                                        style="width: 500px; height: 600px">
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -155,7 +168,7 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
             });
             feature.setStyle(blue)
             var cross_feature = null
-            if (crossovers) {
+            if (crossovers != 'None') {
                 cross_feature = format.readFeature(crossovers, {
                     dataProjection: 'EPSG:4326',
                     featureProjection: 'EPSG:3857'
@@ -178,8 +191,47 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
             });
             map.getView().fit(source.getExtent(), map.getSize())
             map.getView().setZoom(map.getView().getZoom() - 1)
+
+            // Profiles:
+            var data = []
+            var profiles = JSON.parse('{{ dataset_profiles | escapejs }}');
+            var current_dataset = 0;
+            var data_set_id = parseInt('{{ object.id }}')
+            for (var i=0; i<profiles.length; i++) {
+                var showlegend = true
+                if (current_dataset == profiles[i].data_set_id) {
+                    showlegend = false
+                }
+
+                var color = 'rgb(255,75,75)'
+                if (data_set_id == profiles[i].data_set_id) {
+                    color = 'rgb(75,75,255)'
+                }
+
+                var profile = {
+                    x: profiles[i].value,
+                    y: profiles[i].depth,
+                    mode: 'lines+markers',
+                    showlegend: showlegend,
+                    name: '',
+                    line: {
+                        color: color,
+                        width: 1
+                    },
+                }
+                if (profile.showlegend) {
+                    profile.name = profiles[i].expocode
+                }
+                data.push(profile)
+                current_dataset = profiles[i].data_set_id
+            }
+            var layout = {
+                yaxis: {autorange: 'reversed'},
+                margin: {l: 30, r:0},
+            };
+            Plotly.newPlot('profiles', data, layout);
           </script>
 
-        <a href="{% url 'data_set-delete' object.id %}">[Delete]</a>
+        <a href="{% url 'data_set-delete' object.id %}">[Delete dataset]</a>
     </div>
 {% endblock %}

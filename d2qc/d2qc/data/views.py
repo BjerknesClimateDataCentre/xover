@@ -467,8 +467,14 @@ class DataSetDetail(DetailView):
                 self.kwargs.get('parameter_id')
             )
             context['crossover_datasets'] = self.get_object().get_crossover_data_sets(
-                    self.kwargs.get('parameter_id')
+                self.kwargs.get('parameter_id')
+            )
+            context['dataset_profiles'] = json.dumps(
+                self.get_object().get_profiles(
+                    self.kwargs.get('parameter_id'),
+                    self.kwargs.get('data_set_id')
                 )
+            )
         return context
 
 class DataSetDelete(DeleteView):

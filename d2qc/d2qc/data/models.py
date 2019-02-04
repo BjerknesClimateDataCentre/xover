@@ -111,7 +111,7 @@ class DataSet(models.Model):
         ordering = ['expocode']
         unique_together = ('expocode', 'owner')
     _datatypes = {}
-
+    _single_data_type_ids = {}
     id = models.AutoField(primary_key=True)
     is_reference = models.BooleanField(default=False)
     expocode = models.CharField(max_length=255)
@@ -174,8 +174,8 @@ class DataSet(models.Model):
                 inner join d2qc_depths d on d.cast_id = c.id
                 inner join d2qc_data_values dv on dv.depth_id = d.id
                 where data_set_id={}
-                and dv.data_type_id={}) points
-                """.format(self.id, parameter_id)
+                and dv.data_type_id in ({})) points
+                """.format(self.id, self._in_datatype(parameter_id))
 
         cursor = connection.cursor()
         cursor.execute(sql)
@@ -189,9 +189,9 @@ class DataSet(models.Model):
             inner join d2qc_casts c on c.station_id = s.id
             inner join d2qc_depths d on d.cast_id = c.id
             inner join d2qc_data_values dv on dv.depth_id = d.id
-            where data_set_id={} and dv.data_type_id={} and d.depth>={}
+            where data_set_id={} and dv.data_type_id in ({}) and d.depth>={}
             """.format(
-                self.id, parameter_id, min_depth
+                self.id, self._in_datatype(parameter_id), min_depth
             )
         buffer = """
             select
@@ -200,19 +200,48 @@ class DataSet(models.Model):
         """.format(radius, stations)
         return buffer
 
+    def _in_datatype(self, parameter_id):
+        if parameter_id not in self._single_data_type_ids:
+            sql = """
+                select string_agg(dt2.id::text, ',') from d2qc_data_types dt
+                inner join d2qc_data_types dt2 on dt.identifier=dt2.identifier
+                where dt.id={}  OFFSET 0
+            """.format(parameter_id)
+            cursor = connection.cursor()
+            cursor.execute(sql)
+            self._single_data_type_ids[parameter_id] = cursor.fetchone()[0]
+
+        return self._single_data_type_ids[parameter_id]
+
     def get_crossover_stations(self, parameter_id):
+        # TODO: This should be handled by optimizing the query. Currently
+        # this part is executed separately instead of as a subquery, to speed
+        # up query.
+        psql = self._get_data_set_polygon_sql(parameter_id)
+        cursor = connection.cursor()
+        cursor.execute(psql)
+
         sql = """
             select
-            st_astext(st_union(st.position))
-            from d2qc_stations st
-            where st.data_set_id<>{}  and st_contains(({}), st.position)
-        """.format(self.id, self._get_data_set_polygon_sql(parameter_id))
+            st_astext(st_union(s.position))
+            from d2qc_stations s
+            inner join d2qc_casts c on (c.station_id=s.id)
+            inner join d2qc_depths d on (d.cast_id=c.id)
+            inner join d2qc_data_values dv on (dv.depth_id=d.id)
+            where s.data_set_id<>{}  and st_contains('{}', s.position)
+            and dv.data_type_id in ({})
+        """.format(
+            self.id,
+            cursor.fetchone()[0],
+            self._in_datatype(parameter_id)
+        )
 
-        cursor = connection.cursor()
+        # cursor = connection.cursor()
         cursor.execute(sql)
         return cursor.fetchall()[0][0]
 
     def get_crossover_data_sets(self, parameter_id):
+        min_depth = 1500
         sql = """
             select ds.id, ds.expocode,
             count(st.id) as station_count,
@@ -222,13 +251,88 @@ class DataSet(models.Model):
             inner join d2qc_casts ct on (st.id = ct.station_id)
             inner join d2qc_depths depth on (ct.id = depth.cast_id)
             where st.data_set_id<>{}  and st_contains(({}), st.position)
+            and depth.depth>={}
             group by ds.id
             order by first_station
-        """.format(self.id, self._get_data_set_polygon_sql(parameter_id))
+        """.format(
+            self.id,
+            self._get_data_set_polygon_sql(parameter_id),
+            min_depth
+            )
 
         cursor = connection.cursor()
         cursor.execute(sql)
         return cursor.fetchall()
+
+    def get_profiles(self, parameter_id, data_set_id = None):
+        """Get profiles for this dataset and the given parameter, possibly also
+        with another data set to compare."""
+
+        min_depth = 1500
+        sql = """
+            select ds.id, ds.expocode, s.station_number, c.cast as c_cast,
+            d.depth::float, dv.value::float
+            from d2qc_data_values dv
+            inner join d2qc_depths d on (dv.depth_id = d.id)
+            inner join d2qc_casts c on (d.cast_id = c.id)
+            inner join d2qc_stations s on (c.station_id = s.id)
+            inner join d2qc_data_sets ds on (s.data_set_id = ds.id)
+            where dv.data_type_id in ({}) and s.data_set_id = {} and depth>={}
+        """.format(self._in_datatype(parameter_id), self.id, min_depth)
+
+        if data_set_id:
+            sql += """
+                UNION
+                select ds.id, ds.expocode, s.station_number, c.cast as c_cast,
+                d.depth::float, dv.value::float
+                from d2qc_data_values dv
+                inner join d2qc_depths d on (dv.depth_id = d.id)
+                inner join d2qc_casts c on (d.cast_id = c.id)
+                inner join d2qc_stations s on (c.station_id = s.id)
+                inner join d2qc_data_sets ds on (s.data_set_id = ds.id)
+                where dv.data_type_id in ({}) and s.data_set_id = {} and depth>={}
+                and st_contains(({}), s.position)
+            """.format(
+                self._in_datatype(parameter_id),
+                data_set_id,
+                min_depth,
+                self._get_data_set_polygon_sql(parameter_id)
+            )
+        sql += " order by station_number, c_cast, depth"
+
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        profiles = []
+        data_set = None
+        station = None
+        cast = None
+        current = {}
+        for row in cursor.fetchall():
+            if (
+                    row[0] != data_set
+                    or row[2] != station
+                    or row[3] != cast
+            ):
+                if current:
+                    profiles.append(current)
+                current = {
+                    'data_set_id': row[0],
+                    'expocode': row[1],
+                    'station_number': row[2],
+                    'cast': row[3],
+                    'depth': [],
+                    'value': [],
+                }
+                data_set = current['data_set_id']
+                station = current['station_number']
+                cast = current['cast']
+            current['depth'].append(row[4])
+            current['value'].append(row[5])
+        if current:
+            profiles.append(current)
+        return profiles
+
+
 
 
 class DataType(models.Model):
