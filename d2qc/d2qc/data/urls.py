@@ -40,6 +40,7 @@ delete = '/delete'
 data_set = 'data_set'
 profile = 'profile'
 parameter = 'parameter'
+crossover = 'crossover'
 urlpatterns = [
     path(px + ids, views.dataSet),
     path(px + ids + types, views.dataSet),
@@ -100,6 +101,13 @@ urlpatterns = [
                 + parameter + '/<int:parameter_id>',
         DataSetDetail.as_view(),
         name='data_set_parameter-detail'
+    ),
+    path(
+        data_set + detail + '/<int:pk>/'
+                + parameter + '/<int:parameter_id>/'
+                + crossover + '/<int:data_set_id>',
+        DataSetDetail.as_view(),
+        name='data_set_crossover'
     ),
     path(
             data_set + delete + '/<int:pk>',
