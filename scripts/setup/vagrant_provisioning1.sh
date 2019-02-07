@@ -17,15 +17,6 @@ add-apt-repository -y ppa:ubuntugis/ppa
 apt-get update
 apt-get upgrade -y
 
-# Database setup
-apt-get install -y mariadb-server
-echo "SET GLOBAL sql_mode='STRICT_ALL_TABLES'" |mysql -uroot
-echo "CREATE USER 'd2qc'@'localhost';" |mysql -uroot
-echo "GRANT ALL PRIVILEGES ON d2qc.* To 'd2qc'@'localhost' IDENTIFIED BY 'd2qc';" \
-    |mysql -uroot
-echo "CREATE DATABASE d2qc CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" \
-    |mysql -uroot
-
 # Install postgresql database server
 apt-get install -y binutils libproj-dev gdal-bin python-gdal
 apt-get install -y postgresql postgresql-contrib libpq-dev
@@ -45,7 +36,6 @@ sudo -u postgres  sh -c 'psql d2qc -c "CREATE EXTENSION postgis;"'
 # Install Python, pip, virtualenv
 apt-get install -y python-pip
 apt-get install -y python-dev
-apt-get install -y libmysqlclient-dev
 apt-get install -y python3-dev
 apt-get install -y python3-tk
 

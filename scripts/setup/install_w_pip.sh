@@ -9,8 +9,6 @@
 # apt install python
 # Pip:
 # apt install python-pip
-# Ubuntu also needs:
-# sudo apt-get install libmysqlclient-dev
 # Upgrade Pip:
 # pip install --upgrade pip
 # Virtualenv:
@@ -47,6 +45,3 @@ fi
 
 pip install -r scripts/setup/requirements.txt
 
-echo "Remember to set up the database if you have not already"
-echo "Instructions: "
-cat scripts/setup/mariadb_setup.md
