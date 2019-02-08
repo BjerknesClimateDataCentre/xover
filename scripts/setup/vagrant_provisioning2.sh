@@ -24,7 +24,6 @@ python -m pip install --user virtualenv
 
 if [ ! -d .env_vagrant ]
 then
-#  virtualenv -p python3 --no-site-packages --distribute .env_vagrant
   virtualenv -p python3 --no-site-packages .env_vagrant
 fi
 
@@ -49,6 +48,21 @@ echo "alias a='source /vagrant/.env_vagrant/bin/activate'" >> ~/.profile
 echo "alias m='python manage.py'" >> ~/.profile
 echo "alias dev='python manage.py runserver 0.0.0.0:8000'" >> ~/.profile
 source ~/.profile
+
+# Check django configs exist
+if [ ! -e d2qc/d2qc/setup/development.py ]
+then
+  cp d2qc/d2qc/setup/sample.development.py d2qc/d2qc/setup/development.py
+  echo "Copying d2qc/d2qc/setup/sample.development.py to development.py"
+  echo "Modify this file if needed"
+fi
+
+if [ ! -e d2qc/d2qc/setup/production.py ]
+then
+  cp d2qc/d2qc/setup/sample.production.py d2qc/d2qc/setup/production.py
+  echo "Copying d2qc/d2qc/setup/sample.production.py to production.py"
+  echo "Modify this file if needed"
+fi
 
 # Run django migrations
 cd d2qc
