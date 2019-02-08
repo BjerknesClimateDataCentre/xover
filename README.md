@@ -68,8 +68,8 @@ To use the Django development server on the vagrant machine:
 Set up a testserver
 -------------------
 
-To set up a standalone test-server using UH-IAAS, follow instructions
-[here](docs/setup_testserver.py).
+To set up a standalone test-server using UH-IAAS, follow instructions at
+[docs/setup_testserver.md](docs/setup_testserver.md).
 
 Production setup information
 ----------------------------
