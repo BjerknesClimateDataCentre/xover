@@ -41,7 +41,7 @@ pip install https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz
 
 # Set backend to default Agg by commenting line
 sed -i 's/^\( *backend *:.*\)$/# \1/' \
-    /vagrant/.env_vagrant/lib/python3.5/site-packages/matplotlib/mpl-data/matplotlibrc
+    /vagrant/.env_vagrant/lib/python3.*/site-packages/matplotlib/mpl-data/matplotlibrc
 
 # Shortcuts:
 echo "alias a='source /vagrant/.env_vagrant/bin/activate'" >> ~/.profile
