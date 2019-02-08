@@ -64,6 +64,16 @@ single-letter commands.
 *Afterwards format volume*
 * `sudo mkfs.ext4 /dev/sdb1`
 
+To mount the volume on startup:
+* `sudo mkdir /mnt/data`
+* `sudo chown ubuntu:ubuntu /mnt/data`
+* `sudo vi /etc/fstab`
+... and add the following line to en end of the fstab - file:
+`/dev/sdb1 /mnt/data ext4 defaults 0 0`
+
+* now mount the volume:
+* `sudo mount /mnt/data`
+
 ### Install and setup server software ###
 
 There are scripts to make this smoothly, so start by
@@ -80,8 +90,70 @@ Most of the sofware setup is defined in /scripts/setup. Vagrant scripts here are
 * `sudo ./scripts/setup/vagrant_provisioning1.sh`
 * `./scripts/setup/vagrant_provisioning2.sh`
 * `sudo ./scripts/setup/vagrant_provisioning3.sh`
+
 # Run this only on development servers #
 * `./scripts/setup/vagrant_dev_provisioning.sh`
 
 To be able to access the development server from the outside you need to update
 the ALLOWED_HOSTS - variable in the django setup.
+
+### Use the new disk volume for postgresql data ###
+
+* Check current directory:
+* `sudo -u postgres psql`
+* `postgres=# SHOW data_directory;`
+
+>        data_directory
+> -----------------------------
+>  /var/lib/postgresql/10/main
+> (1 row)
+
+* Quit psql
+* `postgres=# \q`
+
+* Stop the postgresql service
+* `sudo service postgresql stop`
+* ... and check that it stopped:
+* `sudo service postgresql status`
+* Last line should read something like "... Stopped PostgreSQL RDBMS."
+
+* Move the data:
+
+* `sudo rsync -av /var/lib/postgresql /mnt/data/pgdata`
+* check
+* `ls /mnt/data/pgdata`
+* outputs "postgresql"
+
+* Update postgresql confiuration:
+* `sudo vi /etc/postgresql/10/main/postgresql.conf`
+* change data_directory to  '/mnt/data/pgdata/postgresql/10/main'" and save
+
+* Start the portgres service again:
+* `sudo service postgresql start`
+
+### Import reference data to the development server ###
+
+The reference data is available from the [GLODAP website](http://glodap.info).
+Links provided below might change. The importscript without parameters looks
+for a file called GLODAPv2_sorted.csv, and another called EXPOCODES.txt, both
+residing in the folder /vagrant/d2qc/d2qc/data/glodap/data.
+
+* `cd /vagrant/d2qc/d2qc/data/glodap`
+* `mkdir data`
+* `cd data`
+* `wget https://www.nodc.noaa.gov/archive/arc0107/0162565/1.1/data/0-data/data_product/EXPOCODES.txt`
+* `wget https://www.nodc.noaa.gov/archive/arc0107/0162565/1.1/data/0-data/data_product/GLODAPv2%20Merged%20Master%20File.csv.zip`
+
+* Install unzip and unzip file:
+* `sudo apt install unzip`
+* `unzip GLODAPv2\ Merged\ Master\ File.csv.zip`
+
+* Sort the dataset
+* `/vagrant/scripts/db/sort_GLODAPv2_dataset.sh <GLODAPv2\ Merged\ Master\ File.csv >GLODAPv2_sorted.csv`
+
+* Run the import script. This takes a LOOOOONG time (about 24 hours?)
+* `cd /vagrant`
+* `source .env_vagrant/bin/activate`
+* `cd d2qc`
+* `python manage.py shell -c \
+    'from d2qc.data.glodap.glodap import Glodap; Glodap().fileImport()'`
