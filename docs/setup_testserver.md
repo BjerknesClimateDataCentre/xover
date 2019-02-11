@@ -49,7 +49,7 @@ ssh ubuntu@XXX.XXX.XX.XX
 
 After ssh-ing into the new machine you do the following:
 
-*Partition and format your disk volume, possibly /dev/sdb*
+**Partition and format your disk volume, possibly /dev/sdb**
 
 This uses the fdisk programme to partition your disk volume. All commands are
 single-letter commands.
@@ -61,7 +61,7 @@ single-letter commands.
   * 1    # ... with partition number 1
 * w      # Write partition to disk
 
-*Afterwards format volume*
+**Afterwards format volume**
 * `sudo mkfs.ext4 /dev/sdb1`
 
 To mount the volume on startup:
