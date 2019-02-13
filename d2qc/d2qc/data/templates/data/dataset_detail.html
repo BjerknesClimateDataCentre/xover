@@ -139,8 +139,9 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
             var raster = new ol.layer.Tile({
                 source: new ol.source.OSM()
             });
-            var wkt = '{{ stations }}';
+            var stations = '{{ stations }}';
             var crossovers = '{{ crossovers }}';
+            var stations_polygon = '{{ stations_polygon }}'
             var features = []
             red = new ol.style.Style({
                 image: new ol.style.Circle({
@@ -158,17 +159,25 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                     radius: 3,
                 })
             });
+            blue_line = new ol.style.Style({
+              stroke: new ol.style.Stroke({
+                color: [0,0,255,1],
+              })
+            });
 
 
             var format = new ol.format.WKT();
 
-            var feature = format.readFeature(wkt, {
+            var feature = format.readFeature(stations, {
                 dataProjection: 'EPSG:4326',
                 featureProjection: 'EPSG:3857'
             });
             feature.setStyle(blue)
+            // Add stations from data set as first layer
+            features.push(feature)
+
             var cross_feature = null
-            if (crossovers != 'None') {
+            if (crossovers && crossovers != 'None') {
                 cross_feature = format.readFeature(crossovers, {
                     dataProjection: 'EPSG:4326',
                     featureProjection: 'EPSG:3857'
@@ -176,8 +185,15 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 cross_feature.setStyle(red);
                 features.push(cross_feature)
             }
-            // Add stations from data set on top of crossovers
-            features.push(feature)
+            var buffer_feature = null
+            if (stations_polygon && stations_polygon != 'None')
+              buffer_feature = format.readFeature(stations_polygon, {
+                dataProjection: 'EPSG:4326',
+                featureProjection: 'EPSG:3857'
+              });
+              buffer_feature.setStyle(blue_line);
+              features.push(buffer_feature)
+
             var source = new ol.source.Vector({
                 features: features
             })
