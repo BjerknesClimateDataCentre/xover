@@ -12,7 +12,7 @@ Vagrant.configure(2) do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
-  config.vm.box = "ubuntu/xenial64"
+  config.vm.box = "ubuntu/bionic64"
   # Prevent TTY Errors (copied from laravel/homestead: "homestead.rb" file)...
   # By default this is "bash -l".
   config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
@@ -22,7 +22,7 @@ Vagrant.configure(2) do |config|
   if ENV['DEV']
     config.vm.provision "shell", path: 'scripts/setup/vagrant_dev_provisioning.sh', privileged: false
   end
-  
+
   # Relocate the log file to the temp folder
   config.vm.provider "virtualbox" do |vb|
     vb.customize [
