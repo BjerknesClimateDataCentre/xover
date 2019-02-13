@@ -9,7 +9,7 @@ import re
 from decimal import Decimal
 import math
 from django.db import connection
-
+import hashlib
 
 class Profile(models.Model):
     class Meta:
@@ -112,6 +112,8 @@ class DataSet(models.Model):
         unique_together = ('expocode', 'owner')
     _datatypes = {}
     _single_data_type_ids = {}
+    _stations = {}
+    _contains_polygon = {}
     id = models.AutoField(primary_key=True)
     is_reference = models.BooleanField(default=False)
     expocode = models.CharField(max_length=255)
@@ -160,47 +162,158 @@ class DataSet(models.Model):
         self._datatypes = typelist
         return typelist
 
-    def get_stations(self, parameter_id = None):
-        """Get the stations in the data set"""
+    def _in_stations(
+            self,
+            data_set_id=None,
+            parameter_id=None,
+            xover_data_set_id = None
+    ):
+        """
+        Get station ids for data_set_id, optionally filtered by parameter
+        and by matching crossover stations in xover_data_set_id. The returned
+        value is cached for reuse.
 
-        sql = """select st_astext(st_collect(position))
-                from d2qc_stations
-                where data_set_id={};""".format(self.id)
+        returns a commaseparated string of ids.
+        """
+        min_depth = self.owner.profile.min_depth
+        radius = self.owner.profile.crossover_radius # radius around points
+
+        # If there is a cached value, return that:
+        query_key = '__'.join(str(i) for i in [
+            data_set_id,
+            parameter_id,
+            xover_data_set_id
+        ])
+        if self._stations.get(query_key):
+            return self._stations.get(query_key)
+
+        subquery = """
+            select distinct s.id from d2qc_stations s
+        """
+        join = """
+            inner join d2qc_casts c on c.station_id = s.id
+            inner join d2qc_depths d on d.cast_id = c.id
+        """
+        where = """
+            where d.depth>={}
+        """.format(min_depth)
+        if data_set_id:
+            where += """
+                and data_set_id={}
+            """.format(data_set_id)
         if parameter_id:
-            sql = """select st_astext(st_collect(points.position)) from
-                (select distinct s.id, position
-                from d2qc_stations s
-                inner join d2qc_casts c on c.station_id = s.id
-                inner join d2qc_depths d on d.cast_id = c.id
+            join += """
                 inner join d2qc_data_values dv on dv.depth_id = d.id
-                where data_set_id={}
-                and dv.data_type_id in ({})) points
-                """.format(self.id, self._in_datatype(parameter_id))
+            """
+            where += """
+                and data_type_id in ({})
+            """.format(self._in_datatype(parameter_id))
+        if xover_data_set_id:
+            contains = """
+                select st_buffer(st_collect(position)::geography, {})::geometry
+                from d2qc_stations where id in ({})
+            """.format(
+                radius,
+                self._in_stations(
+                    parameter_id=parameter_id,
+                    data_set_id=xover_data_set_id
+                )
+            )
+
+            where += """
+            and st_contains('{}', s.position)
+            """.format(self._get_first_sql_result(contains))
+
+        subquery += join + where
+        sql = """
+            select string_agg(stations.id::text, ',') from ({}) stations
+        """.format(subquery)
 
         cursor = connection.cursor()
         cursor.execute(sql)
+        retval = cursor.fetchall()[0][0]
+        self._stations[query_key] = retval
+        return retval if retval else '-1'
+    def _get_first_sql_result(self, sql):
+        """Get the first result of the passed sql query as a string."""
+
+        query_key = hashlib.md5(sql.encode('utf-8')).hexdigest()
+        if query_key in self._contains_polygon:
+            return self._contains_polygon[query_key]
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        retval = cursor.fetchall()[0][0]
+        self._contains_polygon[query_key] = retval
+        return retval
+
+    def get_stations(
+            self,
+            parameter_id=None,
+            data_set_id=None,
+            xover_data_set_id = None
+    ):
+        """
+        Get the stations in data_set_id, possibly filtered by parameter_id
+        and crossover data set id.
+
+        Returns data as Well Known Text multipoint
+        """
+
+        data_set_id = data_set_id if data_set_id else self.id
+
+        sql = """
+            select st_astext(st_collect(position))
+            from d2qc_stations where id in ({})
+        """.format(self._in_stations(
+                parameter_id=parameter_id,
+                data_set_id=data_set_id,
+                xover_data_set_id=xover_data_set_id
+        ))
+        cursor = connection.cursor()
+        cursor.execute(sql)
         return cursor.fetchall()[0][0]
-    def _get_data_set_polygon_sql(self, parameter_id):
-        radius = 200000 # radius in meters around points
-        min_depth = 1500
-        stations = """
-            select distinct s.position
-            from d2qc_stations s
-            inner join d2qc_casts c on c.station_id = s.id
-            inner join d2qc_depths d on d.cast_id = c.id
-            inner join d2qc_data_values dv on dv.depth_id = d.id
-            where data_set_id={} and dv.data_type_id in ({}) and d.depth>={}
-            """.format(
-                self.id, self._in_datatype(parameter_id), min_depth
+
+    def get_stations_polygon(
+            self,
+            parameter_id=None,
+            data_set_id=None,
+            xover_data_set_id = None
+    ):
+        """
+        Get the polygon around stations that define the serach area for
+        matching crossover stations.
+
+        Returns the polygon as Well Known Text multipolygon.
+        """
+        data_set_id = data_set_id if data_set_id else self.id
+        radius = self.owner.profile.crossover_radius # radius around points
+        sql = """
+            select st_astext(
+                st_buffer(
+                    st_collect(position)::geography,
+                    {}
+                )
             )
-        buffer = """
-            select
-            st_buffer(st_union(stat.position)::geography, {})::geometry
-            from ({}) stat
-        """.format(radius, stations)
-        return buffer
+            from d2qc_stations
+            where id in ({})
+        """.format(
+            radius,
+            self._in_stations(
+                parameter_id=parameter_id,
+                data_set_id=data_set_id,
+                xover_data_set_id=xover_data_set_id
+            )
+        )
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        return cursor.fetchall()[0][0]
 
     def _in_datatype(self, parameter_id):
+        """
+        Get datatypes that has the same bodc id as the given parameter_id.
+
+        Returns a commaseparated list of data_set_id's
+        """
         if parameter_id not in self._single_data_type_ids:
             sql = """
                 select string_agg(dt2.id::text, ',') from d2qc_data_types dt
@@ -213,63 +326,86 @@ class DataSet(models.Model):
 
         return self._single_data_type_ids[parameter_id]
 
-    def get_crossover_stations(self, parameter_id):
-        # TODO: This should be handled by optimizing the query. Currently
-        # this part is executed separately instead of as a subquery, to speed
-        # up query.
-        psql = self._get_data_set_polygon_sql(parameter_id)
-        cursor = connection.cursor()
-        cursor.execute(psql)
-
+    def get_crossover_stations(
+            self,
+            parameter_id,
+            data_set_id=None
+    ):
+        """
+        Get stations that are within the crossover range of stations in this
+        data set (default 200km), for the given parameter. If data_set_id
+        is given, only get stations in the given data set.
+        """
         sql = """
             select
-            st_astext(st_union(s.position))
-            from d2qc_stations s
-            inner join d2qc_casts c on (c.station_id=s.id)
-            inner join d2qc_depths d on (d.cast_id=c.id)
-            inner join d2qc_data_values dv on (dv.depth_id=d.id)
-            where s.data_set_id<>{}  and st_contains('{}', s.position)
-            and dv.data_type_id in ({})
+            st_astext(st_union(position))
+            from d2qc_stations
+            where id in ({})
+            and data_set_id <> {}
         """.format(
-            self.id,
-            cursor.fetchone()[0],
-            self._in_datatype(parameter_id)
+            self._in_stations(
+                xover_data_set_id=self.id,
+                parameter_id=parameter_id,
+                data_set_id=data_set_id,
+            ),
+            self.id
         )
-
-        # cursor = connection.cursor()
+        cursor = connection.cursor()
         cursor.execute(sql)
         return cursor.fetchall()[0][0]
 
     def get_crossover_data_sets(self, parameter_id):
-        min_depth = 1500
+        """
+        Get all datasets that have stations within the range (default 200km),
+        possibly filtered by the parameter id.
+
+        Returns a list:
+            [[data-set_id, expocode, station_count, time_first_station], ...]
+        """
         sql = """
             select ds.id, ds.expocode,
             count(st.id) as station_count,
-            min(depth.date_and_time) as first_station
+            min(d.date_and_time) as first_station
             from d2qc_stations st
             inner join d2qc_data_sets ds on (st.data_set_id = ds.id)
-            inner join d2qc_casts ct on (st.id = ct.station_id)
-            inner join d2qc_depths depth on (ct.id = depth.cast_id)
-            where st.data_set_id<>{}  and st_contains(({}), st.position)
-            and depth.depth>={}
+            inner join d2qc_casts c on (c.station_id = st.id)
+            inner join d2qc_depths d on (d.cast_id = c.id)
+            where st.id in ({})
+            and st.data_set_id <> {}
             group by ds.id
             order by first_station
         """.format(
-            self.id,
-            self._get_data_set_polygon_sql(parameter_id),
-            min_depth
-            )
+            self._in_stations(
+                xover_data_set_id=self.id,
+                parameter_id=parameter_id
+            ),
+            self.id
+        )
 
         cursor = connection.cursor()
         cursor.execute(sql)
         return cursor.fetchall()
 
     def get_profiles(self, parameter_id, data_set_id = None):
-        """Get profiles for this dataset and the given parameter, possibly also
-        with another data set to compare."""
+        """
+        Get profiles for this data set and the given parameter_id,
+        possibly also with another data_set_id to compare with.
 
-        min_depth = 1500
-        sql = """
+        Returns an array of structs:
+        [
+            {
+                data_set_id:...,
+                expocode:...,
+                station_number:...,
+                cast:...,
+                depth:[...],
+                value:[...],
+            }
+        ]
+        """
+
+        min_depth = self.owner.profile.min_depth
+        sql_tmpl = """
             select ds.id, ds.expocode, s.station_number, c.cast as c_cast,
             d.depth::float, dv.value::float
             from d2qc_data_values dv
@@ -277,29 +413,30 @@ class DataSet(models.Model):
             inner join d2qc_casts c on (d.cast_id = c.id)
             inner join d2qc_stations s on (c.station_id = s.id)
             inner join d2qc_data_sets ds on (s.data_set_id = ds.id)
-            where dv.data_type_id in ({}) and s.data_set_id = {} and depth>={}
-        """.format(self._in_datatype(parameter_id), self.id, min_depth)
+            where dv.data_type_id in ({}) and s.id in({}) and depth>={}
+        """
+
+        sql = sql_tmpl.format(
+            self._in_datatype(parameter_id),
+            self._in_stations(
+                self.id,
+                parameter_id=parameter_id,
+                xover_data_set_id=data_set_id
+            ),
+            min_depth
+        )
 
         if data_set_id:
-            sql += """
-                UNION
-                select ds.id, ds.expocode, s.station_number, c.cast as c_cast,
-                d.depth::float, dv.value::float
-                from d2qc_data_values dv
-                inner join d2qc_depths d on (dv.depth_id = d.id)
-                inner join d2qc_casts c on (d.cast_id = c.id)
-                inner join d2qc_stations s on (c.station_id = s.id)
-                inner join d2qc_data_sets ds on (s.data_set_id = ds.id)
-                where dv.data_type_id in ({}) and s.data_set_id = {} and depth>={}
-                and st_contains(({}), s.position)
-            """.format(
+            sql += " UNION " + sql_tmpl.format(
                 self._in_datatype(parameter_id),
-                data_set_id,
-                min_depth,
-                self._get_data_set_polygon_sql(parameter_id)
+                self._in_stations(
+                    data_set_id,
+                    parameter_id=parameter_id,
+                    xover_data_set_id=self.id
+                ),
+                min_depth
             )
         sql += " order by station_number, c_cast, depth"
-
         cursor = connection.cursor()
         cursor.execute(sql)
         profiles = []

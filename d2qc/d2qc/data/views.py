@@ -459,12 +459,20 @@ class DataSetDetail(DetailView):
             if data_type['id'] == self.kwargs.get('parameter_id'):
                 context['parameter'] = data_type
                 break
-        context['stations'] = self.get_object().get_stations(
-            self.kwargs.get('parameter_id')
+        context['stations_polygon'] = self.get_object().get_stations_polygon(
+            parameter_id=self.kwargs.get('parameter_id'),
+            xover_data_set_id=self.kwargs.get('data_set_id'),
         )
+        context['stations'] = self.get_object().get_stations(
+            parameter_id=self.kwargs.get('parameter_id'),
+            xover_data_set_id=self.kwargs.get('data_set_id')
+        )
+        if not context['stations_polygon']:
+            context['stations_polygon'] = ''
         if self.kwargs.get('parameter_id'):
             context['crossovers'] = self.get_object().get_crossover_stations(
-                self.kwargs.get('parameter_id')
+                parameter_id=self.kwargs.get('parameter_id'),
+                data_set_id=self.kwargs.get('data_set_id'),
             )
             context['crossover_datasets'] = self.get_object().get_crossover_data_sets(
                 self.kwargs.get('parameter_id')
