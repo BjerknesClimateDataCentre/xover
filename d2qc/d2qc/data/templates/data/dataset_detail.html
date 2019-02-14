@@ -242,8 +242,10 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 current_dataset = profiles[i].data_set_id
             }
             var layout = {
-                yaxis: {autorange: 'reversed'},
-                margin: {l: 30, r:0},
+                yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
+                xaxis: {title: {text:profiles[0].parameter}},
+                margin: {l: 60, r:0},
+                legend: {orientation: 'h'}
             };
             Plotly.newPlot('profiles', data, layout);
           </script>
