@@ -412,6 +412,7 @@ class DataSet(models.Model):
                 self.owner.profile.min_depth
         )
 
+        sql += " order by expocode, station_number, c_cast, depth"
         cursor = connection.cursor()
         cursor.execute(sql)
         profiles = []
