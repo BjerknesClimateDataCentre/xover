@@ -24,7 +24,7 @@ python -m pip install --user virtualenv
 
 if [ ! -d .env_vagrant ]
 then
-  virtualenv -p python3 --no-site-packages .env_vagrant
+  python3 -m venv .env_vagrant
 fi
 
 source .env_vagrant/bin/activate
