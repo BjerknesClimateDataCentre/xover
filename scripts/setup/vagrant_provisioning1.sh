@@ -34,10 +34,10 @@ sudo -u postgres  sh -c 'psql d2qc -c "CREATE EXTENSION postgis;"'
 
 
 # Install Python, pip, virtualenv
-apt-get install -y python-pip
-apt-get install -y python-dev
+apt-get install -y python3-pip
 apt-get install -y python3-dev
 apt-get install -y python3-tk
+apt-get install -y python3-venv
 
 # Install GEOS for matplotlib
 apt-get install -y libgeos-c1v5 libgeos-dev
