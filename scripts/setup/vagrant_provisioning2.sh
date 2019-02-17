@@ -18,9 +18,6 @@ git submodule update
 echo 'PATH="$PATH:/home/vagrant/.local/bin"' >> ~/.profile
 source ~/.profile
 
-# Install Virtualenv
-python -m pip install --user virtualenv
-
 
 if [ ! -d .env_vagrant ]
 then

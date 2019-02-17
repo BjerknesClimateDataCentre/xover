@@ -49,4 +49,4 @@ apt-get install libapache2-mod-wsgi-py3
 service apache2 restart
 
 # Upgrade pip to latest version
-pip install --upgrade pip
+pip3 install --upgrade pip
