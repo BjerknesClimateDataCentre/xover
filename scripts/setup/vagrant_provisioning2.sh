@@ -18,11 +18,9 @@ git submodule update
 echo 'PATH="$PATH:/home/vagrant/.local/bin"' >> ~/.profile
 source ~/.profile
 
-
-if [ ! -d .env_vagrant ]
-then
-  python3 -m venv .env_vagrant
-fi
+# Remove possibly existing environment folder
+rm -rf .env_vagrant
+python3 -m venv .env_vagrant
 
 source .env_vagrant/bin/activate
 

@@ -13,7 +13,6 @@ cd /vagrant
 # Prevent errors trying to access stdin
 export DEBIAN_FRONTEND=noninteractive
 
-add-apt-repository -y ppa:ubuntugis/ppa
 apt-get update
 apt-get upgrade -y
 
