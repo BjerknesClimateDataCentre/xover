@@ -29,6 +29,8 @@ sudo -u postgres createdb -O d2qc d2qc
 # Install postgis extensions
 apt-get install -y postgis
 sudo -u postgres  sh -c 'psql d2qc -c "CREATE EXTENSION postgis;"'
+grant='GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO d2qc;'
+sudo -u postgres  sh -c "psql d2qc -c '$grant'"
 
 
 

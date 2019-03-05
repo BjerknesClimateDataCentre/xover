@@ -2,6 +2,7 @@
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from d2qc.setup.tools import postgres_wo_password
 from datetime import datetime
 import os
 
@@ -19,14 +20,8 @@ class Command(BaseCommand):
         _file = settings.BACKUP_FOLDER
         if not os.path.isdir(_file):
             os.makedirs(_file)
-        pgpass_file = os.path.expanduser('~/.pgpass')
-        if not os.path.isfile(pgpass_file):
-            with open(pgpass_file, 'a') as pgpass:
-                pgpass.write("{}:{}:{}:{}:{}".format(
-                        host, port or '*', user, pw, db_name
-                    )
-                )
-            os.chmod(pgpass_file, 0o600)
+
+        postgres_wo_password()
 
         _file += '/d2qc-dbbackup-'
         _file += datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
