@@ -95,7 +95,13 @@ Most of the sofware setup is defined in /scripts/setup. Vagrant scripts here are
 * `./scripts/setup/vagrant_dev_provisioning.sh`
 
 To be able to access the development server from the outside you need to update
-the ALLOWED_HOSTS - variable in the django setup.
+the ALLOWED_HOSTS - variable in the django setup:
+* in /vagrant/d2qc/d2qc/setup/production.py add your server IP and/or server
+  name to the ALLOWED_HOSTS array.
+
+To also make sure the production.py setup is used for shell scripts on the
+server, add this line to .profile:
+export DJANGO_SETTINGS_MODULE=d2qc.setup.production
 
 ### Use the new disk volume for postgresql data ###
 
@@ -130,6 +136,12 @@ the ALLOWED_HOSTS - variable in the django setup.
 
 * Start the portgres service again:
 * `sudo service postgresql start`
+
+**Let ubuntu own /mnt/data:**
+This way you can keep backups and file data here
+
+`sudo chown ubuntu:ubuntu /mnt/data`
+
 
 ### Import reference data to the development server ###
 
