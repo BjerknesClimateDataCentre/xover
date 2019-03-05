@@ -33,6 +33,11 @@ DATABASES = {
     }
 }
 
+# Settings used by the restore from prod script
+PROD_SERVER_IP = '158.39.74.107'
+PROD_SERVER_USER_DATA_FOLDER = '/mnt/data/user_data'
+PROD_SERVER_DB_FILE = '/mnt/data/backup/latest.dump'
+
 #LOGGING = {
 #    'version': 1,
 #    'disable_existing_loggers': False,

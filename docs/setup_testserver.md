@@ -99,10 +99,6 @@ the ALLOWED_HOSTS - variable in the django setup:
 * in /vagrant/d2qc/d2qc/setup/production.py add your server IP and/or server
   name to the ALLOWED_HOSTS array.
 
-To also make sure the production.py setup is used for shell scripts on the
-server, add this line to .profile:
-export DJANGO_SETTINGS_MODULE=d2qc.setup.production
-
 ### Use the new disk volume for postgresql data ###
 
 * Check current directory:
@@ -137,11 +133,22 @@ export DJANGO_SETTINGS_MODULE=d2qc.setup.production
 * Start the portgres service again:
 * `sudo service postgresql start`
 
+
+### On a production server ###
+
+To also make sure the production.py setup is used for shell scripts on the
+server, add this line to .profile:
+
+`export DJANGO_SETTINGS_MODULE=d2qc.setup.production`
+
 **Let ubuntu own /mnt/data:**
 This way you can keep backups and file data here
 
 `sudo chown ubuntu:ubuntu /mnt/data`
 
+**Let www-data own /mnt/data/user_data:**
+...and let the user-data folder point here
+`sudo chown www-data:www-data /mnt/data`
 
 ### Import reference data to the development server ###
 
