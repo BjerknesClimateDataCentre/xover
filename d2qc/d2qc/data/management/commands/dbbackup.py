@@ -41,5 +41,6 @@ class Command(BaseCommand):
         cmd += "d2qc"
         os.system(cmd)
         latest = settings.BACKUP_FOLDER + "/latest.dump"
-        os.remove(latest)
+        if os.path.isfile(latest):
+            os.remove(latest)
         os.symlink(_file, latest)
