@@ -133,14 +133,6 @@ the ALLOWED_HOSTS - variable in the django setup:
 * Start the portgres service again:
 * `sudo service postgresql start`
 
-
-### On a production server ###
-
-To also make sure the production.py setup is used for shell scripts on the
-server, add this line to .profile:
-
-`export DJANGO_SETTINGS_MODULE=d2qc.setup.production`
-
 **Let ubuntu own /mnt/data:**
 This way you can keep backups and file data here
 

@@ -82,6 +82,11 @@ To configure the production system:
 
 And update `production.py` with correct details. For
 
+To make sure the production.py setup is used for shell scripts on the
+server, make sure the following environment variable is set:
+
+`export DJANGO_SETTINGS_MODULE=d2qc.setup.production`
+
 Restart apache for the changes to take effect:
 `sudo service apache2 restart`
 
