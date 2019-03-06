@@ -61,4 +61,5 @@ fi
 
 # Run django migrations
 cd d2qc
+python manage.py restore_db_from_prod --verbosity 1
 python manage.py migrate
