@@ -50,30 +50,37 @@ class Command(BaseCommand):
         )
 
         # check ssh connection
-        if 0 != os.system("ssh -q ubuntu@{} exit".format(ip)):
+        if 0 != os.system(
+                "ssh -o StrictHostKeyChecking=no -q ubuntu@{} exit".format(ip)
+        ):
             logger.error("Could not connect to server {}. Exiting.".format(ip))
             sys.exit()
 
         verbose = ''
-        if options['verbosity']>0:
-            verbose = 'v'
+        if options['verbosity'] > 0:
+            verbose = '-v'
 
         # Get data files
-        cmd = "rsync -z{}rt --delete ".format(verbose)
+        cmd = "rsync -zrt {} --delete ".format(verbose)
         cmd += "ubuntu@{}:{} {}".format(ip, remote_data_folder, data_folder)
+        if options['verbosity'] > 0:
+            self.stdout.write(self.style.SUCCESS(cmd))
         os.system(cmd)
 
         # Get db backup file
         if os.path.islink(backup_db_file):
             os.remove(backup_db_file)
 
-        cmd = "rsync -z{}tLk ".format(verbose)
+        cmd = "rsync -ztLk {} ".format(verbose)
         cmd += "ubuntu@{}:{} {}".format(ip, remote_db_file, backup_folder)
+        if options['verbosity'] > 0:
+            self.stdout.write(self.style.SUCCESS(cmd))
         os.system(cmd)
 
         # restore database from backup
-        cmd = "pg_restore --clean --schema public "
-        cmd += "--dbname {} --host {} --username {} ".format(
+        cmd = "pg_restore --clean --if-exists --schema public "
+        cmd += "{} --dbname {} --host {} --username {} ".format(
+            verbose,
             db_name,
             host,
             user
@@ -81,6 +88,8 @@ class Command(BaseCommand):
         cmd += backup_db_file
 
         postgres_wo_password()
+        if options['verbosity'] > 0:
+            self.stdout.write(self.style.SUCCESS(cmd))
         os.system(cmd)
         if options['migrate']:
             call_command('migrate', verbosity=options['verbosity'])
