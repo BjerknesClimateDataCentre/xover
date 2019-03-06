@@ -59,7 +59,8 @@ then
   echo "Modify this file if needed"
 fi
 
-# Run django migrations
 cd d2qc
+# Fetch database from prod
 python manage.py restore_db_from_prod --verbosity 1
+# Run django migrations
 python manage.py migrate

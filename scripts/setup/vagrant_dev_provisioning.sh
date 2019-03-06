@@ -12,5 +12,10 @@ cd d2qc
 echo "
 from django.contrib.auth import get_user_model;
 User = get_user_model();
-User.objects.create_superuser('admin', 'jhe052@uib.no', '123');" \
-    | python manage.py shell
+admin,b=User.objects.get_or_create(username='admin')
+admin.is_superuser = True
+admin.is_staff = True
+admin.set_password('123')
+admin.email = 'jhe052@uib.no'
+admin.save()
+" | python manage.py shell
