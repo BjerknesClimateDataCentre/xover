@@ -61,6 +61,6 @@ fi
 
 cd d2qc
 # Fetch database from prod
-python manage.py restore_db_from_prod --verbosity 1
+python manage.py db_restore_from_prod --verbosity 1
 # Run django migrations
 python manage.py migrate
