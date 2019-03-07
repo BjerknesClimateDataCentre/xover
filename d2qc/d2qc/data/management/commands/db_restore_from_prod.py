@@ -61,7 +61,9 @@ class Command(BaseCommand):
             verbose = '-v'
 
         # Get data files
-        cmd = "rsync -zrt {} --delete ".format(verbose)
+        cmd = "rsync -zrt {} --delete ".format(
+            verbose if options['verbosity']>1 else ''
+        )
         cmd += "ubuntu@{}:{} {}".format(ip, remote_data_folder, data_folder)
         if options['verbosity'] > 0:
             self.stdout.write(self.style.SUCCESS(cmd))
@@ -71,7 +73,9 @@ class Command(BaseCommand):
         if os.path.islink(backup_db_file):
             os.remove(backup_db_file)
 
-        cmd = "rsync -ztLk {} ".format(verbose)
+        cmd = "rsync -ztLk {} ".format(
+            verbose if options['verbosity']>1 else ''
+        )
         cmd += "ubuntu@{}:{} {}".format(ip, remote_db_file, backup_folder)
         if options['verbosity'] > 0:
             self.stdout.write(self.style.SUCCESS(cmd))
@@ -80,7 +84,7 @@ class Command(BaseCommand):
         # restore database from backup
         cmd = "pg_restore --clean --if-exists --schema public "
         cmd += "{} --dbname {} --host {} --username {} ".format(
-            verbose,
+            verbose if options['verbosity']>1 else '',
             db_name,
             host,
             user
