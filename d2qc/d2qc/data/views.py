@@ -252,7 +252,18 @@ class DataFileDetail(DetailView):
             pass
 
         # Load file head:
-        filecontent = fileobject.read_file()
+        filecontent = ""
+        try:
+            filecontent = fileobject.read_file()
+        except Exception as err:
+            messages.error(
+                    self.request,
+                    'Could not read file {}'.format(
+                            fileobject.filepath
+                    )
+            )
+            messages.error(self.request, 'ERROR: {}'.format(str(err)))
+
         context['filehead'] = filecontent[:50]
         context['count'] = len(filecontent)
         return context

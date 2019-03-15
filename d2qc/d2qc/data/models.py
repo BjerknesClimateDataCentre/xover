@@ -96,17 +96,8 @@ class DataFile(models.Model):
                 with open(path, encoding="utf-8") as excfile:
                     filearray = excfile.readlines()
             except:
-                try:
-                    with open(path, encoding="iso-8859-1") as excfile:
-                        filearray = excfile.readlines()
-                except:
-                    messages.error(
-                            self.request,
-                            'Could not read file {}'.format(
-                                    path
-                            )
-                    )
-                    messages.error(self.request, 'ERROR: {}'.format(str(err)))
+                with open(path, encoding="iso-8859-1") as excfile:
+                    filearray = excfile.readlines()
         return filearray
 
 
