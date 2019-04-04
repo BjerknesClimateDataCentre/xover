@@ -1,4 +1,5 @@
-from django.contrib.auth import get_user_model;
+from django.contrib.auth import get_user_model
+from d2qc.data.models import Profile
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
@@ -27,3 +28,6 @@ class Command(BaseCommand):
         admin.set_password(settings.DEV_ADMIN_PROPERTIES['password'])
         admin.email = settings.DEV_ADMIN_PROPERTIES['email']
         admin.save()
+        admin.profile = Profile(user=admin)
+        admin.profile.save()
+
