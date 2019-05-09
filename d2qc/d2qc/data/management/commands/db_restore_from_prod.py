@@ -70,6 +70,12 @@ class Command(BaseCommand):
         os.system(cmd)
 
         # Get db backup file
+        if os.path.isfile(backup_folder):
+            os.remove(backup_folder)
+
+        if not os.path.exists(backup_folder):
+            os.mkdir(backup_folder)
+
         if os.path.islink(backup_db_file):
             os.remove(backup_db_file)
 
