@@ -234,6 +234,7 @@ class DataSet(models.Model):
         retval = cursor.fetchall()[0][0]
         self._stations[query_key] = retval
         return retval if retval else '-1'
+
     def _get_first_sql_result(self, sql):
         """Get the first result of the passed sql query as a string."""
 
@@ -364,7 +365,7 @@ class DataSet(models.Model):
         """
         sql = """
             select ds.id, ds.expocode,
-            count(st.id) as station_count,
+            count(distinct st.id) as station_count,
             min(d.date_and_time) as first_station
             from d2qc_stations st
             inner join d2qc_data_sets ds on (st.data_set_id = ds.id)
