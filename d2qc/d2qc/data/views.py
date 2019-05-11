@@ -459,30 +459,88 @@ class DataSetDetail(DetailView):
             if data_type['id'] == self.kwargs.get('parameter_id'):
                 context['parameter'] = data_type
                 break
+
+        # Get the stations for the current data set,
+        # filtering by parameter if required
+        data_set_stations = self.get_object().get_stations(
+            parameter_id=self.kwargs.get('parameter_id'),
+            data_set_id=self.kwargs.get('pk')
+        )
+
+        # Get the search buffer for the current data set
+        data_set_buffer = self.get_object().get_station_buffer(
+            data_set_stations
+        )
+
+        # Get the station buffer outline polygon
         context['stations_polygon'] = self.get_object().get_stations_polygon(
-            parameter_id=self.kwargs.get('parameter_id'),
-            xover_data_set_id=self.kwargs.get('data_set_id'),
+            data_set_stations
         )
-        context['stations'] = self.get_object().get_stations(
-            parameter_id=self.kwargs.get('parameter_id'),
-            xover_data_set_id=self.kwargs.get('data_set_id')
+
+        # Get the positions of the data set stations
+        context['station_positions'] = self.get_object().get_station_positions(
+            data_set_stations
         )
+
         if not context['stations_polygon']:
             context['stations_polygon'] = ''
         if self.kwargs.get('parameter_id'):
+            # Get the crossover stations, restricted to a specific dataset
+            # if crossover_data_set_id is not None
             context['crossovers'] = self.get_object().get_crossover_stations(
+                data_set_id=self.kwargs.get('pk'),
+                search_buffer=data_set_buffer,
                 parameter_id=self.kwargs.get('parameter_id'),
-                data_set_id=self.kwargs.get('data_set_id'),
+                crossover_data_set_id=self.kwargs.get('data_set_id')
             )
-            context['crossover_datasets'] = self.get_object().get_crossover_data_sets(
-                self.kwargs.get('parameter_id')
+
+            # Get the positions of the crossover stations
+            context['crossover_positions'] = self.get_object().get_station_positions(
+                context['crossovers']
             )
-            context['dataset_profiles'] = json.dumps(
-                self.get_object().get_profiles(
-                    self.kwargs.get('parameter_id'),
-                    self.kwargs.get('data_set_id')
+
+            # Get the data set details of the crossovers
+            context['crossover_datasets'] = self.get_object().get_station_data_sets(
+                self.get_object().get_crossover_stations(
+                    data_set_id=self.kwargs.get('pk'),
+                    search_buffer=data_set_buffer,
+                    parameter_id=self.kwargs.get('parameter_id')
                 )
             )
+
+            # If we are only looking at one crossover data set,
+            # restrict the main data set to only those stations
+            # within range of that crossover
+            if self.kwargs.get('data_set_id') is not None:
+                crossover_buffer = self.get_object().get_station_buffer(
+                    context['crossovers']
+                )
+
+                data_set_stations = self.get_object().get_crossover_stations(
+                    data_set_id=self.kwargs.get('data_set_id'),
+                    search_buffer=crossover_buffer,
+                    parameter_id=self.kwargs.get('parameter_id'),
+                    crossover_data_set_id=self.kwargs.get('pk')
+                )
+
+                context['station_positions'] = self.get_object().get_station_positions(
+                    data_set_stations
+                )
+
+                context['stations_polygon'] = self.get_object().get_stations_polygon(
+                    data_set_stations
+                )
+
+
+            # Get the profiles for the plot
+            if self.kwargs.get('data_set_id') is not None:
+                profile_stations = data_set_stations + "," + context['crossovers']
+                context['dataset_profiles'] = json.dumps(
+                    self.get_object().get_profiles(
+                        profile_stations,
+                        self.kwargs.get('parameter_id')
+                    )
+                )
         return context
 
 class DataSetDelete(DeleteView):
