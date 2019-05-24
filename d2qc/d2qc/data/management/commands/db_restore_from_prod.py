@@ -36,6 +36,7 @@ class Command(BaseCommand):
         pw = settings.DATABASES['default']['PASSWORD']
         host = settings.DATABASES['default']['HOST']
         port = settings.DATABASES['default']['PORT']
+        initdb_path = settings.INITDB_PATH
         ip = settings.PROD_SERVER_IP
         remote_db_file = settings.PROD_SERVER_DB_FILE
         remote_data_folder = os.path.join(
@@ -81,8 +82,19 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(cmd))
         os.system(cmd)
 
+        # drop the current database
+        os.system("sudo -u postgres dropdb d2qc")
+
+        # re-create database
+        os.system("sudo -u postgres createdb -O d2qc d2qc")
+
+        # Initalize database (install postgis etc)
+        with open(initdb_path, 'r') as file:
+            sql = file.read()
+        os.system("sudo -u postgres sh -c 'psql d2qc -c \"{}\"'".format(sql))
+
         # restore database from backup
-        cmd = "pg_restore --clean --if-exists --schema public "
+        cmd = "pg_restore --schema public "
         cmd += "{} --dbname {} --host {} --username {} ".format(
             verbose if options['verbosity']>1 else '',
             db_name,

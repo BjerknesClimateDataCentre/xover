@@ -27,7 +27,8 @@ BACKUP_FOLDER = os.path.join(PROJECT_DIR, 'backup')
 # Data folder
 DATA_FOLDER = os.path.join(BASE_DIR, 'user_data')
 
-
+# Database initialization script
+INITDB_PATH = '/vagrant/scripts/setup/initdb.sql'
 
 ALLOWED_HOSTS = []
 
