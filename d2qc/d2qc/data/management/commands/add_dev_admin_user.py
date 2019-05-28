@@ -27,7 +27,5 @@ class Command(BaseCommand):
         admin.is_staff = True
         admin.set_password(settings.DEV_ADMIN_PROPERTIES['password'])
         admin.email = settings.DEV_ADMIN_PROPERTIES['email']
+        admin.profile, created = Profile.objects.get_or_create(user=admin)
         admin.save()
-        admin.profile = Profile(user=admin)
-        admin.profile.save()
-
