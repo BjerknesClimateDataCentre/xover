@@ -82,16 +82,31 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(cmd))
         os.system(cmd)
 
+        # Terminate all connections:
+        sql = """
+            SELECT pg_terminate_backend(pg_stat_activity.pid)
+            FROM pg_stat_activity
+            WHERE pg_stat_activity.datname = '"'"'{}'"'"'
+            AND pid <> pg_backend_pid();
+        """.format(db_name)
+        os.system(
+            "sudo -u postgres sh -c 'psql {} -c \"{}\"'".format(db_name, sql)
+        )
+
         # drop the current database
-        os.system("sudo -u postgres dropdb d2qc")
+        os.system("sudo -u postgres dropdb {}".format(db_name))
 
         # re-create database
-        os.system("sudo -u postgres createdb -O d2qc d2qc")
+        os.system(
+            "sudo -u postgres createdb -O {} {}".format(user, db_name)
+        )
 
         # Initalize database (install postgis etc)
         with open(initdb_path, 'r') as file:
             sql = file.read()
-        os.system("sudo -u postgres sh -c 'psql d2qc -c \"{}\"'".format(sql))
+        os.system(
+            "sudo -u postgres sh -c 'psql {} -c \"{}\"'".format(db_name, sql)
+        )
 
         # restore database from backup
         cmd = "pg_restore --schema public "
@@ -109,4 +124,3 @@ class Command(BaseCommand):
         os.system(cmd)
         if options['migrate']:
             call_command('migrate', verbosity=options['verbosity'])
-
