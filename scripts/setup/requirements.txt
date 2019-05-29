@@ -24,3 +24,4 @@ scipy==1.1.0
 seabird==0.10.5
 six==1.11.0
 supportdata==0.1.2
+django-mathfilters==0.4.0
