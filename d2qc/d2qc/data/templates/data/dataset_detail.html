@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block css %}
+{% load mathfilters %}
 <link rel="stylesheet" type="text/css"
 href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/css/ol.css">
 <style>
@@ -40,6 +41,17 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
             This data set is a reference data set
         </h4>
         {% endif %}
+        <aside>
+            <div class="query_setup">
+                <h4>Current setup</h4>
+                <dl>
+                    <dt>Query radius (km)</dt>
+                    <dd>{{ user.profile.crossover_radius |div:1000 }}</dd>
+                    <dt>Minimum depth</dt>
+                    <dd>{{ user.profile.min_depth }}</dd>
+                </dl>
+            </div>
+        </aside>
         <div class="dataset data">
             <dl>
                 <dt>ID</dt>
