@@ -219,7 +219,7 @@ class DataSet(models.Model):
             result = cursor.fetchall()[0][0]
         return result
 
-    def get_station_buffer(
+    def _get_stations_buffer(
         self,
         stations
     ):
@@ -255,18 +255,8 @@ class DataSet(models.Model):
         result = None
         if stations is not None:
             sql = """
-                select st_astext(
-                    st_buffer(
-                        st_collect(position)::geography,
-                        {}
-                    )
-                )
-                from d2qc_stations
-                where id in ({})
-            """.format(
-                self.owner.profile.crossover_radius,
-                stations
-            )
+                select st_astext('{}')
+            """.format(self._get_stations_buffer(stations))
             cursor = connection.cursor()
             cursor.execute(sql)
             result = cursor.fetchall()[0][0]
@@ -294,7 +284,7 @@ class DataSet(models.Model):
     def get_crossover_stations(
             self,
             data_set_id=None,
-            search_buffer=None,
+            stations=None,
             parameter_id=None,
             crossover_data_set_id=None,
     ):
@@ -324,11 +314,11 @@ class DataSet(models.Model):
 
             sql = sql + data_type_clause
 
-        if search_buffer is not None:
+        if stations is not None:
             buffer_clause = """
                 and st_contains('{}', st.position)
             """.format(
-                    search_buffer
+                self._get_stations_buffer(stations)
             )
 
             sql = sql + buffer_clause
