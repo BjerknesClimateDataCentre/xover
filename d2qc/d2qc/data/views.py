@@ -463,8 +463,7 @@ class DataSetDetail(DetailView):
         # Get the stations for the current data set,
         # filtering by parameter if required
         data_set_stations = self.get_object().get_stations(
-            parameter_id=self.kwargs.get('parameter_id'),
-            data_set_id=self.kwargs.get('pk')
+            parameter_id=self.kwargs.get('parameter_id')
         )
 
         # Get the search buffer for the current data set

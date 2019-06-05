@@ -179,7 +179,7 @@ class DataSet(models.Model):
             inner join d2qc_data_values dv on (dv.depth_id = d.id)
             where ds.id = {} and d.depth >= {}
         """.format(
-                data_set_id,
+                data_set_id or self.id,
                 self.owner.profile.min_depth
         )
 
