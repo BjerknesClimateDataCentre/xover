@@ -454,7 +454,8 @@ class DataSetDetail(DetailView):
     model = DataSet
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['data_types'] = self.get_object().get_data_types()
+        data_set = self.get_object()
+        context['data_types'] = data_set.get_data_types()
         for data_type in context['data_types']:
             if data_type['id'] == self.kwargs.get('parameter_id'):
                 context['parameter'] = data_type
@@ -462,17 +463,17 @@ class DataSetDetail(DetailView):
 
         # Get the stations for the current data set,
         # filtering by parameter if required
-        data_set_stations = self.get_object().get_stations(
+        data_set_stations = data_set.get_stations(
             parameter_id=self.kwargs.get('parameter_id')
         )
 
         # Get the station buffer outline polygon
-        context['stations_polygon'] = self.get_object().get_stations_polygon(
+        context['stations_polygon'] = data_set.get_stations_polygon(
             data_set_stations
         )
 
         # Get the positions of the data set stations
-        context['station_positions'] = self.get_object().get_station_positions(
+        context['station_positions'] = data_set.get_station_positions(
             data_set_stations
         )
 
@@ -481,21 +482,20 @@ class DataSetDetail(DetailView):
         if self.kwargs.get('parameter_id'):
             # Get the crossover stations, restricted to a specific dataset
             # if crossover_data_set_id is not None
-            crossover_stations = self.get_object().get_crossover_stations(
-                data_set_id=self.kwargs.get('pk'),
+            crossover_stations = data_set.get_crossover_stations(
                 stations=data_set_stations,
                 parameter_id=self.kwargs.get('parameter_id'),
                 crossover_data_set_id=self.kwargs.get('data_set_id')
             )
 
             # Get the positions of the crossover stations
-            context['crossover_positions'] = self.get_object().get_station_positions(
+            context['crossover_positions'] = data_set.get_station_positions(
                 crossover_stations
             )
 
             # Get the data set details of the crossovers
-            context['crossover_datasets'] = self.get_object().get_station_data_sets(
-                self.get_object().get_crossover_stations(
+            context['crossover_datasets'] = data_set.get_station_data_sets(
+                data_set.get_crossover_stations(
                     data_set_id=self.kwargs.get('pk'),
                     stations=crossover_stations,
                     parameter_id=self.kwargs.get('parameter_id')
@@ -506,31 +506,31 @@ class DataSetDetail(DetailView):
             # restrict the main data set to only those stations
             # within range of that crossover
             if self.kwargs.get('data_set_id') is not None:
-                data_set_stations = self.get_object().get_crossover_stations(
+                data_set_stations = data_set.get_crossover_stations(
                     data_set_id=self.kwargs.get('data_set_id'),
                     stations=crossover_stations,
                     parameter_id=self.kwargs.get('parameter_id'),
                     crossover_data_set_id=self.kwargs.get('pk')
                 )
 
-                context['station_positions'] = self.get_object().get_station_positions(
+                context['station_positions'] = data_set.get_station_positions(
                     data_set_stations
                 )
 
-                context['stations_polygon'] = self.get_object().get_stations_polygon(
+                context['stations_polygon'] = data_set.get_stations_polygon(
                     data_set_stations
                 )
-
 
             # Get the profiles for the plot
             if self.kwargs.get('data_set_id') is not None:
                 profile_stations = data_set_stations + "," + crossover_stations
                 context['dataset_profiles'] = json.dumps(
-                    self.get_object().get_profiles(
+                    data_set.get_profiles(
                         profile_stations,
                         self.kwargs.get('parameter_id')
                     )
                 )
+
         return context
 
 class DataSetDelete(DeleteView):
