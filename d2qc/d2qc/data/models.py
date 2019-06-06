@@ -293,46 +293,47 @@ class DataSet(models.Model):
         data set (default 200km), for the given parameter. If data_set_id
         is given, only get stations in the given data set.
         """
-        sql = """
-            select string_agg(distinct st.id::text, ',') from d2qc_stations st
+        select = """
+            select string_agg(distinct st.id::text, ',')
+        """
+        _from = """
+            from d2qc_stations st
             inner join d2qc_data_sets ds on (st.data_set_id = ds.id)
             inner join d2qc_casts c on (c.station_id = st.id)
             inner join d2qc_depths d on (d.cast_id = c.id)
-            inner join d2qc_data_values dv on (dv.depth_id = d.id)
+        """
+        where = """
             where ds.id <> {} and d.depth >= {}
         """.format(
-                data_set_id,
+                data_set_id or self.id,
                 self.owner.profile.min_depth
         )
 
         if parameter_id is not None:
-            data_type_clause = """
+            _from += """
+                inner join d2qc_data_values dv on (dv.depth_id = d.id)
+            """
+            where += """
                 and dv.data_type_id in ({})
             """.format(
                     self._in_datatype(parameter_id)
             )
 
-            sql = sql + data_type_clause
-
         if stations is not None:
-            buffer_clause = """
+            where += """
                 and st_contains('{}', st.position)
             """.format(
                 self._get_stations_buffer(stations)
             )
 
-            sql = sql + buffer_clause
-
         if crossover_data_set_id is not None:
-            dataset_clause = """
+            where += """
                 and ds.id = {}
             """.format(
                     crossover_data_set_id
             )
 
-            sql = sql + dataset_clause
-
-
+        sql = select + _from + where
         cursor = connection.cursor()
         cursor.execute(sql)
         return cursor.fetchall()[0][0]
