@@ -479,6 +479,10 @@ class DataSetDetail(DetailView):
 
         if not context['stations_polygon']:
             context['stations_polygon'] = ''
+        context['dataset_profiles'] = '[]'
+        context['dataset_interp_profiles'] = '[]'
+        context['dataset_ref_profiles'] = '[]'
+        context['dataset_ref_interp_profiles'] = '[]'
         if self.kwargs.get('parameter_id'):
             # Get the crossover stations, restricted to a specific dataset
             # if crossover_data_set_id is not None
@@ -496,8 +500,7 @@ class DataSetDetail(DetailView):
             # Get the data set details of the crossovers
             context['crossover_datasets'] = data_set.get_station_data_sets(
                 data_set.get_crossover_stations(
-                    data_set_id=self.kwargs.get('pk'),
-                    stations=crossover_stations,
+                    stations=data_set_stations,
                     parameter_id=self.kwargs.get('parameter_id')
                 )
             )
@@ -522,12 +525,30 @@ class DataSetDetail(DetailView):
                 )
 
             # Get the profiles for the plot
+            context['dataset_profiles'] = data_set.get_profiles_as_json(
+                data_set.get_profiles_data(
+                    data_set_stations,
+                    self.kwargs.get('parameter_id'),
+                )
+            )
+            context['dataset_interp_profiles'] = data_set.get_profiles_as_json(
+                data_set.get_interp_profiles(
+                    data_set_stations,
+                    self.kwargs.get('parameter_id'),
+                )
+            )
             if self.kwargs.get('data_set_id') is not None:
-                profile_stations = data_set_stations + "," + crossover_stations
-                context['dataset_profiles'] = json.dumps(
-                    data_set.get_profiles(
-                        profile_stations,
-                        self.kwargs.get('parameter_id')
+                profile_stations = data_set_stations
+                context['dataset_ref_profiles'] = data_set.get_profiles_as_json(
+                    data_set.get_profiles_data(
+                        crossover_stations,
+                        self.kwargs.get('parameter_id'),
+                    )
+                )
+                context['dataset_ref_interp_profiles'] = data_set.get_profiles_as_json(
+                    data_set.get_interp_profiles(
+                        crossover_stations,
+                        self.kwargs.get('parameter_id'),
                     )
                 )
 
