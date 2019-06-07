@@ -223,36 +223,55 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
             // Profiles:
             var data = []
             var profiles = JSON.parse('{{ dataset_profiles | escapejs }}');
+            var interp_profiles = JSON.parse('{{ dataset_interp_profiles | escapejs }}');
+
+            // Reference dataset
+            var profiles_ref = JSON.parse('{{ dataset_ref_profiles | escapejs }}');
+            var interp_profiles_ref = JSON.parse('{{ dataset_ref_interp_profiles | escapejs }}');
+
             var current_dataset = 0;
             var data_set_id = parseInt('{{ object.id }}')
-            for (var i=0; i<profiles.length; i++) {
-                var showlegend = true
-                if (current_dataset == profiles[i].data_set_id) {
-                    showlegend = false
+            var blue = 'rgb(75,75,255)'
+            var red = 'rgb(255,75,75)'
+            for (var i=0; i<interp_profiles.length; i++) {
+                var showlegend = false
+                if (i == 0) {
+                    showlegend = true
                 }
-
-                var color = 'rgb(255,75,75)'
-                if (data_set_id == profiles[i].data_set_id) {
-                    color = 'rgb(75,75,255)'
+                profile = createProfile(
+                    interp_profiles[i],
+                    blue,
+                    showlegend,
+                    true
+                )
+                if(profile) {
+                    data.push(profile)
                 }
-
-                var profile = {
-                    x: profiles[i].value,
-                    y: profiles[i].depth,
-                    mode: 'lines+markers',
-                    showlegend: showlegend,
-                    name: '',
-                    line: {
-                        color: color,
-                        width: 1
-                    },
-                }
-                if (profile.showlegend) {
-                    profile.name = profiles[i].expocode
-                }
-                data.push(profile)
-                current_dataset = profiles[i].data_set_id
             }
+            for (var i=0; i<profiles.length; i++) {
+                profile = createProfile(profiles[i], blue, false, false)
+                if(profile) {
+                    data.push(profile)
+                }
+            }
+            for (var i=0; i<profiles_ref.length; i++) {
+                profile = createProfile(profiles_ref[i], red, false, false)
+                if(profile) {
+                    data.push(profile)
+                }
+            }
+            for (var i=0; i<interp_profiles_ref.length; i++) {
+                var showlegend = false
+                if (i == 0) {
+                    showlegend = true
+                }
+                profile = createProfile(interp_profiles_ref[i], red, showlegend, true)
+                if(profile) {
+                    data.push(profile)
+                }
+            }
+
+
             var layout = {
                 yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
                 xaxis: {title: {text:profiles[0].parameter}},
@@ -260,6 +279,35 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 legend: {orientation: 'h'}
             };
             Plotly.newPlot('profiles', data, layout);
+            /* create a profile for the profile plot */
+            function createProfile(p, color, showlegend, line) {
+                if (!('param' in p)) {
+                    return []
+                }
+
+                var profile = {
+                    x: Object.values(p.param.data),
+                    y: Object.values(p.sigma4.data),
+                    mode: 'markers',
+                    showlegend: showlegend,
+                    name: '',
+                    marker: {
+                      color: color,
+                      size: 3,
+                    },
+                }
+                if (line) {
+                  profile.mode = 'lines'
+                  profile.line = {
+                    color: color,
+                    width: 1,
+                  }
+                }
+                if (showlegend) {
+                    profile.name = p.expocode
+                }
+                return profile
+            }
           </script>
 
         <a href="{% url 'data_set-delete' object.id %}">[Delete dataset]</a>
