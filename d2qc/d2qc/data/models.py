@@ -582,7 +582,15 @@ class DataSet(models.Model):
                 _max=dataframe['depth'].max(),
                 step = 20
             )
-
+        columns = [
+            'data_set_id',
+            'station_number',
+            'expocode',
+            xtype,
+            'param',
+            'latitude',
+            'longitude',
+        ]
         for groupval, data in groups:
             try:
                 if 'expocode' in data:
@@ -606,15 +614,7 @@ class DataSet(models.Model):
                     data['depth'].tolist(),
                     x,
                 )
-                dataframe = pd.DataFrame(columns=[
-                    'data_set_id',
-                    'station_number',
-                    'expocode',
-                    xtype,
-                    'param',
-                    'latitude',
-                    'longitude',
-                ])
+                dataframe = pd.DataFrame(columns=columns)
 
                 dataframe[xtype] = x_interp
                 dataframe['param'] = param_interp
@@ -636,8 +636,10 @@ class DataSet(models.Model):
                 dataframe = None
         if len(profiles)>1:
             profiles = pd.concat(profiles, sort=False)
-        else:
+        elif len(profiles)==1:
             profiles=profiles[0]
+        else:
+            profiles = pd.DataFrame(columns=columns)
         cache.set(cache_key, profiles)
         return profiles
 
