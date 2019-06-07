@@ -2,6 +2,7 @@ from django.contrib.gis.db import models
 from django.forms import ModelForm
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.core.cache import cache
 import os.path
 import datetime
 import logging
@@ -113,7 +114,6 @@ class DataSet(models.Model):
         db_table = 'd2qc_data_sets'
         ordering = ['expocode']
         unique_together = ('expocode', 'owner')
-    _datatypes = {}
     _single_data_type_ids = {}
     _stations = {}
     _contains_polygon = {}
@@ -141,10 +141,10 @@ class DataSet(models.Model):
 
     def get_data_types(self):
         """Fetch all data types in this data set from the database"""
-
-        # If this has been called before:
-        if self._datatypes:
-            return self._datatypes
+        cache_key = "get_data_types-{}".format(self.id)
+        value = cache.get(cache_key, False)
+        if value is not False:
+            return value
 
         sql = """select distinct dt.original_label, dt.identifier, dt.id
             from d2qc_data_types dt
@@ -155,14 +155,14 @@ class DataSet(models.Model):
             where s.data_set_id = {}
             order by dt.original_label;""".format(self.id)
 
-        cursor = connection.cursor()
-        cursor.execute(sql)
         typelist = [{
             'original_label': type[0],
             'identifier': type[1],
             'id': type[2],
-        } for type in cursor.fetchall()]
-        self._datatypes = typelist
+        } for type in self._fetchall_query(sql)]
+        # Set the cache
+        cache.set(cache_key, typelist)
+
         return typelist
 
     def get_stations(
@@ -195,9 +195,7 @@ class DataSet(models.Model):
 
             sql = sql + data_type_clause
 
-        cursor = connection.cursor()
-        cursor.execute(sql)
-        return cursor.fetchall()[0][0]
+        return self._fetchall_query(sql, True)[0]
 
 
     def get_station_positions(
@@ -216,10 +214,7 @@ class DataSet(models.Model):
                 select st_astext(st_collect(position))
                 from d2qc_stations where id in ({})
             """.format(stations)
-
-            cursor = connection.cursor()
-            cursor.execute(sql)
-            result = cursor.fetchall()[0][0]
+            result = self._fetchall_query(sql, True)[0]
         return result
 
     def _get_stations_buffer(
@@ -239,9 +234,7 @@ class DataSet(models.Model):
                     stations
             )
 
-            cursor = connection.cursor()
-            cursor.execute(sql)
-            result = cursor.fetchall()[0][0]
+            result = self._fetchall_query(sql, True)[0]
 
         return result
 
@@ -260,9 +253,7 @@ class DataSet(models.Model):
             sql = """
                 select st_astext('{}')
             """.format(self._get_stations_buffer(stations))
-            cursor = connection.cursor()
-            cursor.execute(sql)
-            result = cursor.fetchall()[0][0]
+            result = self._fetchall_query(sql, True)[0]
 
         return result
 
@@ -278,9 +269,10 @@ class DataSet(models.Model):
                 inner join d2qc_data_types dt2 on dt.identifier=dt2.identifier
                 where dt.id={}  OFFSET 0
             """.format(parameter_id)
-            cursor = connection.cursor()
-            cursor.execute(sql)
-            self._single_data_type_ids[parameter_id] = cursor.fetchone()[0]
+            self._single_data_type_ids[parameter_id] = self._fetchall_query(
+                sql,
+                True,
+            )[0]
 
         return self._single_data_type_ids[parameter_id]
 
@@ -337,9 +329,9 @@ class DataSet(models.Model):
             )
 
         sql = select + _from + where
-        cursor = connection.cursor()
-        cursor.execute(sql)
-        return cursor.fetchall()[0][0]
+        result = self._fetchall_query(sql, True)[0]
+
+        return result
 
     def get_station_data_sets(
         self,
@@ -367,10 +359,7 @@ class DataSet(models.Model):
             """.format(
                 stations
             )
-
-            cursor = connection.cursor()
-            cursor.execute(sql)
-            result = cursor.fetchall()
+            result = self._fetchall_query(sql)
 
         return result
 
@@ -378,12 +367,16 @@ class DataSet(models.Model):
         """
         Executes an sql query, returning the resulting data.
         """
-        cursor = connection.cursor()
-        cursor.execute(sql)
-        if only_one:
-            query = cursor.fetchone()
-        else:
-            query = cursor.fetchall()
+        query_hash = hashlib.md5(sql.encode('utf-8')).hexdigest()
+        query = cache.get(query_hash, False)
+        if not query:
+            cursor = connection.cursor()
+            cursor.execute(sql)
+            if only_one:
+                query = cursor.fetchone()
+            else:
+                query = cursor.fetchall()
+            cache.set(query_hash, query)
         return query
 
     def get_profiles_data(self, stations, parameter_id):
@@ -392,6 +385,17 @@ class DataSet(models.Model):
 
         Returns a pandas dataframe
         """
+        cache_key = "get_profiles_data-{}-{}-{}-{}-{}".format(
+            self.id,
+            parameter_id,
+            stations,
+            self.owner.profile.crossover_radius,
+            self.owner.profile.min_depth,
+        )
+        cache_key = hashlib.md5(cache_key.encode('utf-8')).hexdigest()
+        value = cache.get(cache_key, False)
+        if value is not False:
+            return value
 
         columns = [
             'data_set_id',
@@ -455,6 +459,7 @@ class DataSet(models.Model):
             ),
             dataframe['temp'],
         )
+        cache.set(cache_key, dataframe)
 
         return dataframe
 
@@ -531,6 +536,18 @@ class DataSet(models.Model):
         different depths initially. Returns a dataframe with same format as
         get_profiles_data
         """
+        cache_key = "get_interp_profiles-{}-{}-{}-{}-{}".format(
+            self.id,
+            parameter_id,
+            stations,
+            self.owner.profile.crossover_radius,
+            self.owner.profile.min_depth,
+        )
+        cache_key = hashlib.md5(cache_key.encode('utf-8')).hexdigest()
+        value = cache.get(cache_key, False)
+        if value is not False:
+            return value
+
         dataframe = self.get_profiles_data(stations, parameter_id)
         groups = dataframe.groupby(
             [
@@ -621,7 +638,7 @@ class DataSet(models.Model):
             profiles = pd.concat(profiles, sort=False)
         else:
             profiles=profiles[0]
-
+        cache.set(cache_key, profiles)
         return profiles
 
 class DataType(models.Model):
