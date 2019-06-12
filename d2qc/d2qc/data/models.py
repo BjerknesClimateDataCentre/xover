@@ -175,7 +175,7 @@ class DataSet(models.Model):
         possibly filtered by parameter_id
         """
         sql = """
-            select string_agg(distinct st.id::text, ',') from d2qc_stations st
+            select distinct st.id from d2qc_stations st
             inner join d2qc_data_sets ds on (st.data_set_id = ds.id)
             inner join d2qc_casts c on (c.station_id = st.id)
             inner join d2qc_depths d on (d.cast_id = c.id)
@@ -195,12 +195,11 @@ class DataSet(models.Model):
 
             sql = sql + data_type_clause
 
-        return self._fetchall_query(sql, True)[0]
-
+        return [ row[0] for row in self._fetchall_query(sql) ]
 
     def get_station_positions(
             self,
-            stations
+            stations: list=[],
     ):
         """
         Get the stations in data_set_id, possibly filtered by parameter_id
@@ -209,38 +208,48 @@ class DataSet(models.Model):
         Returns data as Well Known Text multipoint
         """
         result = None
-        if stations is not None:
-            sql = """
-                select st_astext(st_collect(position))
-                from d2qc_stations where id in ({})
-            """.format(stations)
-            result = self._fetchall_query(sql, True)[0]
+        sql = """
+            select st_astext(st_collect(position))
+            from d2qc_stations where id in ({})
+        """.format(DataSet._in_stations(stations))
+        result = self._fetchall_query(sql, True)[0]
         return result
+
+    @staticmethod
+    def _in_stations(stations: list=None):
+        """
+        Get a commaseparated list of stations suitable for an in() - statment
+        in SQL. if the stations - list is empty or none, '-1' is returned.
+
+        eg.
+        >>> DataSet._in_stations([4,6,8])
+        '4,6,8'
+        """
+        return ','.join(str(i) for i in stations or ['-1'])
 
     def _get_stations_buffer(
         self,
-        stations
+        stations: list=[],
     ):
         """
         Get the search buffer for a set of stations
         """
         result = None
-        if stations is not None:
-            sql = """
-                select st_buffer(st_collect(position)::geography, {})::geometry
-                from d2qc_stations where id in ({})
-            """.format(
-                    self.owner.profile.crossover_radius,
-                    stations
-            )
+        sql = """
+            select st_buffer(st_collect(position)::geography, {})::geometry
+            from d2qc_stations where id in ({})
+        """.format(
+                self.owner.profile.crossover_radius,
+                DataSet._in_stations(stations),
+        )
 
-            result = self._fetchall_query(sql, True)[0]
+        result = self._fetchall_query(sql, True)[0]
 
         return result
 
     def get_stations_polygon(
             self,
-            stations
+            stations: list,
     ):
         """
         Get the polygon around stations that define the serach area for
@@ -249,11 +258,10 @@ class DataSet(models.Model):
         Returns the polygon as Well Known Text multipolygon.
         """
         result = None
-        if stations is not None:
-            sql = """
-                select st_astext('{}')
-            """.format(self._get_stations_buffer(stations))
-            result = self._fetchall_query(sql, True)[0]
+        sql = """
+            select st_astext('{}')
+        """.format(self._get_stations_buffer(stations))
+        result = self._fetchall_query(sql, True)[0]
 
         return result
 
@@ -279,7 +287,7 @@ class DataSet(models.Model):
     def get_crossover_stations(
             self,
             data_set_id=None,
-            stations=None,
+            stations: list=None,
             parameter_id=None,
             crossover_data_set_id=None,
     ):
@@ -289,7 +297,7 @@ class DataSet(models.Model):
         is given, only get stations in the given data set.
         """
         select = """
-            select string_agg(distinct st.id::text, ',')
+            select distinct st.id
         """
         _from = """
             from d2qc_stations st
@@ -329,13 +337,12 @@ class DataSet(models.Model):
             )
 
         sql = select + _from + where
-        result = self._fetchall_query(sql, True)[0]
 
-        return result
+        return [row[0] for row in self._fetchall_query(sql)]
 
     def get_station_data_sets(
         self,
-        stations
+        stations: list,
     ):
         """
         Get the data set details for a set of stations
@@ -357,7 +364,7 @@ class DataSet(models.Model):
                 group by ds.id
                 order by first_station
             """.format(
-                stations
+                DataSet._in_stations(stations)
             )
             result = self._fetchall_query(sql)
 
@@ -379,7 +386,7 @@ class DataSet(models.Model):
             cache.set(query_hash, query)
         return query
 
-    def get_profiles_data(self, stations, parameter_id):
+    def get_profiles_data(self, stations: list, parameter_id):
         """
         Get profiles for the stations and the given parameter_id.
 
@@ -439,10 +446,9 @@ class DataSet(models.Model):
             s.id in({}) and depth>={}
         """
 
-
         sql = sql_tmpl.format(
             self._in_datatype(parameter_id),
-            stations,
+            DataSet._in_stations(stations),
             self.owner.profile.min_depth,
         )
 
