@@ -635,6 +635,12 @@ class DataSet(models.Model):
                         dataframe[c] = expocode
                     else:
                         dataframe[c] = data[c].iloc[0]
+
+                # Trim nan-rows at start and end
+                first = dataframe['param'].first_valid_index()
+                last = dataframe['param'].last_valid_index()
+                dataframe = dataframe.loc[first:last, :]
+
                 profiles.append(dataframe)
             except Exception as e:
                 print("#################### ERROR #####################")
