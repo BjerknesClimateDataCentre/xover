@@ -75,6 +75,9 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                                 <th>
                                     Profiles
                                 </th>
+                                <th>
+                                    Statistics
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -124,6 +127,11 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                                 <td>
                                     <div id="profiles"
                                         style="width: 500px; height: 600px">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div id="stats"
+                                        style="width: 300px; height: 600px">
                                     </div>
                                 </td>
                             </tr>
@@ -302,12 +310,59 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                     color: color,
                     width: 1,
                   }
+                  profile.hoverinfo = 'skip'
                 }
                 if (showlegend) {
                     profile.name = p.expocode
                 }
                 return profile
             }
+
+            // Plot stats
+            var stats = JSON.parse('{{ dataset_stats | escapejs }}');
+            var data = []
+            var mean = {
+              x: stats[1],
+              y: stats[0],
+              mode: 'markers',
+              type: 'scatter',
+              marker: {
+                color: blue
+              },
+              name: 'Mean'
+            };
+
+            var stdev_plus = {
+              x: stats[1].map(function (v, i) {return stats[2][i] == null ? null : v + stats[2][i]}),
+              y: stats[0],
+              mode: 'lines',
+              type: 'scatter',
+              line: {
+                color: blue
+              },
+              name: '&#177;  St. dev'
+            };
+            var stdev_min = {
+              x: stats[1].map(function (v, i) {return stats[2][i] == null ? null : v - stats[2][i]}),
+              y: stats[0],
+              mode: 'lines',
+              type: 'scatter',
+              line: {
+                color: blue
+              },
+              showlegend: false,
+              name: '&#177;  St. dev'
+            };
+
+            var data = [mean, stdev_plus, stdev_min];
+            var layout = {
+                yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
+                margin: {l: 60, r:0},
+                legend: {orientation: 'h'},
+                hovermode: 'y'
+            };
+
+            Plotly.newPlot('stats', data, layout);
           </script>
 
         <a href="{% url 'data_set-delete' object.id %}">[Delete dataset]</a>

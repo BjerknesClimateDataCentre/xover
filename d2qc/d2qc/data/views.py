@@ -551,6 +551,12 @@ class DataSetDetail(DetailView):
                         self.kwargs.get('parameter_id'),
                     )
                 )
+                stats = data_set.get_profiles_stats(
+                    data_set_stations,
+                    crossover_stations,
+                    self.kwargs.get('parameter_id'),
+                )
+                context['dataset_stats'] = json.dumps(stats, allow_nan=False)
 
         return context
 

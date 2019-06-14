@@ -13,7 +13,10 @@ from django.db import connection
 import hashlib
 import gsw
 import glodap.util.interp as interp
+import glodap.util.stats as stats
+import glodap.util.geo as geo
 import pandas as pd
+import statistics as stat
 
 class Profile(models.Model):
     class Meta:
@@ -654,6 +657,93 @@ class DataSet(models.Model):
             profiles = pd.DataFrame(columns=columns)
         cache.set(cache_key, profiles)
         return profiles
+
+
+    def get_profiles_stats(
+            self,
+            stations: list,
+            xover_stations: list,
+            parameter_id: int,
+    ):
+        cache_key = "get_profiles_stats-{}-{}-{}-{}-{}".format(
+            self.id,
+            parameter_id,
+            stations,
+            self.owner.profile.crossover_radius,
+            self.owner.profile.min_depth,
+        )
+        cache_key = hashlib.md5(cache_key.encode('utf-8')).hexdigest()
+        value = cache.get(cache_key, False)
+        if value is not False:
+            return value
+
+        xtype = 'sigma4'
+        current_stations = self.get_interp_profiles(stations, parameter_id)
+        current_stations = current_stations.groupby(
+            [
+                'station_number'
+            ]
+        )
+        reference_stations = self.get_interp_profiles(
+            xover_stations,
+            parameter_id,
+        )
+        reference_stations = reference_stations.groupby(
+            [
+                'data_set_id',
+                'station_number'
+            ]
+        )
+
+
+        profiles = []
+        diffs = {}
+        for groupval, current in current_stations:
+            for g2, reference in reference_stations:
+                if (
+                        geo.haversine_distance(
+                            current['longitude'].iloc[0],
+                            current['latitude'].iloc[0],
+                            reference['longitude'].iloc[0],
+                            reference['latitude'].iloc[0],
+                        ) < self.owner.profile.crossover_radius
+                ):
+                    c_ind, r_ind = stats._get_matching_indices(
+                        current.sigma4.tolist(),
+                        reference.sigma4.tolist(),
+                    )
+                    param = current.columns.get_loc('param')
+                    sigma4 = current.columns.get_loc(xtype)
+                    c_param = current.iloc[c_ind, param].tolist()
+                    r_param = reference.iloc[r_ind, param].tolist()
+                    y_all = reference.iloc[r_ind, sigma4].tolist()
+                    for i, y in enumerate(y_all):
+                        if not y in diffs:
+                            diffs[y] = {'diff': []}
+                        diffs[y]['diff'].append(c_param[i] - r_param[i])
+        for y in diffs:
+            diffs[y]['mean'] = stat.mean(diffs[y]['diff'])
+            diffs[y]['stdev'] = None
+            if len(diffs[y]['diff']) > 4:
+                diffs[y]['stdev'] = stat.stdev(diffs[y]['diff'])
+            diffs[y].pop('diff')
+        mean = []
+        stdev = []
+        y=[]
+        for key, value in diffs.items():
+            y.append(key)
+            mean.append(value['mean'])
+            stdev.append(value['stdev'])
+
+        # Sort the lists by y-value
+        zipped = sorted(zip(y, mean, stdev))
+        # ...and unzip
+        y, mean, stdev = zip(*zipped)
+
+        result = (y, mean, stdev)
+        cache.set(cache_key, result)
+        return result
+
 
 class DataType(models.Model):
     class Meta:
