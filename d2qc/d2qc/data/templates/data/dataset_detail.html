@@ -322,8 +322,8 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
             var stats = JSON.parse('{{ dataset_stats | escapejs }}');
             var data = []
             var mean = {
-              x: stats[1],
-              y: stats[0],
+              x: stats.mean,
+              y: stats.y,
               mode: 'markers',
               type: 'scatter',
               marker: {
@@ -333,8 +333,8 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
             };
 
             var stdev_plus = {
-              x: stats[1].map(function (v, i) {return stats[2][i] == null ? null : v + stats[2][i]}),
-              y: stats[0],
+              x: stats.mean.map(function (v, i) {return stats.stdev[i] == null ? null : v + stats.stdev[i]}),
+              y: stats.y,
               mode: 'lines',
               type: 'scatter',
               line: {
@@ -343,8 +343,8 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
               name: '&#177;  St. dev'
             };
             var stdev_min = {
-              x: stats[1].map(function (v, i) {return stats[2][i] == null ? null : v - stats[2][i]}),
-              y: stats[0],
+              x: stats.mean.map(function (v, i) {return stats.stdev[i] == null ? null : v - stats.stdev[i]}),
+              y: stats.y,
               mode: 'lines',
               type: 'scatter',
               line: {
@@ -353,8 +353,49 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
               showlegend: false,
               name: '&#177;  St. dev'
             };
+            var w_mean = {
+              x: [stats.w_mean, stats.w_mean],
+              y: [Math.min(...stats.y), Math.max(...stats.y)],
+              mode: 'lines',
+              type: 'scatter',
+              line: {
+                color: red
+              },
+              name: 'Weighted mean'
+            };
+            var w_std_plus = {
+              x: [stats.w_mean + stats.w_stdev, stats.w_mean + stats.w_stdev],
+              y: [Math.min(...stats.y), Math.max(...stats.y)],
+              mode: 'lines',
+              type: 'scatter',
+              line: {
+                color: red,
+                dash: 'dot'
+              },
+              name: 'Weighted st. dev'
+            };
+            var w_std_min = {
+              x: [stats.w_mean - stats.w_stdev, stats.w_mean - stats.w_stdev],
+              y: [Math.min(...stats.y), Math.max(...stats.y)],
+              mode: 'lines',
+              type: 'scatter',
+              line: {
+                color: red,
+                dash: 'dot'
+              },
+              name: 'Weighted st. dev',
+              showlegend: false
+            };
 
-            var data = [mean, stdev_plus, stdev_min];
+
+            var data = [
+                mean,
+                stdev_plus,
+                stdev_min,
+                w_mean,
+                w_std_plus,
+                w_std_min
+            ];
             var layout = {
                 yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
                 margin: {l: 60, r:0},
