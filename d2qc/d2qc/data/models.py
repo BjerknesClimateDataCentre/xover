@@ -740,7 +740,26 @@ class DataSet(models.Model):
         # ...and unzip
         y, mean, stdev = zip(*zipped)
 
-        result = (y, mean, stdev)
+
+        ###############################################################
+        # TODO If std less than minimum std, set std to minimum - std #
+        # see line 73 xocer_2ndQC.m                                   #
+        ###############################################################
+
+        # Calculate weighted difference
+        w_mean = sum([ not s or m/pow(s, 2) for m, s in zip(mean, stdev)])
+        w_mean = w_mean / sum([ not s or 1/pow(s, 2) for s in stdev])
+        w_stdev = sum([ not s or 1/s for s in stdev])
+        w_stdev = w_stdev / sum([ not s or 1/pow(s, 2) for s in stdev])
+
+        result = {
+            'y': y,
+            'mean': mean,
+            'stdev': stdev,
+            'w_mean': w_mean,
+            'w_stdev': w_stdev
+        }
+
         cache.set(cache_key, result)
         return result
 
