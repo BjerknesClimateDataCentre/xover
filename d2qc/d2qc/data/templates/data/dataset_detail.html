@@ -5,12 +5,12 @@
 href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/css/ol.css">
 <style>
     #map {
-        height: 500px;
-        width: 500px;
+        height: 300px;
+        width: 450px;
     }
     .dataset.data{
         display: flex;
-        justify-content: space-around;
+        justify-content: flex-start;
         align-items: flex-start;
     }
     .dataset.data .selected,
@@ -21,6 +21,18 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
     }
     .dataset.data td {
         vertical-align: top;
+    }
+    .dataset-top {
+        display: flex;
+        justify-content: flex-start;
+    }
+    .head-wrapper {
+      order: 2;
+      padding: 10px;
+    }
+    .map-wrapper {
+      order: 1;
+      padding: 10px;
     }
 </style>
 <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
@@ -33,25 +45,44 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
 {% endblock%}
 {% block content %}
     <div>
-        <h3>
-            ID: {{ object.id }} - {{ object.expocode }}
-        </h3>
-        {% if object.is_reference %}
-        <h4>
-            This data set is a reference data set
-        </h4>
-        {% endif %}
-        <aside>
-            <div class="query_setup">
-                <h4>Current setup</h4>
-                <dl>
-                    <dt>Query radius (km)</dt>
-                    <dd>{{ user.profile.crossover_radius |div:1000 }}</dd>
-                    <dt>Minimum depth</dt>
-                    <dd>{{ user.profile.min_depth }}</dd>
-                </dl>
+        <div class="dataset-top">
+            <div class="head-wrapper">
+                <h3>
+                    ID: {{ object.id }} - {{ object.expocode }}
+                </h3>
+                {% if object.is_reference %}
+                <h4>
+                    This data set is a reference data set
+                </h4>
+                {% endif %}
+                <aside>
+                    <div class="query_setup">
+                        <h4>Current setup</h4>
+                        <dl>
+                            <dt>Query radius (km)</dt>
+                            <dd>{{ user.profile.crossover_radius |div:1000 }}</dd>
+                            <dt>Minimum depth</dt>
+                            <dd>{{ user.profile.min_depth }}</dd>
+                        </dl>
+                    </div>
+                </aside>
             </div>
-        </aside>
+            <div class="map-wrapper">
+                <h4>
+                    {% if parameter %}
+                    Stations with {{ parameter.original_label }} sampling
+                    {% else %}
+                    All stations
+                    {% endif %}
+                </h4>
+                <div id="map">
+                </div>
+                <a href="{% url 'data_set-detail' object.id %}">
+                        [Show all stations]
+                </a>
+            </div>
+        </div>
+
         <div class="dataset data">
             <dl>
                 <dt>ID</dt>
@@ -139,20 +170,6 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                     </table>
                 </dd>
             </dl>
-            <div>
-                <h4>
-                    {% if parameter %}
-                    Stations with {{ parameter.original_label }} sampling
-                    {% else %}
-                    All stations
-                    {% endif %}
-                </h4>
-                <div id="map">
-                </div>
-                <a href="{% url 'data_set-detail' object.id %}">
-                        [Show all stations]
-                </a>
-            </div>
         </div>
         <script type="text/javascript">
 
@@ -284,7 +301,8 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
                 xaxis: {title: {text:profiles[0].parameter}},
                 margin: {l: 60, r:0},
-                legend: {orientation: 'h'}
+                legend: {orientation: 'h'},
+                hovermode: 'y'
             };
             Plotly.newPlot('profiles', data, layout);
             /* create a profile for the profile plot */
