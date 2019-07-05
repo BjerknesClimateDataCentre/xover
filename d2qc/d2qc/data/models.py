@@ -732,8 +732,9 @@ class DataSet(models.Model):
         y=[]
         for key, value in diffs.items():
             y.append(key)
-            mean.append(value['mean'])
-            stdev.append(value['stdev'])
+
+            mean.append(None if value['mean'] is None or math.isnan(value['mean']) else value['mean'])
+            stdev.append(None if value['stdev'] is None or math.isnan(value['stdev']) else value['stdev'])
 
         # Sort the lists by y-value
         zipped = sorted(zip(y, mean, stdev))
