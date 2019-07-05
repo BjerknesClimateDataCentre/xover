@@ -140,7 +140,7 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                                         <tbody>
                                             {% for data_set in crossover_datasets %}
                                             <tr
-                                            {% if data_set_id == data_set.0 %}
+                                            {% if crossover_data_set_id == data_set.0 %}
                                             class="selected"
                                             {% endif %}
                                             >
@@ -311,50 +311,51 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 }
             }
 
-            // Indicate where statistics are valid
-            min_stat = Math.min(...stats.y)
-            max_stat = Math.max(...stats.y)
-            diff_stat = max_stat-min_stat
-            diff_param = param_max - param_min
-            var stats_limits = {
-                x: [
-                    param_min,
-                    param_max,
-                    param_max,
-                    param_max + diff_param / 14,
-                ],
-                y: [
-                    min_stat,
-                    min_stat,
-                    min_stat - diff_stat / 5,
-                    min_stat + diff_stat / 2,
-                ],
-                mode: 'lines',
-                type: 'scatter',
-                line: {
-                  color: bluetransp,
-                },
-                marker: {
-                  color: bluetransp,
-                },
-                showlegend: false
+            if (stats.hasOwnProperty('y')) {
+                // Indicate where statistics are valid
+                min_stat = Math.min(...stats.y)
+                max_stat = Math.max(...stats.y)
+                diff_stat = max_stat-min_stat
+                diff_param = param_max - param_min
+                var stats_limits = {
+                    x: [
+                        param_min,
+                        param_max,
+                        param_max,
+                        param_max + diff_param / 14,
+                    ],
+                    y: [
+                        min_stat,
+                        min_stat,
+                        min_stat - diff_stat / 5,
+                        min_stat + diff_stat / 2,
+                    ],
+                    mode: 'lines',
+                    type: 'scatter',
+                    line: {
+                      color: bluetransp,
+                    },
+                    marker: {
+                      color: bluetransp,
+                    },
+                    showlegend: false
+                }
+                stats_fill = JSON.parse(JSON.stringify(stats_limits))
+                stats_fill.y = [
+                    max_stat,
+                    max_stat,
+                    max_stat + diff_stat / 5,
+                    max_stat - diff_stat / 2,
+                ]
+                stats_fill.fill = 'tonexty'
+                stats_fill.fillcolor = bluetransp
+                stats_fill.showlegend = true
+                stats_fill.name = 'Matching crossover area'
+
+                // Add these to the beginning of the data array
+                data.unshift(stats_fill)
+                data.unshift(stats_limits)
             }
-            stats_fill = JSON.parse(JSON.stringify(stats_limits))
-            stats_fill.y = [
-                max_stat,
-                max_stat,
-                max_stat + diff_stat / 5,
-                max_stat - diff_stat / 2,
-            ]
-            stats_fill.fill = 'tonexty'
-            stats_fill.fillcolor = bluetransp
-            stats_fill.showlegend = true
-            stats_fill.name = 'Matching crossover area'
-
-            // Add these to the beginning of the data array
-            data.unshift(stats_fill)
-            data.unshift(stats_limits)
-
 
             var layout = {
                 yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
@@ -395,91 +396,93 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 return profile
             }
 
-            // Plot stats
-            var data = []
-            var mean = {
-              x: stats.mean,
-              y: stats.y,
-              mode: 'markers',
-              type: 'scatter',
-              marker: {
-                color: blue
-              },
-              name: 'Mean'
-            };
+            if (stats.hasOwnProperty('y')) {
+                // Plot stats
+                var data = []
+                var mean = {
+                  x: stats.mean,
+                  y: stats.y,
+                  mode: 'markers',
+                  type: 'scatter',
+                  marker: {
+                    color: blue
+                  },
+                  name: 'Mean'
+                };
 
-            var stdev_plus = {
-              x: stats.mean.map(function (v, i) {return stats.stdev[i] == null ? null : v + stats.stdev[i]}),
-              y: stats.y,
-              mode: 'lines',
-              type: 'scatter',
-              line: {
-                color: blue
-              },
-              name: '&#177;  St. dev'
-            };
-            var stdev_min = {
-              x: stats.mean.map(function (v, i) {return stats.stdev[i] == null ? null : v - stats.stdev[i]}),
-              y: stats.y,
-              mode: 'lines',
-              type: 'scatter',
-              line: {
-                color: blue
-              },
-              showlegend: false,
-              name: '&#177;  St. dev'
-            };
-            var w_mean = {
-              x: [stats.w_mean, stats.w_mean],
-              y: [Math.min(...stats.y), Math.max(...stats.y)],
-              mode: 'lines',
-              type: 'scatter',
-              line: {
-                color: red
-              },
-              name: 'Weighted mean'
-            };
-            var w_std_plus = {
-              x: [stats.w_mean + stats.w_stdev, stats.w_mean + stats.w_stdev],
-              y: [Math.min(...stats.y), Math.max(...stats.y)],
-              mode: 'lines',
-              type: 'scatter',
-              line: {
-                color: red,
-                dash: 'dot'
-              },
-              name: 'Weighted st. dev'
-            };
-            var w_std_min = {
-              x: [stats.w_mean - stats.w_stdev, stats.w_mean - stats.w_stdev],
-              y: [Math.min(...stats.y), Math.max(...stats.y)],
-              mode: 'lines',
-              type: 'scatter',
-              line: {
-                color: red,
-                dash: 'dot'
-              },
-              name: 'Weighted st. dev',
-              showlegend: false
-            };
+                var stdev_plus = {
+                  x: stats.mean.map(function (v, i) {return stats.stdev[i] == null ? null : v + stats.stdev[i]}),
+                  y: stats.y,
+                  mode: 'lines',
+                  type: 'scatter',
+                  line: {
+                    color: blue
+                  },
+                  name: '&#177;  St. dev'
+                };
+                var stdev_min = {
+                  x: stats.mean.map(function (v, i) {return stats.stdev[i] == null ? null : v - stats.stdev[i]}),
+                  y: stats.y,
+                  mode: 'lines',
+                  type: 'scatter',
+                  line: {
+                    color: blue
+                  },
+                  showlegend: false,
+                  name: '&#177;  St. dev'
+                };
+                var w_mean = {
+                  x: [stats.w_mean, stats.w_mean],
+                  y: [Math.min(...stats.y), Math.max(...stats.y)],
+                  mode: 'lines',
+                  type: 'scatter',
+                  line: {
+                    color: red
+                  },
+                  name: 'Weighted mean'
+                };
+                var w_std_plus = {
+                  x: [stats.w_mean + stats.w_stdev, stats.w_mean + stats.w_stdev],
+                  y: [Math.min(...stats.y), Math.max(...stats.y)],
+                  mode: 'lines',
+                  type: 'scatter',
+                  line: {
+                    color: red,
+                    dash: 'dot'
+                  },
+                  name: 'Weighted st. dev'
+                };
+                var w_std_min = {
+                  x: [stats.w_mean - stats.w_stdev, stats.w_mean - stats.w_stdev],
+                  y: [Math.min(...stats.y), Math.max(...stats.y)],
+                  mode: 'lines',
+                  type: 'scatter',
+                  line: {
+                    color: red,
+                    dash: 'dot'
+                  },
+                  name: 'Weighted st. dev',
+                  showlegend: false
+                };
 
 
-            var data = [
-                mean,
-                stdev_plus,
-                stdev_min,
-                w_mean,
-                w_std_plus,
-                w_std_min
-            ];
-            var layout = {
-                yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
-                margin: {l: 60, r:0},
-                legend: {orientation: 'h'},
-                hovermode: 'y'
-            };
+                var data = [
+                    mean,
+                    stdev_plus,
+                    stdev_min,
+                    w_mean,
+                    w_std_plus,
+                    w_std_min
+                ];
+                var layout = {
+                    yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
+                    margin: {l: 60, r:0},
+                    legend: {orientation: 'h'},
+                    hovermode: 'y'
+                };
 
-            Plotly.newPlot('stats', data, layout);
+                Plotly.newPlot('stats', data, layout);
+            }
           </script>
 
         <a href="{% url 'data_set-delete' object.id %}">[Delete dataset]</a>
