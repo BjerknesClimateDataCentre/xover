@@ -743,9 +743,8 @@ class DataSet(models.Model):
         y=[]
         for key, value in diffs.items():
             y.append(key)
-
-            mean.append(None if value['mean'] is None or math.isnan(value['mean']) else value['mean'])
-            stdev.append(None if value['stdev'] is None or math.isnan(value['stdev']) else value['stdev'])
+            mean.append(value['mean'])
+            stdev.append(value['stdev'])
 
         # Sort the lists by y-value
         zipped = sorted(zip(y, mean, stdev))
@@ -755,14 +754,14 @@ class DataSet(models.Model):
 
         ###############################################################
         # TODO If std less than minimum std, set std to minimum - std #
-        # see line 73 xocer_2ndQC.m                                   #
+        # see line 73 xover_2ndQC.m                                   #
         ###############################################################
 
         # Calculate weighted difference
-        w_mean = sum([ not s or m/pow(s, 2) for m, s in zip(mean, stdev)])
-        w_mean = w_mean / sum([ not s or 1/pow(s, 2) for s in stdev])
-        w_stdev = sum([ not s or 1/s for s in stdev])
-        w_stdev = w_stdev / sum([ not s or 1/pow(s, 2) for s in stdev])
+        w_mean = sum([ 0 if not s else m/pow(s, 2) for m, s in zip(mean, stdev)])
+        w_mean = w_mean / sum([ 0 if not s else 1/pow(s, 2) for s in stdev])
+        w_stdev = sum([ 0 if not s else 1/s for s in stdev])
+        w_stdev = w_stdev / sum([ 0 if not s else 1/pow(s, 2) for s in stdev])
 
         result = {
             'y': y,
