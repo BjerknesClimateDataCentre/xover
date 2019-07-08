@@ -665,12 +665,14 @@ class DataSet(models.Model):
             xover_stations: list,
             parameter_id: int,
     ):
-        cache_key = "get_profiles_stats-{}-{}-{}-{}-{}".format(
+        data_type = DataType.objects.get(pk=parameter_id)
+        cache_key = "get_profiles_stats-{}-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
             stations,
             self.owner.profile.crossover_radius,
             self.owner.profile.min_depth,
+            data_type.offset_type.id,
         )
         cache_key = hashlib.md5(cache_key.encode('utf-8')).hexdigest()
         value = cache.get(cache_key, False)
@@ -720,7 +722,16 @@ class DataSet(models.Model):
                     for i, y in enumerate(y_all):
                         if not y in diffs:
                             diffs[y] = {'diff': []}
-                        diffs[y]['diff'].append(c_param[i] - r_param[i])
+                        if data_type.offset_type.id == 1:
+                            val = c_param[i] - r_param[i]
+                            if val is None or math.isnan(val):
+                                continue
+                            diffs[y]['diff'].append(val)
+                        elif data_type.offset_type.id == 2:
+                            val = c_param[i] / r_param[i]
+                            if val is None or math.isnan(val):
+                                continue
+                            diffs[y]['diff'].append(val)
         for y in diffs:
             diffs[y]['mean'] = stat.mean(diffs[y]['diff'])
             diffs[y]['stdev'] = None
@@ -782,11 +793,27 @@ class DataType(models.Model):
     altLabel = models.CharField(max_length=255, default='', blank=True)
     definition = models.CharField(max_length=255, default='', blank=True)
     original_label = models.CharField(max_length=20, default='')
+    offset_type = models.ForeignKey(
+        'OffsetType',
+        on_delete = models.PROTECT,
+        blank = True,
+        null = True,
+        default = 1,
+    )
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     def __str__(self):
         label = self.original_label if self.original_label else self.identifier
         return label
+
+class OffsetType(models.Model):
+    class Meta:
+        db_table = 'd2qc_offset_types'
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=20, default='', blank=True)
+    description = models.CharField(max_length=255, default='', blank=True)
+    def __str__(self):
+        return self.name
 
 class DataUnit(models.Model):
     class Meta:

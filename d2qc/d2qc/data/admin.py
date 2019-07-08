@@ -10,6 +10,10 @@ from django.contrib import admin
 class DataSetAdmin(admin.ModelAdmin):
     pass
 
+@admin.register(OffsetType)
+class OffsetTypeAdmin(admin.ModelAdmin):
+    pass
+
 @admin.register(DataType)
 class DataTypeAdmin(admin.ModelAdmin):
     pass
