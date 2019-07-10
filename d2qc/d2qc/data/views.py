@@ -17,6 +17,7 @@ from django.views.generic.edit import DeleteView
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.contrib.auth import login
+from django.core.cache import cache
 from d2qc.data.models import *
 from d2qc.data.forms import DataFileForm
 from rest_framework import viewsets
@@ -29,6 +30,9 @@ from django.contrib.gis.geos import Point
 import json
 import traceback
 import math
+import subprocess
+import hashlib
+
 
 class MissingColumnException(KeyError):
     pass
@@ -484,6 +488,40 @@ class DataSetDetail(DetailView):
         context['dataset_ref_profiles'] = '[]'
         context['dataset_ref_interp_profiles'] = '[]'
         if self.kwargs.get('parameter_id'):
+            cache_key_px = "_xover-{}-{}-{}-{}".format(
+                data_set.id,
+                self.kwargs.get('parameter_id'),
+                data_set.owner.profile.crossover_radius,
+                data_set.owner.profile.min_depth,
+            )
+
+            # Check if calculation has begun
+            calculating_key = hashlib.md5(
+                ('calculating' + cache_key_px).encode('utf-8')
+            ).hexdigest()
+            calculating_value = cache.get(calculating_key, False)
+
+            # Check if calculation is ready
+            ready_key = hashlib.md5(
+                ('calculate' + cache_key_px).encode('utf-8')
+            ).hexdigest()
+            value = cache.get(ready_key, False)
+            context['summary_stats'] = None
+            if calculating_value is False:
+                # Spawn process to calculate weighted mean for parameter
+                subprocess.Popen([
+                    settings.PYTHON_ENV,
+                    os.path.join(settings.BASE_DIR,"manage.py"),
+                    'calculate_xover',
+                    str(data_set.id),
+                    str(self.kwargs.get('parameter_id')),
+                    str(data_set.owner.profile.crossover_radius),
+                    str(data_set.owner.profile.min_depth),
+                ])
+                cache.set(calculating_key, True)
+            elif value is not False:
+                context['summary_stats'] = value
+
             # Get the crossover stations, restricted to a specific dataset
             # if crossover_data_set_id is not None
             crossover_stations = data_set.get_crossover_stations(
