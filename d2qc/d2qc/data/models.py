@@ -171,12 +171,24 @@ class DataSet(models.Model):
     def get_stations(
             self,
             parameter_id=None,
-            data_set_id=None
+            data_set_id=None,
+            crossover_radius=False,
+            min_depth=False,
     ):
         """
         Get the list of stations in data_set_id or the current data set,
         possibly filtered by parameter_id
         """
+        crossover_radius = (
+            crossover_radius
+            or self.owner.profile.crossover_radius
+            or self.crossover_radius
+        )
+        min_depth = (
+            min_depth
+            or self.owner.profile.min_depth
+            or self.min_depth
+        )
         sql = """
             select distinct st.id from d2qc_stations st
             inner join d2qc_data_sets ds on (st.data_set_id = ds.id)
@@ -186,7 +198,7 @@ class DataSet(models.Model):
             where ds.id = {} and d.depth >= {}
         """.format(
                 data_set_id or self.id,
-                self.owner.profile.min_depth
+                min_depth
         )
 
         if parameter_id is not None:
@@ -233,7 +245,13 @@ class DataSet(models.Model):
     def _get_stations_buffer(
         self,
         stations: list=[],
+        crossover_radius=False,
     ):
+        crossover_radius = (
+            crossover_radius
+            or self.owner.profile.crossover_radius
+            or self.crossover_radius
+        )
         """
         Get the search buffer for a set of stations
         """
@@ -242,7 +260,7 @@ class DataSet(models.Model):
             select st_buffer(st_collect(position)::geography, {})::geometry
             from d2qc_stations where id in ({})
         """.format(
-                self.owner.profile.crossover_radius,
+                crossover_radius,
                 DataSet._in_stations(stations),
         )
 
@@ -253,17 +271,28 @@ class DataSet(models.Model):
     def get_stations_polygon(
             self,
             stations: list,
-    ):
+            crossover_radius=False,
+        ):
         """
         Get the polygon around stations that define the serach area for
         matching crossover stations.
 
         Returns the polygon as Well Known Text multipolygon.
         """
+        if len(stations) == 0:
+            return []
+        crossover_radius = (
+            crossover_radius
+            or self.owner.profile.crossover_radius
+            or self.crossover_radius
+        )
         result = None
         sql = """
             select st_astext('{}')
-        """.format(self._get_stations_buffer(stations))
+        """.format(self._get_stations_buffer(
+            stations,
+            crossover_radius=crossover_radius,
+        ))
         result = self._fetchall_query(sql, True)[0]
 
         return result
@@ -293,12 +322,25 @@ class DataSet(models.Model):
             stations: list=None,
             parameter_id=None,
             crossover_data_set_id=None,
-    ):
+            min_depth=False,
+            crossover_radius=False,
+        ):
         """
         Get stations that are within the crossover range of stations in this
         data set (default 200km), for the given parameter. If data_set_id
         is given, only get stations in the given data set.
         """
+
+        min_depth = (
+            min_depth
+            or self.owner.profile.min_depth
+            or self.min_depth
+        )
+        crossover_radius = (
+            crossover_radius
+            or self.owner.profile.crossover_radius
+            or self.crossover_radius
+        )
         select = """
             select distinct st.id
         """
@@ -312,7 +354,7 @@ class DataSet(models.Model):
             where ds.id <> {} and d.depth >= {}
         """.format(
                 data_set_id or self.id,
-                self.owner.profile.min_depth
+                min_depth
         )
 
         if parameter_id is not None:
@@ -325,11 +367,14 @@ class DataSet(models.Model):
                     self._in_datatype(parameter_id)
             )
 
-        if stations is not None:
+        if stations is not None and len(stations) > 0:
             where += """
                 and st_contains('{}', st.position)
             """.format(
-                self._get_stations_buffer(stations)
+                self._get_stations_buffer(
+                    stations,
+                    crossover_radius=crossover_radius,
+                )
             )
 
         if crossover_data_set_id is not None:
@@ -389,18 +434,34 @@ class DataSet(models.Model):
             cache.set(query_hash, query)
         return query
 
-    def get_profiles_data(self, stations: list, parameter_id):
+    def get_profiles_data(
+            self,
+            stations: list,
+            parameter_id,
+            crossover_radius=False,
+            min_depth=False,
+    ):
         """
         Get profiles for the stations and the given parameter_id.
 
         Returns a pandas dataframe
         """
+        crossover_radius = (
+            crossover_radius
+            or self.owner.profile.crossover_radius
+            or self.crossover_radius
+        )
+        min_depth = (
+            min_depth
+            or self.owner.profile.min_depth
+            or self.min_depth
+        )
         cache_key = "get_profiles_data-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
             stations,
-            self.owner.profile.crossover_radius,
-            self.owner.profile.min_depth,
+            crossover_radius,
+            min_depth,
         )
         cache_key = hashlib.md5(cache_key.encode('utf-8')).hexdigest()
         value = cache.get(cache_key, False)
@@ -452,7 +513,7 @@ class DataSet(models.Model):
         sql = sql_tmpl.format(
             self._in_datatype(parameter_id),
             DataSet._in_stations(stations),
-            self.owner.profile.min_depth,
+            min_depth,
         )
 
         sql += " order by d.id, expocode, station_number, c_cast, depth"
@@ -538,26 +599,69 @@ class DataSet(models.Model):
 
         return profiles
 
-    def get_interp_profiles(self, stations, parameter_id):
+    def get_timespan(self, stations: list=[]):
+        """
+        Get the first and last data timestamp for this cruise
+        Optionally provide a list of stations to filter the result.
+
+        stations: list of station id's, ignoring id's not from this cruise
+
+        retuns a tuple with two date objects (start, end)
+        """
+
+        sql = """
+            SELECT min(date_and_time), max(date_and_time) FROM d2qc_depths d
+            INNER JOIN d2qc_casts c on d.cast_id = c.id
+            INNER JOIN d2qc_stations s on c.station_id = s.id
+            WHERE s.data_set_id = {}
+        """.format(self.id)
+        if len(stations) > 0:
+            sql += """
+            AND s.id in ({})
+            """.format(self._in_stations(stations))
+        return self._fetchall_query(sql)[0]
+
+    def get_interp_profiles(
+            self,
+            stations,
+            parameter_id,
+            crossover_radius=False,
+            min_depth=False,
+    ):
         """
         Fetches profiles for the given stations, and interpolates these
         to a common depth/sigma4 parameter to allow comparing profiles with
         different depths initially. Returns a dataframe with same format as
         get_profiles_data
         """
+        crossover_radius = (
+            crossover_radius
+            or self.owner.profile.crossover_radius
+            or self.crossover_radius
+        )
+        min_depth = (
+            min_depth
+            or self.owner.profile.min_depth
+            or self.min_depth
+        )
         cache_key = "get_interp_profiles-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
             stations,
-            self.owner.profile.crossover_radius,
-            self.owner.profile.min_depth,
+            crossover_radius,
+            min_depth,
         )
         cache_key = hashlib.md5(cache_key.encode('utf-8')).hexdigest()
         value = cache.get(cache_key, False)
         if value is not False:
             return value
 
-        dataframe = self.get_profiles_data(stations, parameter_id)
+        dataframe = self.get_profiles_data(
+            stations,
+            parameter_id,
+            crossover_radius=crossover_radius,
+            min_depth=min_depth,
+        )
         groups = dataframe.groupby(
             [
                 'data_set_id',
@@ -664,14 +768,26 @@ class DataSet(models.Model):
             stations: list,
             xover_stations: list,
             parameter_id: int,
+            crossover_radius=False,
+            min_depth=False,
     ):
+        crossover_radius = (
+            crossover_radius
+            or self.owner.profile.crossover_radius
+            or self.crossover_radius
+        )
+        min_depth = (
+            min_depth
+            or self.owner.profile.min_depth
+            or self.min_depth
+        )
         data_type = DataType.objects.get(pk=parameter_id)
         cache_key = "get_profiles_stats-{}-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
             stations,
-            self.owner.profile.crossover_radius,
-            self.owner.profile.min_depth,
+            crossover_radius,
+            min_depth,
             data_type.offset_type.id,
         )
         cache_key = hashlib.md5(cache_key.encode('utf-8')).hexdigest()
@@ -680,7 +796,12 @@ class DataSet(models.Model):
             return value
 
         xtype = 'sigma4'
-        current_stations = self.get_interp_profiles(stations, parameter_id)
+        current_stations = self.get_interp_profiles(
+            stations,
+            parameter_id,
+            crossover_radius=crossover_radius,
+            min_depth=min_depth,
+        )
         current_stations = current_stations.groupby(
             [
                 'station_number'
@@ -689,7 +810,11 @@ class DataSet(models.Model):
         reference_stations = self.get_interp_profiles(
             xover_stations,
             parameter_id,
+            crossover_radius=crossover_radius,
+            min_depth=min_depth,
         )
+        ref_expocode = reference_stations.expocode.iloc[0]
+        ref_data_set_id = reference_stations.data_set_id.iloc[0]
         reference_stations = reference_stations.groupby(
             [
                 'data_set_id',
@@ -708,7 +833,7 @@ class DataSet(models.Model):
                             current['latitude'].iloc[0],
                             reference['longitude'].iloc[0],
                             reference['latitude'].iloc[0],
-                        ) < self.owner.profile.crossover_radius
+                        ) < crossover_radius
                 ):
                     c_ind, r_ind = stats._get_matching_indices(
                         current.sigma4.tolist(),
@@ -732,16 +857,22 @@ class DataSet(models.Model):
                             if val is None or math.isnan(val):
                                 continue
                             diffs[y]['diff'].append(val)
+        has_std = False
         for y in diffs:
-            diffs[y]['mean'] = stat.mean(diffs[y]['diff'])
-            diffs[y]['stdev'] = None
-            if len(diffs[y]['diff']) > 4:
-                diffs[y]['stdev'] = stat.stdev(diffs[y]['diff'])
+            if len(diffs[y]['diff']) > 0:
+                diffs[y]['mean'] = stat.mean(diffs[y]['diff'])
+                diffs[y]['stdev'] = None
+                if len(diffs[y]['diff']) > 4:
+                    diffs[y]['stdev'] = stat.stdev(diffs[y]['diff'])
+                    has_std = True
             diffs[y].pop('diff')
+
         mean = []
         stdev = []
         y=[]
         for key, value in diffs.items():
+            if not 'mean' in value:
+                continue
             y.append(key)
             mean.append(value['mean'])
             stdev.append(value['stdev'])
@@ -751,24 +882,28 @@ class DataSet(models.Model):
         # ...and unzip
         y, mean, stdev = zip(*zipped)
 
-
         ###############################################################
         # TODO If std less than minimum std, set std to minimum - std #
         # see line 73 xover_2ndQC.m                                   #
         ###############################################################
 
         # Calculate weighted difference
-        w_mean = sum([ 0 if not s else m/pow(s, 2) for m, s in zip(mean, stdev)])
-        w_mean = w_mean / sum([ 0 if not s else 1/pow(s, 2) for s in stdev])
-        w_stdev = sum([ 0 if not s else 1/s for s in stdev])
-        w_stdev = w_stdev / sum([ 0 if not s else 1/pow(s, 2) for s in stdev])
+        w_mean = None
+        w_stdev = None
+        if has_std:
+            w_mean = sum([ 0 if not s else m/pow(s, 2) for m, s in zip(mean, stdev)])
+            w_mean = w_mean / sum([ 0 if not s else 1/pow(s, 2) for s in stdev])
+            w_stdev = sum([ 0 if not s else 1/s for s in stdev])
+            w_stdev = w_stdev / sum([ 0 if not s else 1/pow(s, 2) for s in stdev])
 
         result = {
             'y': y,
             'mean': mean,
             'stdev': stdev,
             'w_mean': w_mean,
-            'w_stdev': w_stdev
+            'w_stdev': w_stdev,
+            'expocode': ref_expocode,
+            'data_set_id': int(ref_data_set_id),
         }
 
         cache.set(cache_key, result)
