@@ -30,6 +30,9 @@ DATA_FOLDER = os.path.join(BASE_DIR, 'user_data')
 # Database initialization script
 INITDB_PATH = '/vagrant/scripts/setup/initdb.sql'
 
+# Path to python environment
+PYTHON_ENV = os.path.join(PROJECT_DIR, '.env_vagrant', 'bin', 'python')
+
 ALLOWED_HOSTS = []
 
 

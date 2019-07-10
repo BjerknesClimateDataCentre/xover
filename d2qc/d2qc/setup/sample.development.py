@@ -33,6 +33,14 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'd2qc_cache',
+        'TIMEOUT': None,
+    }
+}
+
 # Settings used by the restore from prod script
 PROD_SERVER_IP = '158.39.74.107'
 PROD_SERVER_USER_DATA_FOLDER = '/mnt/data/user_data'

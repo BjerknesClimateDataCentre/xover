@@ -33,6 +33,14 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'd2qc_cache',
+        'TIMEOUT': None,
+    }
+}
+
 # Email setup
 EMAIL_USE_TLS = True
 EMAIL_HOST = ''
