@@ -64,3 +64,5 @@ cd d2qc
 python manage.py db_restore_from_prod --verbosity 1
 # Run django migrations
 python manage.py migrate
+# Setup database caching
+python manage.py createcachetable
