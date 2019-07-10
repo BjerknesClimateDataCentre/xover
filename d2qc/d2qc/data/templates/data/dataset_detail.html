@@ -169,6 +169,18 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                         </tbody>
                     </table>
                 </dd>
+                <dd>
+                  <div class="summary-wrapper">
+                    {% if summary_stats %}
+                    <div id="summary-stats"
+                        style="width: 500px; height: 600px">
+                    </div>
+                    {% elif parameter %}
+                    <img src="https://i.gifer.com/8vEg.gif" width="100" />
+                    <p>Calculating summary statistics</p>
+                    {% endif %}
+                  </div>
+                </dd>
             </dl>
         </div>
         <script type="text/javascript">
@@ -311,6 +323,7 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 }
             }
 
+            // Check stats are not empty
             if (stats.hasOwnProperty('y')) {
                 // Indicate where statistics are valid
                 min_stat = Math.min(...stats.y)
@@ -483,6 +496,40 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
 
                 Plotly.newPlot('stats', data, layout);
             }
+            {% if summary_stats %}
+            var summary_stats = JSON.parse('{{ summary_stats | escapejs }}');
+            w_mean = {
+              x: summary_stats.date,
+              y: summary_stats.w_mean,
+              text: summary_stats.expocode,
+              textposition: 'top',
+              error_y: {
+                type: 'data',
+                array: summary_stats.w_stdev,
+                visible: true
+              },
+              mode: 'lines+markers+text',
+              type: 'scatter',
+              line: {
+                color: 'black'
+              },
+              name: 'Weighted mean'
+            };
+            data = [
+              w_mean
+            ]
+            layout = {
+                yaxis: {title: {text:'Offset'}},
+                margin: {l: 60, r:0},
+                legend: {orientation: 'h'},
+                hovermode: 'x'
+            };
+
+            Plotly.newPlot('summary-stats', data, layout);
+
+
+            {% endif %}
+
           </script>
 
         <a href="{% url 'data_set-delete' object.id %}">[Delete dataset]</a>
