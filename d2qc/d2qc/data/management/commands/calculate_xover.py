@@ -86,6 +86,11 @@ class Command(BaseCommand):
                 )[0]
                 data['date'].append(_date.strftime("%Y-%m-%dT00:00:00.0Z"))
 
+        mean = sum([ 0 if not s else m/pow(s, 2) for m, s in zip(data['w_mean'], data['w_stdev'])])
+        mean = mean / sum([ 0 if not s else 1/pow(s, 2) for s in data['w_stdev']])
+        stdev = sum([ 0 if not s else pow(s, -2) for s in data['w_stdev']])
+        stdev = pow(1/stdev, 1/2)
+
         # Sort by date
         zipped = sorted(zip(
             data['date'],
@@ -102,6 +107,8 @@ class Command(BaseCommand):
             data['w_stdev'],
             data['w_mean']
         ) = zip(*zipped)
+        data['stdev'] = [stdev] * len(data['date'])
+        data['mean'] = [mean] * len(data['date'])
 
         data = json.dumps(data)
         cache.set(cache_key, data)

@@ -513,10 +513,46 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
               line: {
                 color: 'black'
               },
+              name: 'Weighted mean &plusmn; st. dev'
+            };
+            mean = {
+              x: summary_stats.date,
+              y: summary_stats.mean,
+              mode: 'lines',
+              type: 'scatter',
+              line: {
+                color: red
+              },
               name: 'Weighted mean'
             };
+            stdev = {
+              x: summary_stats.date,
+              y: summary_stats.mean.map(function(x, i){return x + summary_stats.stdev[i];}),
+              mode: 'lines',
+              type: 'scatter',
+              line: {
+                color: red,
+                dash: 'dot'
+              },
+              name: 'Stdev'
+            };
+            stdev2 = {
+              x: summary_stats.date,
+              y: summary_stats.mean.map(function(x, i){return x - summary_stats.stdev[i];}),
+              mode: 'lines',
+              type: 'scatter',
+              line: {
+                color: red,
+                dash: 'dot'
+              },
+              showlegend: false
+            };
+
             data = [
-              w_mean
+              w_mean,
+              mean,
+              stdev,
+              stdev2
             ]
             layout = {
                 yaxis: {title: {text:'Offset'}},
