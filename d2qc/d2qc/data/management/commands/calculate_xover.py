@@ -102,7 +102,7 @@ class Command(BaseCommand):
                 crossover_stations,
                 parameter_id,
             )
-            if stats['w_mean']:
+            if 'w_mean' in stats and stats['w_mean']:
                 data['w_mean'].append(float(stats['w_mean']))
                 data['w_stdev'].append(float(stats['w_stdev']))
                 data['expocode'].append(stats['expocode'])

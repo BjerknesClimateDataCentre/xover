@@ -795,17 +795,11 @@ class DataSet(models.Model):
         if value is not False:
             return value
 
-        xtype = 'sigma4'
         current_stations = self.get_interp_profiles(
             stations,
             parameter_id,
             crossover_radius=crossover_radius,
             min_depth=min_depth,
-        )
-        current_stations = current_stations.groupby(
-            [
-                'station_number'
-            ]
         )
         reference_stations = self.get_interp_profiles(
             xover_stations,
@@ -813,6 +807,16 @@ class DataSet(models.Model):
             crossover_radius=crossover_radius,
             min_depth=min_depth,
         )
+        if reference_stations.size == 0 or current_stations.size == 0:
+            cache.set(cache_key, {})
+            return {}
+
+        current_stations = current_stations.groupby(
+            [
+                'station_number'
+            ]
+        )
+        xtype = 'sigma4'
         ref_expocode = reference_stations.expocode.iloc[0]
         ref_data_set_id = reference_stations.data_set_id.iloc[0]
         reference_stations = reference_stations.groupby(
@@ -870,6 +874,8 @@ class DataSet(models.Model):
         mean = []
         stdev = []
         y=[]
+        w_mean = None
+        w_stdev = None
         for key, value in diffs.items():
             if not 'mean' in value:
                 continue
@@ -888,8 +894,6 @@ class DataSet(models.Model):
         ###############################################################
 
         # Calculate weighted difference
-        w_mean = None
-        w_stdev = None
         if has_std:
             w_mean = sum([ 0 if not s else m/pow(s, 2) for m, s in zip(mean, stdev)])
             w_mean = w_mean / sum([ 0 if not s else 1/pow(s, 2) for s in stdev])
