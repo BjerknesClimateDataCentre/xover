@@ -15,16 +15,42 @@ class Command(BaseCommand):
     in the background.
     """
     def add_arguments(self, parser):
-        parser.add_argument('data_set_id', nargs='+', type=int)
-        parser.add_argument('parameter_id', nargs='+', type=int)
-        parser.add_argument('radius', nargs='+', type=int)
-        parser.add_argument('min_depth', nargs='+', type=int)
+        parser.add_argument(
+            'data_set_id',
+            nargs='+',
+            type=int,
+            help='Calculate for this data set',
+        )
+        parser.add_argument(
+            'parameter_id',
+            nargs='+',
+            type=int,
+            help='Calculate for this parameter',
+        )
+        parser.add_argument(
+            'radius',
+            nargs='+',
+            type=int,
+            help='Select stations within this radius, in meters',
+        )
+        parser.add_argument(
+            'min_depth',
+            nargs='+',
+            type=int,
+            help='Use this minimum depth for calculations',
+        )
+        parser.add_argument(
+            '-d',
+            '--data_return',
+            help='Return the data (normally data is simply cached)',
+        )
 
     def handle(self, *args, **options):
         data_set_id = options['data_set_id'][0]
         parameter_id = options['parameter_id'][0]
         radius = options['radius'][0]
         min_depth = options['min_depth'][0]
+        data_return = options['data_return']
 
         # Return cached value if exists
         cache_key = "calculate_xover-{}-{}-{}-{}".format(
@@ -112,4 +138,5 @@ class Command(BaseCommand):
 
         data = json.dumps(data)
         cache.set(cache_key, data)
-        return data
+        if data_return:
+            return data
