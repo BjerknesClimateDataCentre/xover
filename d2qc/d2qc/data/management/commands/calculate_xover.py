@@ -4,7 +4,6 @@ from django.core.management.base import BaseCommand
 from d2qc.data.glodap.glodap import Glodap
 import d2qc.data.models as models
 import os
-import hashlib
 from django.core.cache import cache
 import json
 
@@ -59,7 +58,6 @@ class Command(BaseCommand):
             radius,
             min_depth,
         )
-        cache_key = hashlib.md5(cache_key.encode('utf-8')).hexdigest()
         value = cache.get(cache_key, False)
         if value is not False:
             return value
