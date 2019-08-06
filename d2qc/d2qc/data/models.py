@@ -10,7 +10,6 @@ import re
 from decimal import Decimal
 import math
 from django.db import connection
-import hashlib
 import gsw
 import glodap.util.interp as interp
 import glodap.util.stats as stats
@@ -422,8 +421,8 @@ class DataSet(models.Model):
         """
         Executes an sql query, returning the resulting data.
         """
-        query_hash = hashlib.md5(sql.encode('utf-8')).hexdigest()
-        query = cache.get(query_hash, False)
+        cache_key = "_fetchall_query-{}".format(hash(sql))
+        query = cache.get(cache_key, False)
         if not query:
             cursor = connection.cursor()
             cursor.execute(sql)
@@ -431,7 +430,7 @@ class DataSet(models.Model):
                 query = cursor.fetchone()
             else:
                 query = cursor.fetchall()
-            cache.set(query_hash, query)
+            cache.set(cache_key, query)
         return query
 
     def get_profiles_data(
@@ -459,11 +458,10 @@ class DataSet(models.Model):
         cache_key = "get_profiles_data-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
-            stations,
+            hash(tuple(stations)),
             crossover_radius,
             min_depth,
         )
-        cache_key = hashlib.md5(cache_key.encode('utf-8')).hexdigest()
         value = cache.get(cache_key, False)
         if value is not False:
             return value
@@ -647,11 +645,10 @@ class DataSet(models.Model):
         cache_key = "get_interp_profiles-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
-            stations,
+            hash(tuple(stations)),
             crossover_radius,
             min_depth,
         )
-        cache_key = hashlib.md5(cache_key.encode('utf-8')).hexdigest()
         value = cache.get(cache_key, False)
         if value is not False:
             return value
@@ -750,7 +747,7 @@ class DataSet(models.Model):
 
                 profiles.append(dataframe)
             except Exception as e:
-                print("#################### ERROR #####################")
+                print("#################### WARNING #####################")
                 print(e)
                 dataframe = None
         if len(profiles)>1:
@@ -785,12 +782,11 @@ class DataSet(models.Model):
         cache_key = "get_profiles_stats-{}-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
-            stations,
+            hash(tuple(stations)),
             crossover_radius,
             min_depth,
             data_type.offset_type.id,
         )
-        cache_key = hashlib.md5(cache_key.encode('utf-8')).hexdigest()
         value = cache.get(cache_key, False)
         if value is not False:
             return value

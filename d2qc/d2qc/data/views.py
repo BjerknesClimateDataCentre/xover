@@ -31,7 +31,6 @@ import json
 import traceback
 import math
 import subprocess
-import hashlib
 
 
 class MissingColumnException(KeyError):
@@ -496,15 +495,11 @@ class DataSetDetail(DetailView):
             )
 
             # Check if calculation has begun
-            calculating_key = hashlib.md5(
-                ('calculating' + cache_key_px).encode('utf-8')
-            ).hexdigest()
+            calculating_key = 'calculating' + cache_key_px
             calculating_value = cache.get(calculating_key, False)
 
             # Check if calculation is ready
-            ready_key = hashlib.md5(
-                ('calculate' + cache_key_px).encode('utf-8')
-            ).hexdigest()
+            ready_key = 'calculate' + cache_key_px
             value = cache.get(ready_key, False)
             context['summary_stats'] = None
             if calculating_value is False:
