@@ -95,12 +95,22 @@ class Command(BaseCommand):
                 crossover_data_set_id=data_set_id,
                 min_depth=min_depth,
             )
+            if (
+                    len(crossover_stations) == 0
+                    or len(crossed_data_set_stations) == 0
+            ):
+                continue
             stats = data_set.get_profiles_stats(
                 crossed_data_set_stations,
                 crossover_stations,
                 parameter_id,
             )
-            if 'w_mean' in stats and stats['w_mean']:
+            if (
+                    'w_mean' in stats
+                    and stats['w_mean']
+                    and 'w_stdev' in stats
+                    and stats['w_stdev']
+            ):
                 data['w_mean'].append(float(stats['w_mean']))
                 data['w_stdev'].append(float(stats['w_stdev']))
                 data['expocode'].append(stats['expocode'])
