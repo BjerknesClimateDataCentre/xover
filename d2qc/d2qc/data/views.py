@@ -458,7 +458,9 @@ class DataSetDetail(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         data_set = self.get_object()
-        context['data_types'] = data_set.get_data_types()
+        context['data_types'] = data_set.get_data_types(
+            min_depth = data_set.owner.profile.min_depth
+        )
         for data_type in context['data_types']:
             if data_type['id'] == self.kwargs.get('parameter_id'):
                 context['parameter'] = data_type

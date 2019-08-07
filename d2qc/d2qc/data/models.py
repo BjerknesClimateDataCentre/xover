@@ -141,7 +141,7 @@ class DataSet(models.Model):
     def __str__(self):
         return self.expocode
 
-    def get_data_types(self):
+    def get_data_types(self, min_depth=0):
         """Fetch all data types in this data set from the database"""
         cache_key = "get_data_types-{}".format(self.id)
         value = cache.get(cache_key, False)
@@ -155,7 +155,11 @@ class DataSet(models.Model):
             inner join d2qc_casts c on c.id=d.cast_id
             inner join d2qc_stations s on c.station_id=s.id
             where s.data_set_id = {}
-            order by dt.original_label;""".format(self.id)
+            and d.depth >= {}
+            order by dt.original_label;""".format(
+                self.id,
+                min_depth
+            )
 
         typelist = [{
             'original_label': type[0],
