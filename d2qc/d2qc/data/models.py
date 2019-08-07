@@ -260,7 +260,10 @@ class DataSet(models.Model):
         """
         result = None
         sql = """
-            select st_buffer(st_collect(position)::geography, {})::geometry
+            select coalesce(
+                st_buffer(st_collect(position)::geography, {})::geometry,
+                ST_GeomFromText('POLYGON EMPTY')
+            )
             from d2qc_stations where id in ({})
         """.format(
                 crossover_radius,
