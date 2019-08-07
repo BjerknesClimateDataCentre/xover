@@ -106,7 +106,8 @@ class Command(BaseCommand):
                 parameter_id,
             )
             if (
-                    'w_mean' in stats
+                    stats is not None
+                    and 'w_mean' in stats
                     and stats['w_mean']
                     and 'w_stdev' in stats
                     and stats['w_stdev']
