@@ -173,7 +173,7 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                   <div class="summary-wrapper">
                     {% if summary_stats %}
                     <div id="summary-stats"
-                        style="width: 500px; height: 600px">
+                        style="width: 100%; height: 600px">
                     </div>
                     {% elif parameter %}
                     <img src="https://i.gifer.com/8vEg.gif" width="100" />
@@ -508,7 +508,7 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 array: summary_stats.w_stdev,
                 visible: true
               },
-              mode: 'lines+markers+text',
+              mode: 'markers+text',
               type: 'scatter',
               line: {
                 color: 'black'
