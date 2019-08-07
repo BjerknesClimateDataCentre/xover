@@ -879,41 +879,42 @@ class DataSet(models.Model):
         y=[]
         w_mean = None
         w_stdev = None
+        result = None
         for key, value in diffs.items():
             if not 'mean' in value:
                 continue
             y.append(key)
             mean.append(value['mean'])
             stdev.append(value['stdev'])
+        if len(mean) > 0:
+            # Sort the lists by y-value
+            zipped = sorted(zip(y, mean, stdev))
+            # ...and unzip
+            y, mean, stdev = zip(*zipped)
 
-        # Sort the lists by y-value
-        zipped = sorted(zip(y, mean, stdev))
-        # ...and unzip
-        y, mean, stdev = zip(*zipped)
+            ###############################################################
+            # TODO If std less than minimum std, set std to minimum - std #
+            # see line 73 xover_2ndQC.m                                   #
+            ###############################################################
 
-        ###############################################################
-        # TODO If std less than minimum std, set std to minimum - std #
-        # see line 73 xover_2ndQC.m                                   #
-        ###############################################################
+            # Calculate weighted difference
+            if has_std:
+                w_mean = sum([ 0 if not s else m/pow(s, 2) for m, s in zip(mean, stdev)])
+                w_mean = w_mean / sum([ 0 if not s else 1/pow(s, 2) for s in stdev])
+                w_stdev = sum([ 0 if not s else 1/s for s in stdev])
+                w_stdev = w_stdev / sum([ 0 if not s else 1/pow(s, 2) for s in stdev])
 
-        # Calculate weighted difference
-        if has_std:
-            w_mean = sum([ 0 if not s else m/pow(s, 2) for m, s in zip(mean, stdev)])
-            w_mean = w_mean / sum([ 0 if not s else 1/pow(s, 2) for s in stdev])
-            w_stdev = sum([ 0 if not s else 1/s for s in stdev])
-            w_stdev = w_stdev / sum([ 0 if not s else 1/pow(s, 2) for s in stdev])
+            result = {
+                'y': y,
+                'mean': mean,
+                'stdev': stdev,
+                'w_mean': w_mean,
+                'w_stdev': w_stdev,
+                'expocode': ref_expocode,
+                'data_set_id': int(ref_data_set_id),
+            }
+            cache.set(cache_key, result)
 
-        result = {
-            'y': y,
-            'mean': mean,
-            'stdev': stdev,
-            'w_mean': w_mean,
-            'w_stdev': w_stdev,
-            'expocode': ref_expocode,
-            'data_set_id': int(ref_data_set_id),
-        }
-
-        cache.set(cache_key, result)
         return result
 
 
