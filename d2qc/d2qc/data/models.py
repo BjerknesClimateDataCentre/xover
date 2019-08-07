@@ -373,7 +373,7 @@ class DataSet(models.Model):
                     self._in_datatype(parameter_id)
             )
 
-        if stations is not None and len(stations) > 0:
+        if stations is not None:
             where += """
                 and st_contains('{}', st.position)
             """.format(
