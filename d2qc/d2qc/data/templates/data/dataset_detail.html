@@ -513,6 +513,8 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
               line: {
                 color: 'black'
               },
+              hoverinfo: 'text',
+              textposition: 'top right',
               name: 'Weighted mean &plusmn; st. dev'
             };
             mean = {
@@ -523,7 +525,11 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
               line: {
                 color: red
               },
-              name: 'Weighted mean'
+              name: 'Weighted mean',
+              hoverinfo: 'text',
+              hovertext:
+                'Mean ' + summary_stats.mean[0].toFixed(4) + '<br>'
+                  + 'Stdev &plusmn;' + summary_stats.stdev[0].toFixed(4)
             };
             stdev = {
               x: summary_stats.date,
@@ -534,7 +540,8 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 color: red,
                 dash: 'dot'
               },
-              name: 'Stdev'
+              name: 'Stdev',
+              hoverinfo: 'skip'
             };
             stdev2 = {
               x: summary_stats.date,
@@ -545,7 +552,8 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 color: red,
                 dash: 'dot'
               },
-              showlegend: false
+              showlegend: false,
+              hoverinfo: 'skip'
             };
 
             data = [
