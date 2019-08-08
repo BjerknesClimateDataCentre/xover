@@ -130,3 +130,4 @@ class Command(BaseCommand):
         os.system(cmd)
         if options['migrate']:
             call_command('migrate', verbosity=options['verbosity'])
+            call_command('createcachetable', verbosity=options['verbosity'])
