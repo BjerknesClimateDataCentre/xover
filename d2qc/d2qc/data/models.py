@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.cache import cache
 import os.path
-import datetime
+from datetime import datetime
 import logging
 import re
 from decimal import Decimal
@@ -71,6 +71,12 @@ class DataFile(models.Model):
             null=True,
             editable=False
     )
+    import_errors = models.TextField(blank=True)
+    import_started = models.DateTimeField()
+    import_finnished = models.DateTimeField()
+
+    # Messages reported while importing data
+    _messages = []
 
     def __str__(self):
         return self.name if self.name else self.filepath
@@ -81,9 +87,6 @@ class DataFile(models.Model):
         if not DataSet.objects.filter(data_file_id=self.id).exists():
             self.filepath.delete()
         super().delete()
-
-    def is_imported(self):
-        return self.data_sets.count() > 0
 
     def read_file(self):
         filearray = []
@@ -100,7 +103,201 @@ class DataFile(models.Model):
                     filearray = excfile.readlines()
         return filearray
 
+    def _write_messages(self, append = False):
+        if append:
+            self.import_errors += '\n'.join(self._messages)
+        else:
+            self.import_errors = '\n'.join(self._messages)
 
+        self.save()
+
+    def import_data(self):
+        """
+        Import data from this data file. Abort if data existsself. Import errors
+        are appended to the import_errors field.
+
+        return True if data was imported, else return False
+        """
+        if self.import_started:
+            self._messages = ["File data already beeing imported"]
+            self._write_messages(append = True)
+            return False
+
+        datagrid = excread.excread(str(self.filepath))
+
+        MANDATORY_VARS = (
+            'EXPOCODE', 'EXC_DATETIME', 'EXC_CTDDEPTH', 'STNNBR', 'LATITUDE',
+            'LONGITUDE',
+        )
+
+        # Variables not to be treated as data variables
+        IGNORE = (
+            'EXPOCODE', 'EXC_DATETIME', 'EXC_CTDDEPTH', 'STNNBR', 'SECT_ID', 'DATE',
+            'TIME', 'LATITUDE', 'LONGITUDE', 'BTLNBR', 'BTLNBR_FLAG_W',
+            'SAMPNO', 'CASTNO', 'CTDDEPTH', 'CTDDEP'
+        )
+
+        QC_SUFFIX = '_FLAG_W'
+
+
+        # Check all mandatory variables are there
+        datetime = ''
+        depth = ''
+        stnnbr = ''
+        castno = ''
+        data_set = None
+        station = None
+        cast = None
+        depth = None
+        # Raise an exception if mandatory columns are missing
+        if not all(key in datagrid.columns for key in MANDATORY_VARS):
+            message = "Data file missing some mandatory column: {}".format(
+                ', '.join(MANDATORY_VARS)
+            )
+            self._messages.append(message)
+            self._write_messages()
+            self.import_finnished = datetime.now()
+            self.save()
+            return False
+
+        # Import data types
+        missing_vars = []
+        data_types = {str(type_):type_ for type_ in DataType.objects.all()}
+        for var in datagrid.columns:
+            if var in IGNORE:
+                continue
+            if var.endswith(QC_SUFFIX):
+                continue
+            if var not in data_types:
+                missing_vars.append(var)
+
+        if missing_vars:
+            message = """There where variables in the dataset that are not defined in
+            the system. These cannot be handled. An administrator has to add
+            the variables as data types for them to be treated. Unhandled
+            variables in the data set: {}
+            """.format(
+                ', '.join(missing_vars)
+            )
+            self._messages.append(message)
+
+        missing_depth_warning = False # Indicate missing depth already warned
+        missing_position_warning = False
+        for i, expo in enumerate(datagrid['EXPOCODE']):
+            if not data_set or expo != data_set.expocode:
+                # Add new dataset
+                data_set = DataSet(
+                    expocode=expo,
+                    is_reference = False,
+                    data_file = self,
+                    owner = self.owner
+                )
+                if DataSet.objects.filter(
+                            expocode=expo,
+                            owner=self.owner
+                ).exists():
+                    # TODO Support files with multiple datasets, where one or
+                    # more might already exist in database, but not all.
+                    message = 'Dataset {} already exists for this user'. format(
+                        expo
+                    )
+                    self._messages.append(message)
+                    self._write_messages()
+                    self.import_finnished = datetime.now()
+                    self.save()
+                    return False
+
+                data_set.save()
+                station = None
+                cast = None
+                depth = None
+            if not station or datagrid['STNNBR'][i] != station.station_number:
+                longitude = datagrid['LONGITUDE'][i]
+                latitude = datagrid['LATITUDE'][i]
+                if math.isnan(longitude) or math.isnan(latitude):
+                    if missing_position_warning:
+                        continue
+                    # Warning and dont insert if depth is NaN
+                    message = """Latitude or longitude is nan on line {}.
+                    Station will not be added when position is missing.
+                    Subsequent missing position errors are supressed for this
+                    file.
+                    """.format(i)
+                    self._messages.append(message)
+                    missing_position_warning = True
+                    continue
+                # Add new station
+                station = Station(
+                        data_set = data_set,
+                        position = Point(longitude, latitude),
+                        station_number = datagrid['STNNBR'][i]
+                )
+                station.save()
+                cast = None
+                depth = None
+            if (
+                    not cast or
+                    ('CASTNO' in datagrid and datagrid['CASTNO'][i] != cast.cast)
+            ):
+                # Add new cast
+                cast_ = 1
+                if 'CASTNO' in datagrid:
+                    cast_ = datagrid['CASTNO'][i]
+                cast = Cast(
+                        station = station,
+                        cast = cast_
+                )
+                cast.save()
+                depth = None
+
+            if (
+                    not depth
+                    or depth.depth != datagrid['EXC_CTDDEPTH'][i]
+                    or (
+                        'BTLNBR' in datagrid
+                        and depth.bottle != datagrid['BTLNBR'][i]
+                    )
+            ):
+                if math.isnan(datagrid['EXC_CTDDEPTH'][i]):
+                    if missing_depth_warning:
+                        continue
+                    # Warning and dont insert if depth is NaN
+                    message = """Depth is nan on line {}. Data will not be added when
+                            depth is nan. Subsequent missing depth errors are
+                            supressed for this file.
+                            """.format(i)
+                    self._messages.append(message)
+                    missing_depth_warning = True
+                    continue
+
+                # Add new depth
+                btlnbr = datagrid.get('BTLNBR', False)
+                depth = Depth(
+                        cast = cast,
+                        depth = datagrid['EXC_CTDDEPTH'][i],
+                        bottle = 1 if btlnbr is False else btlnbr[i],
+                        date_and_time = datagrid['EXC_DATETIME'][i],
+                )
+                depth.save()
+            for key in datagrid.columns:
+                if key in IGNORE:
+                    continue
+                if not key in data_types:
+                    # Variable not found in database
+                    continue
+                qc_flag = None
+                if key + QC_SUFFIX in datagrid:
+                    qc_flag = int(datagrid[key + QC_SUFFIX][i])
+                value = DataValue(
+                        depth = depth,
+                        value = datagrid[key][i],
+                        qc_flag = qc_flag,
+                        data_type = data_types[key]
+                )
+                value.save()
+        self.import_finnished = datetime.now()
+        self.save()
+        return True
 
 class DataSet(models.Model):
     class Meta:
