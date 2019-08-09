@@ -1,5 +1,3 @@
-# Import some test data to the database
-
 from django.core.management.base import BaseCommand
 from d2qc.data.glodap.glodap import Glodap
 import d2qc.data.models as models
