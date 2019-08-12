@@ -444,13 +444,17 @@ class DataSetDelete(DeleteView):
     success_url = reverse_lazy('data_set-list')
     def delete(self, request, *args, **kwargs):
         rex = re.compile('^[a-zA-Z_/]+delete/([0-9]+)')
+
+        data_file = self.model.objects.get(pk=kwargs['pk']).data_file
         messages.success(
             self.request,
-            "Data set #{} was deleted".format(
-                    rex.findall(request.path)[0]
-            )
+            "Data set #{} was deleted".format(kwargs['pk'])
         )
-        return super().delete(request, *args, **kwargs)
+        retval = super().delete(request, *args, **kwargs)
+        data_file.import_started = None
+        data_file.import_finnished = None
+        data_file.save()
+        return retval
 
 class ProfileUpdate(UpdateView):
     model = Profile
