@@ -72,8 +72,8 @@ class DataFile(models.Model):
             editable=False
     )
     import_errors = models.TextField(blank=True)
-    import_started = models.DateTimeField()
-    import_finnished = models.DateTimeField()
+    import_started = models.DateTimeField(null=True)
+    import_finnished = models.DateTimeField(null=True)
 
     # Messages reported while importing data
     _messages = []
