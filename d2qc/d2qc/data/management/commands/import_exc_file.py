@@ -18,4 +18,13 @@ class Command(BaseCommand):
         data_file = models.DataFile.objects.get(pk=pk)
         data_file.import_data()
         if options['verbosity'] > 0:
-            self.stdout.write(self.style.SUCCESS("Import finnished"))
+            seconds = (
+                    data_file.import_finnished - data_file.import_started
+            ).total_seconds()
+            self.stdout.write(self.style.SUCCESS(
+                    "Import finnished in {} seconds".format(int(seconds))
+            ))
+            if data_file.import_errors:
+                self.stdout.write(self.style.NOTICE(
+                        "INFO: {}".format(data_file.import_errors)
+                ))
