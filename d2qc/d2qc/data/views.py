@@ -18,6 +18,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.contrib.auth import login
 from django.core.cache import cache
+from django.utils import timezone
 from d2qc.data.models import *
 from d2qc.data.forms import DataFileForm
 from rest_framework import viewsets
@@ -234,7 +235,6 @@ class DataFileDetail(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         fileobject = DataFile.objects.get(pk=self.kwargs.get('pk'))
-        context['imported'] = fileobject.import_started
         context['import_mode'] = self.request.path.endswith('import')
         # Load data_file owner data:
         try:
@@ -263,22 +263,25 @@ class DataFileDetail(DetailView):
         context['filehead'] = filecontent[:50]
         context['count'] = len(filecontent)
 
-        if self.exec:
-            self._do_import(fileobject)
-
-        return context
-
-    def _do_import(self, data_file):
-        if not data_file.import_started:
+        if self.exec and not fileobject.import_started:
             # Spawn process to start importing file data
             subprocess.Popen([
                 settings.PYTHON_ENV,
                 os.path.join(settings.BASE_DIR,"manage.py"),
                 'import_exc_file',
-                str(data_set.id),
+                str(fileobject.id),
+                '-v',
+                '0'
             ])
-            data_file.import_started = datetime.now()
-            data_file.save()
+        context['import_time'] = ''
+        if fileobject.import_finnished:
+            context['import_time'] = (
+                fileobject.import_finnished -
+                fileobject.import_started
+            ).total_seconds()
+
+        return context
+
 
 class IndexPage(TemplateView):
     template_name = 'index.html'
