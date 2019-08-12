@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+.message {
+  color: red;
+}
+</style>
     <div>
         <h3>
             ID: {{ object.id }} -
@@ -9,6 +14,19 @@
             {{ object.filepath }}
             {% endif %}
         </h3>
+        <div class="import">
+          {% if object.import_finnished %}
+          <h4>Imported {{ object.import_finnished }} UTC,
+            took {{ import_time }} sek
+          </h4>
+          <p class="message">{{ object.import_errors }}</p>
+          {% elif object.import_started %}
+          <h4>Import started at {{ object.import_started }} UTC</h4>
+          <p class="message">{{ object.import_errors }}</p>
+          {% else %}
+          <h4>File not imported yet</h4>
+          {% endif %}
+        </div>
         <dl>
             <dt>Filepath</dt>
             <dd>{{ object.filepath }}</dd>
@@ -23,15 +41,14 @@
             <dd>{{ object.headers | linebreaks }}</dd>
             <dt>Line count</dt>
             <dd>{{ count }}</dd>
-            <dt>Imported</dt>
-            <dd>{{ imported }}</dd>
+
         </dl>
         <a href="{% url 'data_file-update' object.id %}">[Edit]</a>
-        {% if not imported %}
+        {% if not object.import_finnished %}
         <a href="{% url 'data_file-import-exec' object.id %}">[Import file]</a>
         {% endif %}
         <a href="{% url 'data_file-delete' object.id %}">[Delete]</a>
-        {% if filehead and not imported %}
+        {% if filehead and not object.import_finnished %}
         <div class="scrollable">
             <h3>First lines of file</h3>
             <p>

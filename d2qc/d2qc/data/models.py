@@ -3,8 +3,9 @@ from django.forms import ModelForm
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.cache import cache
+from django.contrib.gis.geos import Point
 import os.path
-from datetime import datetime
+from django.utils import timezone
 import logging
 import re
 from decimal import Decimal
@@ -14,6 +15,7 @@ import gsw
 import glodap.util.interp as interp
 import glodap.util.stats as stats
 import glodap.util.geo as geo
+import glodap.util.excread as excread
 import pandas as pd
 import statistics as stat
 
@@ -103,13 +105,13 @@ class DataFile(models.Model):
                     filearray = excfile.readlines()
         return filearray
 
-    def _write_messages(self, append = False):
+    def _write_messages(self, append = False, save = False):
         if append:
             self.import_errors += '\n'.join(self._messages)
         else:
             self.import_errors = '\n'.join(self._messages)
-
-        self.save()
+        if save:
+            self.save()
 
     def import_data(self):
         """
@@ -120,8 +122,11 @@ class DataFile(models.Model):
         """
         if self.import_started:
             self._messages = ["File data already beeing imported"]
-            self._write_messages(append = True)
+            self._write_messages(append = True, save = True)
             return False
+
+        self.import_started = timezone.now()
+        self.save()
 
         datagrid = excread.excread(str(self.filepath))
 
@@ -141,7 +146,6 @@ class DataFile(models.Model):
 
 
         # Check all mandatory variables are there
-        datetime = ''
         depth = ''
         stnnbr = ''
         castno = ''
@@ -156,7 +160,7 @@ class DataFile(models.Model):
             )
             self._messages.append(message)
             self._write_messages()
-            self.import_finnished = datetime.now()
+            self.import_finnished = timezone.now()
             self.save()
             return False
 
@@ -203,7 +207,7 @@ class DataFile(models.Model):
                     )
                     self._messages.append(message)
                     self._write_messages()
-                    self.import_finnished = datetime.now()
+                    self.import_finnished = timezone.now()
                     self.save()
                     return False
 
@@ -295,7 +299,8 @@ class DataFile(models.Model):
                         data_type = data_types[key]
                 )
                 value.save()
-        self.import_finnished = datetime.now()
+        self._write_messages()
+        self.import_finnished = timezone.now()
         self.save()
         return True
 
