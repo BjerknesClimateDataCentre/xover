@@ -5,6 +5,7 @@ cycler==0.10.0
 -e git+https://github.com/django/django.git@483cc1c430e038d7d16342f76761d18b989c3eed#egg=Django
 djangorestframework==3.9.4
 filelock==3.0.8
+file-read-backwards==2.0.0
 gsw==3.2.1
 kiwisolver==1.0.1
 matplotlib==2.2.3

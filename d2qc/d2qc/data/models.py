@@ -139,7 +139,7 @@ class DataFile(models.Model):
         IGNORE = (
             'EXPOCODE', 'EXC_DATETIME', 'EXC_CTDDEPTH', 'STNNBR', 'SECT_ID', 'DATE',
             'TIME', 'LATITUDE', 'LONGITUDE', 'BTLNBR', 'BTLNBR_FLAG_W',
-            'SAMPNO', 'CASTNO', 'CTDDEPTH', 'CTDDEP'
+            'SAMPNO', 'CASTNO', 'CTDDEPTH', 'CTDDEP', 'HOUR', 'MINUTE', 'DEPTH'
         )
 
         QC_SUFFIX = '_FLAG_W'
