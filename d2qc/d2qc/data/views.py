@@ -167,6 +167,11 @@ class DataFileCreate(CreateView):
     model = DataFile
     form_class = DataFileForm
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def get_success_url(self):
         return reverse('data_file-detail', kwargs={'pk':self.object.id})
 
