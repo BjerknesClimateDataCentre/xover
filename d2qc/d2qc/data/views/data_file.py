@@ -8,6 +8,7 @@ from d2qc.data.serializers import DataFileSerializer
 from d2qc.data.models import DataFile
 from d2qc.data.forms import DataFileForm
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
