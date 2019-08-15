@@ -63,7 +63,7 @@
             <ul class="messages">
                 {% for message in messages %}
                 <li class="{{ message.tags|default:'message' }}">
-                    {{ message }}
+                    {{ message|safe }}
                 </li>
                 {% endfor %}
             </ul>
@@ -73,4 +73,3 @@
         {% endblock %}
     </body>
 </html>
-

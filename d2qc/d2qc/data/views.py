@@ -228,11 +228,17 @@ class DataFileDelete(DeleteView):
     def delete(self, request, *args, **kwargs):
         file = self.get_object()
         if file.data_sets:
-            data_sets = ', '.join([d.expocode for d in file.data_sets.all()])
+            data_sets = []
+            for d in file.data_sets.all():
+                ds = '<a href="{}">{}</a>'.format(
+                    reverse('data_set-detail', args=[d.id]),
+                    d.expocode,
+                )
+                data_sets.append(ds)
             messages.error(
                 self.request,
                 "Cannot delete file before deleting dataset(s) {}.".format(
-                    data_sets
+                    ', '.join(data_sets)
                 )
             )
             return redirect(reverse('data_file-detail', args=[kwargs['pk']]))
