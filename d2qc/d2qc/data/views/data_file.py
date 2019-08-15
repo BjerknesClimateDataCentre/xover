@@ -96,7 +96,7 @@ class DataFileDelete(DeleteView):
     success_url = reverse_lazy('data_file-list')
     def delete(self, request, *args, **kwargs):
         file = self.get_object()
-        if file.data_sets:
+        if file.data_sets.exists():
             data_sets = []
             for d in file.data_sets.all():
                 ds = '<a href="{}">{}</a>'.format(
