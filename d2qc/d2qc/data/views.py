@@ -33,6 +33,7 @@ import traceback
 import math
 import subprocess
 from datetime import datetime
+from django.shortcuts import redirect
 
 
 
@@ -225,6 +226,17 @@ class DataFileDelete(DeleteView):
     model = DataFile
     success_url = reverse_lazy('data_file-list')
     def delete(self, request, *args, **kwargs):
+        file = self.get_object()
+        if file.data_sets:
+            data_sets = ', '.join([d.expocode for d in file.data_sets.all()])
+            messages.error(
+                self.request,
+                "Cannot delete file before deleting dataset(s) {}.".format(
+                    data_sets
+                )
+            )
+            return redirect(reverse('data_file-detail', args=[kwargs['pk']]))
+
         rex = re.compile('^[a-zA-Z_/]+delete/([0-9]+)')
         messages.success(
             self.request,
