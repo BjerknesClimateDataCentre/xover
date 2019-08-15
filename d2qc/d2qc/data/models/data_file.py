@@ -4,6 +4,7 @@ from django.contrib.gis.db import models
 from django.contrib.auth.models import User
 import os.path
 from d2qc.data.models import DataSet
+from d2qc.data.models import DataType
 from django.conf import settings
 import glodap.util.excread as excread
 from django.utils import timezone
