@@ -205,7 +205,7 @@ class DataFile(models.Model):
                     message = 'Dataset {} already exists for this user'. format(
                         expo
                     )
-                    self._messages.append(message)
+                    self._messages = [message]
                     self._write_messages()
                     self.import_finnished = timezone.now()
                     self.save()
