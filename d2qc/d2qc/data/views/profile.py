@@ -2,6 +2,8 @@ from d2qc.data.models import Profile
 
 from django.views.generic.edit import UpdateView
 from django.contrib import messages
+from django.urls import reverse
+
 
 class ProfileUpdate(UpdateView):
     model = Profile

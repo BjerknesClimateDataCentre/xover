@@ -1,5 +1,9 @@
 from django.contrib.gis.db import models
 
+from decimal import Decimal
+import math
+import logging
+
 class DataValue(models.Model):
     class Meta:
         db_table = 'd2qc_data_values'
@@ -14,10 +18,12 @@ class DataValue(models.Model):
     qc2_flag = models.IntegerField(blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
     def save(self, *args, **kwargs):
         try:
             v = Decimal(self.value)
         except ValueError:
+            logger = logging.getLogger(__name__)
             logger.error('Data Value ' + self.value + ' is not a float value')
         if not math.isnan(v) and int(v) != -9999:
             super(DataValue, self).save(*args, **kwargs)

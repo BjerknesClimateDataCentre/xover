@@ -2,9 +2,15 @@ import re
 import math
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
+from django.contrib.gis.geos import Point
 import os.path
-from d2qc.data.models import DataSet
-from d2qc.data.models import DataType
+# from d2qc.data.models import DataSet
+# from d2qc.data.models import DataType
+# from d2qc.data.models import Station
+# from d2qc.data.models import Cast
+# from d2qc.data.models import Depth
+# from d2qc.data.models import DataValue
+import d2qc.data as data
 from django.conf import settings
 import glodap.util.excread as excread
 from django.utils import timezone
@@ -60,7 +66,7 @@ class DataFile(models.Model):
     # Delete files as object is deleted
     def delete(self):
         # Dont delete file if file has related data set(s)
-        if not DataSet.objects.filter(data_file_id=self.id).exists():
+        if not data.models.DataSet.objects.filter(data_file_id=self.id).exists():
             self.filepath.delete()
         super().delete()
 
@@ -113,7 +119,8 @@ class DataFile(models.Model):
         IGNORE = (
             'EXPOCODE', 'EXC_DATETIME', 'EXC_CTDDEPTH', 'STNNBR', 'SECT_ID', 'DATE',
             'TIME', 'LATITUDE', 'LONGITUDE', 'BTLNBR', 'BTLNBR_FLAG_W',
-            'SAMPNO', 'CASTNO', 'CTDDEPTH', 'CTDDEP', 'HOUR', 'MINUTE', 'DEPTH'
+            'SAMPNO', 'CASTNO', 'CTDDEPTH', 'CTDDEP', 'HOUR', 'MINUTE', 'DEPTH',
+            'HOUR','MINUTE',
         )
 
         QC_SUFFIX = '_FLAG_W'
@@ -140,7 +147,7 @@ class DataFile(models.Model):
 
         # Import data types
         missing_vars = []
-        data_types = {str(type_):type_ for type_ in DataType.objects.all()}
+        data_types = {str(type_):type_ for type_ in data.models.DataType.objects.all()}
         for var in datagrid.columns:
             if var in IGNORE:
                 continue
@@ -164,13 +171,13 @@ class DataFile(models.Model):
         for i, expo in enumerate(datagrid['EXPOCODE']):
             if not data_set or expo != data_set.expocode:
                 # Add new dataset
-                data_set = DataSet(
+                data_set = data.models.DataSet(
                     expocode=expo,
                     is_reference = False,
                     data_file = self,
                     owner = self.owner
                 )
-                if DataSet.objects.filter(
+                if data.models.DataSet.objects.filter(
                             expocode=expo,
                             owner=self.owner
                 ).exists():
@@ -205,7 +212,7 @@ class DataFile(models.Model):
                     missing_position_warning = True
                     continue
                 # Add new station
-                station = Station(
+                station = data.models.Station(
                         data_set = data_set,
                         position = Point(longitude, latitude),
                         station_number = datagrid['STNNBR'][i]
@@ -221,7 +228,7 @@ class DataFile(models.Model):
                 cast_ = 1
                 if 'CASTNO' in datagrid:
                     cast_ = datagrid['CASTNO'][i]
-                cast = Cast(
+                cast = data.models.Cast(
                         station = station,
                         cast = cast_
                 )
@@ -250,7 +257,7 @@ class DataFile(models.Model):
 
                 # Add new depth
                 btlnbr = datagrid.get('BTLNBR', False)
-                depth = Depth(
+                depth = data.models.Depth(
                         cast = cast,
                         depth = datagrid['EXC_CTDDEPTH'][i],
                         bottle = 1 if btlnbr is False else btlnbr[i],
@@ -266,7 +273,7 @@ class DataFile(models.Model):
                 qc_flag = None
                 if key + QC_SUFFIX in datagrid:
                     qc_flag = int(datagrid[key + QC_SUFFIX][i])
-                value = DataValue(
+                value = data.models.DataValue(
                         depth = depth,
                         value = datagrid[key][i],
                         qc_flag = qc_flag,
