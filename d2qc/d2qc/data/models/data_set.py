@@ -1,12 +1,18 @@
 import math
 import gsw
+import pandas as pd
+import statistics as stat
+
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
 from django.db import connection
 from django.core.cache import cache
+
 import glodap.util.interp as interp
 import glodap.util.stats as stats
 import glodap.util.geo as geo
+
+import d2qc.data as data
 
 class DataSet(models.Model):
     class Meta:
@@ -605,15 +611,15 @@ class DataSet(models.Model):
             'latitude',
             'longitude',
         ]
-        for groupval, data in groups:
+        for groupval, _data in groups:
             try:
-                if 'expocode' in data:
-                    expocode = data['expocode'].iloc[0]
-                data = interp.remove_nans(data, ['depth', 'param', 'sigma4'])
-                data = interp.sort_data_set_on_dimension(data, xtype)
-                data = interp.average_values_for_duplicate_dimension(data, xtype)
-                x = data[xtype].tolist()
-                y = data['param'].tolist()
+                if 'expocode' in _data:
+                    expocode = _data['expocode'].iloc[0]
+                _data = interp.remove_nans(_data, ['depth', 'param', 'sigma4'])
+                _data = interp.sort_data_set_on_dimension(_data, xtype)
+                _data = interp.average_values_for_duplicate_dimension(_data, xtype)
+                x = _data[xtype].tolist()
+                y = _data['param'].tolist()
                 # xover on density surface (se xover_2ndQC.m line 99)
                 x_interp,param_interp=interp.pchip_interpolate_profile(
                     x=x,
@@ -625,7 +631,7 @@ class DataSet(models.Model):
                 x_interp,param_interp = interp.subst_depth_profile_gaps_with_nans(
                     x_interp,
                     param_interp,
-                    data['depth'].tolist(),
+                    _data['depth'].tolist(),
                     x,
                 )
                 dataframe = pd.DataFrame(columns=columns)
@@ -642,7 +648,7 @@ class DataSet(models.Model):
                     elif c == 'expocode':
                         dataframe[c] = expocode
                     else:
-                        dataframe[c] = data[c].iloc[0]
+                        dataframe[c] = _data[c].iloc[0]
 
                 # Trim nan-rows at start and end
                 first = dataframe['param'].first_valid_index()
@@ -682,7 +688,7 @@ class DataSet(models.Model):
             or self.owner.profile.min_depth
             or self.min_depth
         )
-        data_type = DataType.objects.get(pk=parameter_id)
+        data_type = data.models.DataType.objects.get(pk=parameter_id)
         cache_key = "get_profiles_stats-{}-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
