@@ -1,7 +1,8 @@
 # Restore the database from the production environment
 
 from django.conf import settings
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
+from d2qc.data.management.newline_command import NewlineCommand
 from django.core.management import call_command
 from d2qc.setup.tools import postgres_wo_password
 from datetime import datetime
@@ -9,13 +10,14 @@ import os
 import logging
 import sys
 
-class Command(BaseCommand):
-    '''Restore the database from the production environment. You need to have
-    your ssh-key added to the production-server for this to work. In addition,
-    you might need to make the following changes to ~/.ssh/config
-    Host                    *
-      ForwardAgent          yes
-    '''
+class Command(NewlineCommand):
+    help = """
+        Restore the database from the production environment. You need to have
+        your ssh-key added to the production-server for this to work. In addition,
+        you might need to make the following changes to ~/.ssh/config
+        Host                    *
+          ForwardAgent          yes
+    """
 
     def add_arguments(self, parser):
         # Named (optional) arguments

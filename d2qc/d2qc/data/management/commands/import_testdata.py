@@ -1,12 +1,16 @@
 # Import some test data to the database
 
-from django.core.management.base import BaseCommand
+from d2qc.data.management.newline_command import NewlineCommand
 from d2qc.data.glodap.glodap import Glodap
 import os
 
 
-class Command(BaseCommand):
-
+class Command(NewlineCommand):
+    help = """
+        Import some test-data into the database. Might be sufficient for
+        testing user interface changes etc. For testing the actual crossover-
+        functionality, use db_restore_from_prod instead.
+    """
     def handle(self, *args, **options):
         testdata = os.path.join(
             os.path.dirname(__file__),

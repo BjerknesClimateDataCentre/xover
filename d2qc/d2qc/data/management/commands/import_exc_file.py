@@ -1,9 +1,10 @@
-from django.core.management.base import BaseCommand
+from d2qc.data.management.newline_command import NewlineCommand
 import d2qc.data.models as models
 
-class Command(BaseCommand):
-    """
-    This command is mainly used internally to import files in the background.
+class Command(NewlineCommand):
+    help = """
+        This command is mainly used internally to import files in the
+        background.
     """
     def add_arguments(self, parser):
         parser.add_argument(

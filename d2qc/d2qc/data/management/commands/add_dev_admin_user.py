@@ -1,15 +1,16 @@
 from django.contrib.auth import get_user_model
 from d2qc.data.models import Profile
-from django.core.management.base import BaseCommand, CommandError
+from d2qc.data.management.newline_command import NewlineCommand
+from django.core.management.base import CommandError
 from django.conf import settings
 
-class Command(BaseCommand):
-    '''### Only use on development environments ###
-    Create a admin user with username admin, password 123. If this user
-    already exists, just set the password to 123, so you can access the admin
-    account easily.
+class Command(NewlineCommand):
+    help = '''
+        ### Only use on development environments ###
+        Create a admin user with username admin, password 123. If this user
+        already exists, just set the password to 123, so you can access the admin
+        account easily.
     '''
-
     def handle(self, *args, **options):
         '''Restore the database
         '''

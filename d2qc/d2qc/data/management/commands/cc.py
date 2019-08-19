@@ -1,8 +1,8 @@
-from django.core.management.base import BaseCommand
+from d2qc.data.management.newline_command import NewlineCommand
 from django.core.cache import cache
 
-class Command(BaseCommand):
-    """Clear cache for the application"""
+class Command(NewlineCommand):
+    help = """Clear cache for the application"""
     def handle(self, *args, **options):
         cache.clear()
         if options['verbosity'] > 0:
