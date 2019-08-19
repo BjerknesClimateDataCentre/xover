@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand
+from d2qc.data.management.newline_command import NewlineCommand
 from d2qc.data.glodap.glodap import Glodap
 import d2qc.data.models as models
 import os
@@ -6,10 +6,10 @@ from django.core.cache import cache
 import json
 
 
-class Command(BaseCommand):
-    """
-    This command is mainly used internally to calculate crossovers for a dataset
-    in the background.
+class Command(NewlineCommand):
+    help = """
+        This command is mainly used internally to calculate crossovers for a dataset
+        in the background.
     """
     def add_arguments(self, parser):
         parser.add_argument(

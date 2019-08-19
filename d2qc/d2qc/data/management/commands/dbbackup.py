@@ -1,16 +1,22 @@
-# Make standard mariadb backup of the database
-
 from django.conf import settings
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
+from d2qc.data.management.newline_command import NewlineCommand
 from d2qc.setup.tools import postgres_wo_password
 from datetime import datetime
 import os
 
-class Command(BaseCommand):
+class Command(NewlineCommand):
+    help = """
+        Make a backup of the database. This function uses the current
+        setup to make a database dump in the backup folder also specified in
+        the configuration. Backup files are in the postgres dump format. They
+        are named: d2qc-dbbackup-YYYY-mm-dd_HH:MM:SS.dump
+        There is also a softlink called latest.dump, pointing to the last
+        generated backup.
+    """
+
 
     def handle(self, *args, **options):
-        '''Make a backup of the database
-        '''
 
         db_name = settings.DATABASES['default']['NAME']
         user = settings.DATABASES['default']['USER']
