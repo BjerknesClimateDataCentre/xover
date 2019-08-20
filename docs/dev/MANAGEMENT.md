@@ -3,7 +3,7 @@ Django management functionality
 -------------------------------
 
 Djangos build in management functionality is reached through the d2qc/manage.py
-file (se [aliases](dev/ALIASES.md) for shortcuts. Below I use `m` as alias for
+file (se [aliases](ALIASES.md) for shortcuts. Below I use `m` as alias for
 manage.py)
 
 List available functionality (only displaying custom funcitonality here):
