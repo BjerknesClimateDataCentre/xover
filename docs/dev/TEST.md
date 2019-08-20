@@ -1,5 +1,4 @@
 
-
 Setup a test server (using UH-IAAS / Openstack)
 -----------------------------------------------
 
