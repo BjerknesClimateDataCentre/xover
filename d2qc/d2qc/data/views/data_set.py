@@ -78,10 +78,10 @@ class DataSetDetail(DetailView):
 
         if not context['stations_polygon']:
             context['stations_polygon'] = ''
-        context['dataset_profiles'] = '[]'
-        context['dataset_interp_profiles'] = '[]'
-        context['dataset_ref_profiles'] = '[]'
-        context['dataset_ref_interp_profiles'] = '[]'
+        context['dataset_profiles'] = None
+        context['dataset_interp_profiles'] = None
+        context['dataset_ref_profiles'] = None
+        context['dataset_ref_interp_profiles'] = None
         if self.kwargs.get('parameter_id'):
             cache_key_px = "_xover-{}-{}-{}-{}".format(
                 data_set.id,
@@ -187,7 +187,8 @@ class DataSetDetail(DetailView):
                     crossover_stations,
                     self.kwargs.get('parameter_id'),
                 )
-                context['dataset_stats'] = json.dumps(stats, allow_nan=False)
+                if stats:
+                    context['dataset_stats'] = json.dumps(stats, allow_nan=False)
 
         return context
 
