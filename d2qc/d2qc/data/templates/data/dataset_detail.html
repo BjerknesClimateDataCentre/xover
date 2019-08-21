@@ -188,6 +188,8 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
             var raster = new ol.layer.Tile({
                 source: new ol.source.OSM()
             });
+            var cruise_positions = '{{ cruise_positions }}';
+            var cruise_polygon = '{{ cruise_polygon }}';
             var stations = '{{ station_positions }}';
             var crossovers = '{{ crossover_positions }}';
             var stations_polygon = '{{ stations_polygon }}'
@@ -208,6 +210,16 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                     radius: 3,
                 })
             });
+
+            blue_hole = new ol.style.Style({
+                image: new ol.style.Circle({
+                    stroke: new ol.style.Stroke({
+                        color: [0,0,255,.8]
+                    }),
+                    radius: 3,
+                })
+            });
+
             blue_line = new ol.style.Style({
               stroke: new ol.style.Stroke({
                 color: [0,0,255,1],
@@ -217,12 +229,21 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
 
             var format = new ol.format.WKT();
 
-            var feature = format.readFeature(stations, {
+            var feature = format.readFeature(cruise_positions, {
+                dataProjection: 'EPSG:4326',
+                featureProjection: 'EPSG:3857'
+            });
+            feature.setStyle(blue_hole)
+            // Add all cruise stations as first layer
+            features.push(feature)
+
+
+            feature = format.readFeature(stations, {
                 dataProjection: 'EPSG:4326',
                 featureProjection: 'EPSG:3857'
             });
             feature.setStyle(blue)
-            // Add stations from data set as first layer
+            // Stations filtered by parameter
             features.push(feature)
 
             var cross_feature = null
