@@ -68,18 +68,18 @@ var w_std_min = {
 
 
 var data = [
-    mean,
-    stdev_plus,
-    stdev_min,
-    w_mean,
-    w_std_plus,
-    w_std_min
+  mean,
+  stdev_plus,
+  stdev_min,
+  w_mean,
+  w_std_plus,
+  w_std_min
 ];
 var layout = {
-    yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
-    margin: {l: 60, r:0},
-    legend: {orientation: 'h'},
-    hovermode: 'y'
+  yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
+  margin: {l: 60, r:0},
+  legend: {orientation: 'h'},
+  hovermode: 'y'
 };
 
 Plotly.newPlot('stats', data, layout);

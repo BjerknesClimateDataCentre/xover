@@ -1,27 +1,27 @@
 red_map = new ol.style.Style({
-    image: new ol.style.Circle({
-        fill: new ol.style.Fill({
-            color: [255,0,0,.4]
-        }),
-        radius: 3,
-    })
+  image: new ol.style.Circle({
+    fill: new ol.style.Fill({
+      color: [255,0,0,.4]
+    }),
+    radius: 3,
+  })
 });
 blue_map = new ol.style.Style({
-    image: new ol.style.Circle({
-        fill: new ol.style.Fill({
-            color: [0,0,255,1]
-        }),
-        radius: 3,
-    })
+  image: new ol.style.Circle({
+    fill: new ol.style.Fill({
+      color: [0,0,255,1]
+    }),
+    radius: 3,
+  })
 });
 
 blue_hole_map = new ol.style.Style({
-    image: new ol.style.Circle({
-        stroke: new ol.style.Stroke({
-            color: [0,0,255,.8]
-        }),
-        radius: 3,
-    })
+  image: new ol.style.Circle({
+    stroke: new ol.style.Stroke({
+      color: [0,0,255,.8]
+    }),
+    radius: 3,
+  })
 });
 
 blue_line_map = new ol.style.Style({

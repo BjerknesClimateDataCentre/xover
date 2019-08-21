@@ -184,16 +184,12 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
             </dl>
         </div>
         <script type="text/javascript">
-
-
-            {% include "./dataset_detail/colors.js" %}
-            {% include "./dataset_detail/map.js" %}
-
-            {% if dataset_profiles %}
-              {% include "./dataset_detail/profile.js" %}
-            {% endif %}
-
-          </script>
+        {% include "./dataset_detail/colors.js" %}
+        {% include "./dataset_detail/map.js" %}
+        {% if dataset_profiles %}
+          {% include "./dataset_detail/profile.js" %}
+        {% endif %}
+        </script>
 
         <a href="{% url 'data_set-delete' object.id %}">[Delete dataset]</a>
     </div>
