@@ -51,6 +51,15 @@ class DataSetDetail(DetailView):
                 context['parameter'] = data_type
                 break
 
+        # Get stations positions and polygons for the whole cruise
+        cruise_stations = data_set.get_stations()
+        context['cruise_polygon'] = data_set.get_stations_polygon(
+            cruise_stations
+        )
+        context['cruise_positions'] = data_set.get_station_positions(
+            cruise_stations
+        )
+
         # Get the stations for the current data set,
         # filtering by parameter if required
         data_set_stations = data_set.get_stations(
