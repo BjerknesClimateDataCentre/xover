@@ -51,20 +51,42 @@ for (var i=0; i<interp_profiles.length; i++) {
 var param_max = Number.MIN_VALUE
 var param_min = Number.MAX_VALUE
 
+function max_reduce(max, x){
+  retval = x
+  if (null == x) {
+    retval = max
+  }
+  else if (null != max) {
+    retval = Math.max(max, x)
+  }
+  return retval
+}
+
+function min_reduce(min, x){
+  retval = x
+  if (null == x) {
+    retval = min
+  }
+  else if (null != min) {
+    retval = Math.min(min, x)
+  }
+  return retval
+}
+
 for (var i=0; i<profiles.length; i++) {
   profile = createProfile(profiles[i], blue_profile, false, false)
   if(profile) {
     data.push(profile)
-    param_max = Math.max(param_max, ...profiles[i].param.data)
-    param_min = Math.min(param_min, ...profiles[i].param.data)
+    param_max = Math.max(param_max, profiles[i].param.data.reduce(max_reduce))
+    param_min = Math.min(param_min, profiles[i].param.data.reduce(min_reduce))
   }
 }
 for (var i=0; i<profiles_ref.length; i++) {
   profile = createProfile(profiles_ref[i], red_profile, false, false)
   if(profile) {
     data.push(profile)
-    param_max = Math.max(param_max, ...profiles_ref[i].param.data)
-    param_min = Math.min(param_min, ...profiles_ref[i].param.data)
+    param_max = Math.max(param_max, profiles_ref[i].param.data.reduce(max_reduce))
+    param_min = Math.min(param_min, profiles_ref[i].param.data.reduce(min_reduce))
   }
 }
 for (var i=0; i<interp_profiles_ref.length; i++) {
