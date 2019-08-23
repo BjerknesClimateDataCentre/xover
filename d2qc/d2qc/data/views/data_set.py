@@ -3,6 +3,7 @@ from rest_framework import viewsets
 from d2qc.data.models import DataSet
 from d2qc.data.serializers import DataSetSerializer
 from d2qc.data.serializers import NestedDataSetSerializer
+from d2qc.data.forms import MergeForm
 
 from django.conf import settings
 from django.contrib import messages
@@ -50,7 +51,9 @@ class DataSetDetail(DetailView):
             if data_type['id'] == self.kwargs.get('parameter_id'):
                 context['parameter'] = data_type
                 break
-
+        context['form'] = MergeForm(
+            params = context['data_types'],
+        )
         # Get stations positions and polygons for the whole cruise
         cruise_stations = data_set.get_stations()
         context['cruise_polygon'] = data_set.get_stations_polygon(

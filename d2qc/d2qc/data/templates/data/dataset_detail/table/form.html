@@ -1,0 +1,78 @@
+<style>
+.mergeform {
+  display: flex;
+  flex-wrap: wrap;
+  width: 200px;
+  justify-content: center;
+}
+.mergebutton, .mergeinfo {
+  width: 100%
+}
+.column {
+  display: flex;
+  width: 35px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.column h4 {
+  width: 100%;
+}
+.column.params {
+  width: auto;
+}
+.column > * > li{
+  display: block;
+  height: 25px;
+  padding: 0;
+  margin: 0;
+}
+.column input {
+  margin: 0;
+  padding: 0;
+}
+.column ul {
+  padding: 0 4px;
+  margin:0;
+  display: block;
+}
+.column fieldset {
+  border: none;
+}
+</style>
+<form class="mergeform" method="post">
+  {% csrf_token %}
+  <div class="pri column">
+    <h4>Pri.</h4>
+    {{form.primary}}
+  </div>
+  <div class="sec column">
+    <h4>Sec.</h4>
+    {{form.secondary}}
+  </div>
+  <div class="params column">
+    <h4>Name</h4>
+    <ul>
+    {% for data_type in data_types %}
+    <li
+    {% if parameter.id == data_type.id %}
+    class="selected"
+    {% endif %}
+    >
+        <a
+          href="{% url 'data_set_parameter-detail' object.id data_type.id %}"
+        >
+          {{ data_type.original_label }}
+        </a>
+    </li>
+    {% endfor %}
+    </ul>
+  </div>
+  <div class="mergeinfo">
+    <p>
+      To merge sensordata with bottle data, select the desired primary and 
+      secondary parameters from the list above, and press Merge selected
+      parameters. This will take you to a new screen for completing the merge.
+    </p>
+  </div>
+  <input class="mergebutton" type="submit" value="Merge selected parameters" />
+</form>
