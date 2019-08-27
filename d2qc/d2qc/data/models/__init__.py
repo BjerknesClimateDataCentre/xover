@@ -8,3 +8,8 @@ from .data_unit import DataUnit
 from .depth import Depth
 from .station import Station
 from .cast import Cast
+
+__all__ = [
+    "Profile",  "DataSet",  "DataType",  "DataFile",  "OffsetType",
+    "DataValue",  "DataUnit", "Depth",  "Station",  "Cast",
+]
