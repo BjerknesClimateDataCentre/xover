@@ -23,3 +23,13 @@ from .data_set import NestedDataSetViewSet
 from .data_set import DataSetList
 from .data_set import DataSetDetail
 from .data_set import DataSetDelete
+from .data_set import DataSetMerge
+
+__all__ = [
+  "CastViewSet", "DataTypeViewSet", "DataUnitViewSet", "DataValueViewSet",
+  "DepthViewSet", "StationViewSet", "ProfileUpdate", "IndexPage",
+  "redirect_login", "dataSet", "crossover", "DataFileViewSet", "DataFileList",
+  "DataFileCreate", "DataFileUpdate", "DataFileDelete", "DataFileDetail",
+  "DataSetViewSet", "NestedDataSetViewSet", "DataSetList", "DataSetDetail",
+  "DataSetDelete", "DataSetMerge",
+]
