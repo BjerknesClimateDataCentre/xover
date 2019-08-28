@@ -22,7 +22,6 @@ import json
 import os
 import re
 import subprocess
-import pandas as pd
 
 class DataSetViewSet(viewsets.ModelViewSet):
 
@@ -224,52 +223,23 @@ class DataSetMerge(DetailView):
         data_types = data_set.get_data_types(
             min_depth = data_set.owner.profile.min_depth
         )
-        self.form = MergeForm(request.POST, data_types=data_types)
+        self.form = MergeForm(
+            request.POST,
+            data_types = data_types,
+        )
+        if self.form.is_valid() and request.POST.get('save_parameters', False):
+            self.form.save_merge_data(data_set = self.get_object())
+            # Reloading this to get the new, inserted merge parameter
+            self.form = MergeForm(
+                request.POST,
+                data_types = data_types,
+            )
         retval = super().get(request, *args, **kwargs)
         return retval
 
     def get(self, request, *args, **kwargs):
         return self.post(request, *args, **kwargs)
 
-    def get_success_url(self):
-        return reverse('data_set_merge', kwargs={'pk':self.object.pk})
-
-    def get_merge_data(self, primary_param, secondary_param):
-        data_set = self.get_object()
-        s1 = data_set.get_stations(
-            parameter_id=primary_param
-        )
-        s2 = data_set.get_stations(
-            parameter_id=secondary_param
-        )
-        stations = set(s1) and set(s2)
-
-        primary = data_set.get_profiles_data(
-            stations,
-            primary_param,
-            min_depth = 0,
-        )
-        secondary = data_set.get_profiles_data(
-            stations,
-            secondary_param,
-            min_depth = 0,
-        )
-        # s.loc[s['depth'].isin(p['depth']) & s['station_number'].isin(p['station_number'])]
-        merged = primary.merge(
-            secondary[['depth', 'station_number', 'param']],
-            how = 'inner',
-            left_on = ['station_number', 'depth'],
-            right_on = ['station_number', 'depth'],
-            suffixes = ('_pri', '_sec'),
-        )
-        merged['diff'] = merged['param_pri'] - merged['param_sec']
-        merged = merged.replace({pd.np.nan: None})
-        result = {
-            'depth': merged['depth'].tolist(),
-            'diff': merged['diff'].tolist(),
-        }
-
-        return result
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -279,10 +249,12 @@ class DataSetMerge(DetailView):
         )
         form = self.form
         if form.is_valid():
-            data = self.get_merge_data(
-                form.cleaned_data['primary'],
-                form.cleaned_data['secondary'],
+            data = form.get_merge_data(
+                data_set = self.get_object()
             )
+            data.pop('depth_id', None)
+            data.pop('primary', None)
+            data.pop('secondary', None)
             context['merge_data'] = json.dumps(data)
         context['form'] = form
         return context

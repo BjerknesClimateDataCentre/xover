@@ -34,6 +34,8 @@
   padding: 0 4px;
   margin:0;
   display: block;
+  max-width: 80px;
+  overflow: hidden;
 }
 .column fieldset {
   border: none;
@@ -41,6 +43,7 @@
 </style>
 <form class="mergeform" method="post" action="{% url 'data_set_merge' object.id %}">
   {% csrf_token %}
+  <input type="hidden" name="merge_type" value="0">
   <div class="pri column">
     <h4>Pri.</h4>
     {{form.primary}}
@@ -57,6 +60,7 @@
     {% if parameter.id == data_type.id %}
     class="selected"
     {% endif %}
+    title="{{ data_type.original_label }}"
     >
         <a
           href="{% url 'data_set_parameter-detail' object.id data_type.id %}"

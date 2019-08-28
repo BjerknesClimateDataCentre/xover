@@ -391,13 +391,15 @@ class DataSet(models.Model):
             'press',
             'longitude',
             'latitude',
+            'depth_id',
         ]
         sql_tmpl = """
-            select distinct on(d.id) data_set_id, ds.expocode, s.station_number,
-            c.cast as c_cast, d.depth::float as depth, dv.value::float as param,
+            select distinct on(d.id) data_set_id, ds.expocode, s.station_number, c.cast as c_cast,
+            d.depth::float as depth, dv.value::float as param,
             temp.value::float as temp, salt.value::float as salin,
             pres.value::float as press,
-            st_x(s.position) as longitude, st_y(s.position)  as latitude
+            st_x(s.position) as longitude, st_y(s.position)  as latitude,
+            d.id as depth_id
             from d2qc_depths d
             left join d2qc_data_values dv on (
                 dv.depth_id = d.id and dv.data_type_id in ({})
