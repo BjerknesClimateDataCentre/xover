@@ -41,15 +41,26 @@ class DataSet(models.Model):
     )
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+    _typelist = None
+
     def __str__(self):
         return self.expocode
 
+    def set_type_list(self, typelist):
+        """Reset list of types for this data set"""
+        self._typelist = typelist
+
     def get_data_types(self, min_depth=0):
         """Fetch all data types in this data set from the database"""
-        cache_key = "get_data_types-{}".format(self.id)
-        value = cache.get(cache_key, False)
-        if value is not False:
-            return value
+
+        if min_depth is False:
+            min_depth = self.owner.profile.min_depth
+        if min_depth is False:
+            min_depth = self.min_depth
+
+        if self._typelist:
+            return self._typelist
 
         sql = """select distinct dt.original_label, dt.identifier, dt.id
             from d2qc_data_types dt
@@ -70,8 +81,7 @@ class DataSet(models.Model):
             'id': type[2],
         } for type in self._fetchall_query(sql)]
         # Set the cache
-        cache.set(cache_key, typelist)
-
+        self._typelist = typelist
         return typelist
 
     def get_stations(
@@ -85,16 +95,17 @@ class DataSet(models.Model):
         Get the list of stations in data_set_id or the current data set,
         possibly filtered by parameter_id
         """
-        crossover_radius = (
-            crossover_radius
-            or self.owner.profile.crossover_radius
-            or self.crossover_radius
-        )
-        min_depth = (
-            min_depth
-            or self.owner.profile.min_depth
-            or self.min_depth
-        )
+
+        if crossover_radius is False:
+            crossover_radius = self.owner.profile.crossover_radius
+        if crossover_radius is False:
+            crossover_radius = self.crossover_radius
+
+        if min_depth is False:
+            min_depth = self.owner.profile.min_depth
+        if min_depth is False:
+            min_depth = self.min_depth
+
         sql = """
             select distinct st.id from d2qc_stations st
             inner join d2qc_data_sets ds on (st.data_set_id = ds.id)
@@ -153,11 +164,12 @@ class DataSet(models.Model):
         stations: list=[],
         crossover_radius=False,
     ):
-        crossover_radius = (
-            crossover_radius
-            or self.owner.profile.crossover_radius
-            or self.crossover_radius
-        )
+
+        if crossover_radius is False:
+            crossover_radius = self.owner.profile.crossover_radius
+        if crossover_radius is False:
+            crossover_radius = self.crossover_radius
+
         """
         Get the search buffer for a set of stations
         """
@@ -190,11 +202,12 @@ class DataSet(models.Model):
         """
         if len(stations) == 0:
             return []
-        crossover_radius = (
-            crossover_radius
-            or self.owner.profile.crossover_radius
-            or self.crossover_radius
-        )
+
+        if crossover_radius is False:
+            crossover_radius = self.owner.profile.crossover_radius
+        if crossover_radius is False:
+            crossover_radius = self.crossover_radius
+
         result = None
         sql = """
             select st_astext('{}')
@@ -240,16 +253,16 @@ class DataSet(models.Model):
         is given, only get stations in the given data set.
         """
 
-        min_depth = (
-            min_depth
-            or self.owner.profile.min_depth
-            or self.min_depth
-        )
-        crossover_radius = (
-            crossover_radius
-            or self.owner.profile.crossover_radius
-            or self.crossover_radius
-        )
+        if crossover_radius is False:
+            crossover_radius = self.owner.profile.crossover_radius
+        if crossover_radius is False:
+            crossover_radius = self.crossover_radius
+
+        if min_depth is False:
+            min_depth = self.owner.profile.min_depth
+        if min_depth is False:
+            min_depth = self.min_depth
+
         select = """
             select distinct st.id
         """
@@ -331,23 +344,18 @@ class DataSet(models.Model):
         """
         Executes an sql query, returning the resulting data.
         """
-        cache_key = "_fetchall_query-{}".format(hash(sql))
-        query = cache.get(cache_key, False)
-        if not query:
-            cursor = connection.cursor()
-            cursor.execute(sql)
-            if only_one:
-                query = cursor.fetchone()
-            else:
-                query = cursor.fetchall()
-            cache.set(cache_key, query)
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        if only_one:
+            query = cursor.fetchone()
+        else:
+            query = cursor.fetchall()
         return query
 
     def get_profiles_data(
             self,
             stations: list,
             parameter_id,
-            crossover_radius=False,
             min_depth=False,
     ):
         """
@@ -355,21 +363,16 @@ class DataSet(models.Model):
 
         Returns a pandas dataframe
         """
-        crossover_radius = (
-            crossover_radius
-            or self.owner.profile.crossover_radius
-            or self.crossover_radius
-        )
-        min_depth = (
-            min_depth
-            or self.owner.profile.min_depth
-            or self.min_depth
-        )
-        cache_key = "get_profiles_data-{}-{}-{}-{}-{}".format(
+
+        if min_depth is False:
+            min_depth = self.owner.profile.min_depth
+        if min_depth is False:
+            min_depth = self.min_depth
+
+        cache_key = "get_profiles_data-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
             hash(tuple(stations)),
-            crossover_radius,
             min_depth,
         )
         value = cache.get(cache_key, False)
@@ -390,8 +393,8 @@ class DataSet(models.Model):
             'latitude',
         ]
         sql_tmpl = """
-            select distinct on(d.id) data_set_id, ds.expocode, s.station_number, c.cast as c_cast,
-            d.depth::float as depth, dv.value::float as param,
+            select distinct on(d.id) data_set_id, ds.expocode, s.station_number,
+            c.cast as c_cast, d.depth::float as depth, dv.value::float as param,
             temp.value::float as temp, salt.value::float as salin,
             pres.value::float as press,
             st_x(s.position) as longitude, st_y(s.position)  as latitude
@@ -533,7 +536,6 @@ class DataSet(models.Model):
             self,
             stations,
             parameter_id,
-            crossover_radius=False,
             min_depth=False,
     ):
         """
@@ -542,21 +544,16 @@ class DataSet(models.Model):
         different depths initially. Returns a dataframe with same format as
         get_profiles_data
         """
-        crossover_radius = (
-            crossover_radius
-            or self.owner.profile.crossover_radius
-            or self.crossover_radius
-        )
-        min_depth = (
-            min_depth
-            or self.owner.profile.min_depth
-            or self.min_depth
-        )
-        cache_key = "get_interp_profiles-{}-{}-{}-{}-{}".format(
+
+        if min_depth is False:
+            min_depth = self.owner.profile.min_depth
+        if min_depth is False:
+            min_depth = self.min_depth
+
+        cache_key = "get_interp_profiles-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
             hash(tuple(stations)),
-            crossover_radius,
             min_depth,
         )
         value = cache.get(cache_key, False)
@@ -566,7 +563,6 @@ class DataSet(models.Model):
         dataframe = self.get_profiles_data(
             stations,
             parameter_id,
-            crossover_radius=crossover_radius,
             min_depth=min_depth,
         )
         groups = dataframe.groupby(
@@ -678,16 +674,17 @@ class DataSet(models.Model):
             crossover_radius=False,
             min_depth=False,
     ):
-        crossover_radius = (
-            crossover_radius
-            or self.owner.profile.crossover_radius
-            or self.crossover_radius
-        )
-        min_depth = (
-            min_depth
-            or self.owner.profile.min_depth
-            or self.min_depth
-        )
+
+        if crossover_radius is False:
+            crossover_radius = self.owner.profile.crossover_radius
+        if crossover_radius is False:
+            crossover_radius = self.crossover_radius
+
+        if min_depth is False:
+            min_depth = self.owner.profile.min_depth
+        if min_depth is False:
+            min_depth = self.min_depth
+
         data_type = data.models.DataType.objects.get(pk=parameter_id)
         cache_key = "get_profiles_stats-{}-{}-{}-{}-{}-{}".format(
             self.id,
@@ -704,13 +701,11 @@ class DataSet(models.Model):
         current_stations = self.get_interp_profiles(
             stations,
             parameter_id,
-            crossover_radius=crossover_radius,
             min_depth=min_depth,
         )
         reference_stations = self.get_interp_profiles(
             xover_stations,
             parameter_id,
-            crossover_radius=crossover_radius,
             min_depth=min_depth,
         )
         if reference_stations.size == 0 or current_stations.size == 0:
