@@ -5,7 +5,7 @@
 href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/css/ol.css">
 <style>
     #plot {
-        height: 400px;
+        height: 600px;
         width: 600px;
     }
     .outer {
@@ -37,6 +37,14 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
       order: 1;
       padding: 10px;
     }
+    .save {
+      display: flex;
+      flex-direction: column;
+
+    }
+    .save>* {
+      margin: 0 0 20px;
+    }
 </style>
 <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
 {% endblock %}
@@ -48,7 +56,7 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
 .mergeform {
   display: flex;
   flex-wrap: wrap;
-  width: 200px;
+  width: 400px;
   justify-content: center;
 }
 .mergebutton, .mergeinfo {
@@ -56,7 +64,7 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
 }
 .column {
   display: flex;
-  width: 35px;
+  width: 80px;
   flex-wrap: wrap;
   justify-content: flex-start;
 }
@@ -80,20 +88,29 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
   padding: 0 4px;
   margin:0;
   display: block;
+  max-width: 100px;
+  overflow: hidden;
 }
 .column fieldset {
   border: none;
 }
+#id_merge_type {
+  max-width: 100%;
+  margin: 0 0 10px;
+}
 </style>
+<h3>
+    ID: {{ object.id }} - {{ object.expocode }}
+</h3>
 <div class="outer">
   <form class="mergeform" method="post">
     {% csrf_token %}
     <div class="pri column">
-      <h4>Pri.</h4>
+      <h4>Primary</h4>
       {{form.primary}}
     </div>
     <div class="sec column">
-      <h4>Sec.</h4>
+      <h4>Secondary</h4>
       {{form.secondary}}
     </div>
     <div class="params column">
@@ -104,6 +121,7 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
       {% if parameter.id == data_type.id %}
       class="selected"
       {% endif %}
+      title="{{ data_type.original_label }}"
       >
           <a
             href="{% url 'data_set_parameter-detail' object.id data_type.id %}"
@@ -117,11 +135,21 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
     <div class="mergeinfo">
       <p></p>
     </div>
+    <input class="mergebutton" type="submit"
+    value="Plot selected parameters" name="plot_parameters"/>
+    <h3>Merging</h3>
+    <p>To merge the selected parameters, choose the appropriate action from
+      the select box below, and click Save merge parameter. This will create
+      a new variable in the database named primary_secondary_#, where
+    primary is the name of the primary parameter etc, and # is the merge action.</p>
+    {{form.merge_type}}
 
-    <input class="mergebutton" type="submit" value="Plot selected parameters" />
+    <input class="mergebutton" type="submit"
+    value="Save merge parameter" name="save_parameters"/>
   </form>
   <div id="plot">
   </div>
+  {% if merge_data %}
   <script type="text/javascript">
     var merge_data =   JSON.parse('{{ merge_data | escapejs }}');
 
@@ -131,11 +159,19 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
       type: 'scatter',
       mode: 'markers'
     }
+    var xmax = Math.max(
+      Math.abs(Math.max(...merge_data.diff)),
+      Math.abs(Math.max(...merge_data.diff))
+    );
+
     var layout = {
         yaxis: {autorange: 'reversed', rangemode: 'tozero'},
-        xaxis: {rangemode: 'tozero'}
-      };
-    Plotly.newPlot('plot', [plot], layout);
+        xaxis: {range: [-1 * (xmax + (xmax/10)), xmax + (xmax/10)]}
+    };
+    var mergeplot = Plotly.newPlot('plot', [plot], layout);
   </script>
+  {% else %}
+  <p>Please choose parameters to display plot</p>
+  {% endif %}
 </div>
 {% endblock %}
