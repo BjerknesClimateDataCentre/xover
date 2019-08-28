@@ -2,25 +2,22 @@ from django import forms
 
 
 class MergeForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        params = []
-        if 'params' in kwargs:
-            params = kwargs.pop('params')
-        super().__init__(kwargs)
-        self.fields = {}
 
-        choices = []
-        for param in params:
-            choices.append((param['id'], ""))
-        self.fields = {
-            "primary": forms.ChoiceField(
+    def __init__(self, *args, **kwargs):
+        try:
+            data_types = kwargs.pop('data_types')
+        except KeyError:
+            data_types = None
+        super().__init__(*args, **kwargs)
+        if data_types is not None:
+            choices = [(t['id'], '') for t in data_types]
+            self.fields['primary'] = forms.ChoiceField(
                 label = "Pri.",
-                choices = choices,
                 widget = forms.RadioSelect,
-            ),
-            "secondary": forms.ChoiceField(
+                choices=choices
+            )
+            self.fields['secondary'] = forms.ChoiceField(
                 label = "Sec.",
-                choices = choices,
                 widget = forms.RadioSelect,
-            ),
-        }
+                choices=choices
+            )

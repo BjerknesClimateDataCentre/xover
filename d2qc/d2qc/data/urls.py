@@ -37,6 +37,7 @@ detail = '/detail'
 update = '/update'
 import_ = '/import'
 delete = '/delete'
+merge = '/merge'
 data_set = 'data_set'
 profile = 'profile'
 parameter = 'parameter'
@@ -108,6 +109,11 @@ urlpatterns = [
                 + crossover + '/<int:data_set_id>',
         DataSetDetail.as_view(),
         name='data_set_crossover'
+    ),
+    path(
+        data_set + merge + '/<int:pk>/',
+        DataSetMerge.as_view(),
+        name='data_set_merge'
     ),
     path(
             data_set + delete + '/<int:pk>',

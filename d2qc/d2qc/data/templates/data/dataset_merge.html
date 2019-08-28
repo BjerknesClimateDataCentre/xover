@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block css %}
+{% load mathfilters %}
+<link rel="stylesheet" type="text/css"
+href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/css/ol.css">
+<style>
+    #plot {
+        height: 400px;
+        width: 600px;
+    }
+    .outer {
+      display: flex;
+    }
+    .dataset.data{
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+    }
+    .dataset.data .selected,
+    .dataset.data .selected a {
+        background-color: black;
+        color: white;
+        font-weight: bold;
+    }
+    .dataset.data td {
+        vertical-align: top;
+    }
+    .dataset-top {
+        display: flex;
+        justify-content: flex-start;
+    }
+    .head-wrapper {
+      order: 2;
+      padding: 10px;
+    }
+    .map-wrapper {
+      order: 1;
+      padding: 10px;
+    }
+</style>
+<link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+{% endblock %}
+{% block js %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock%}
+{% block content %}
+<style>
+.mergeform {
+  display: flex;
+  flex-wrap: wrap;
+  width: 200px;
+  justify-content: center;
+}
+.mergebutton, .mergeinfo {
+  width: 100%
+}
+.column {
+  display: flex;
+  width: 35px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.column h4 {
+  width: 100%;
+}
+.column.params {
+  width: auto;
+}
+.column > * > li{
+  display: block;
+  height: 25px;
+  padding: 0;
+  margin: 0;
+}
+.column input {
+  margin: 0;
+  padding: 0;
+}
+.column ul {
+  padding: 0 4px;
+  margin:0;
+  display: block;
+}
+.column fieldset {
+  border: none;
+}
+</style>
+<div class="outer">
+  <form class="mergeform" method="post">
+    {% csrf_token %}
+    <div class="pri column">
+      <h4>Pri.</h4>
+      {{form.primary}}
+    </div>
+    <div class="sec column">
+      <h4>Sec.</h4>
+      {{form.secondary}}
+    </div>
+    <div class="params column">
+      <h4>Name</h4>
+      <ul>
+      {% for data_type in data_types %}
+      <li
+      {% if parameter.id == data_type.id %}
+      class="selected"
+      {% endif %}
+      >
+          <a
+            href="{% url 'data_set_parameter-detail' object.id data_type.id %}"
+          >
+            {{ data_type.original_label }}
+          </a>
+      </li>
+      {% endfor %}
+      </ul>
+    </div>
+    <div class="mergeinfo">
+      <p></p>
+    </div>
+
+    <input class="mergebutton" type="submit" value="Plot selected parameters" />
+  </form>
+  <div id="plot">
+  </div>
+  <script type="text/javascript">
+    var merge_data =   JSON.parse('{{ merge_data | escapejs }}');
+
+    var plot = {
+      x: merge_data.diff,
+      y: merge_data.depth,
+      type: 'scatter',
+      mode: 'markers'
+    }
+    var layout = {
+        yaxis: {autorange: 'reversed', rangemode: 'tozero'},
+        xaxis: {rangemode: 'tozero'}
+      };
+    Plotly.newPlot('plot', [plot], layout);
+  </script>
+</div>
+{% endblock %}

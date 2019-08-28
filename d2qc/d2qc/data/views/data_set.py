@@ -5,19 +5,24 @@ from d2qc.data.serializers import DataSetSerializer
 from d2qc.data.serializers import NestedDataSetSerializer
 from d2qc.data.forms import MergeForm
 
+from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.core.cache import cache
 from django.urls import reverse_lazy
+from django.urls import reverse
+from django.views import View
 from django.views.generic import ListView
 from django.views.generic import DetailView
-from django.views.generic.edit import DeleteView
+from django.views.generic import DeleteView
+from django.views.generic.detail import SingleObjectMixin
+from django.views.generic import FormView
 
 import json
 import os
 import re
 import subprocess
-
+import pandas as pd
 
 class DataSetViewSet(viewsets.ModelViewSet):
 
@@ -51,9 +56,8 @@ class DataSetDetail(DetailView):
             if data_type['id'] == self.kwargs.get('parameter_id'):
                 context['parameter'] = data_type
                 break
-        context['form'] = MergeForm(
-            params = context['data_types'],
-        )
+        form = MergeForm(data_types=context['data_types'])
+        context['form'] = form
         # Get stations positions and polygons for the whole cruise
         cruise_stations = data_set.get_stations()
         context['cruise_polygon'] = data_set.get_stations_polygon(
@@ -211,3 +215,74 @@ class DataSetDelete(DeleteView):
         data_file.import_finnished = None
         data_file.save()
         return retval
+
+class DataSetMerge(DetailView):
+    model = DataSet
+    template_name = 'data/dataset_merge.html'
+    def post(self, request, *args, **kwargs):
+        data_set = self.get_object()
+        data_types = data_set.get_data_types(
+            min_depth = data_set.owner.profile.min_depth
+        )
+        self.form = MergeForm(request.POST, data_types=data_types)
+        retval = super().get(request, *args, **kwargs)
+        return retval
+
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('data_set_merge', kwargs={'pk':self.object.pk})
+
+    def get_merge_data(self, primary_param, secondary_param):
+        data_set = self.get_object()
+        s1 = data_set.get_stations(
+            parameter_id=primary_param
+        )
+        s2 = data_set.get_stations(
+            parameter_id=secondary_param
+        )
+        stations = set(s1) and set(s2)
+
+        primary = data_set.get_profiles_data(
+            stations,
+            primary_param,
+            min_depth = 0,
+        )
+        secondary = data_set.get_profiles_data(
+            stations,
+            secondary_param,
+            min_depth = 0,
+        )
+        # s.loc[s['depth'].isin(p['depth']) & s['station_number'].isin(p['station_number'])]
+        merged = primary.merge(
+            secondary[['depth', 'station_number', 'param']],
+            how = 'inner',
+            left_on = ['station_number', 'depth'],
+            right_on = ['station_number', 'depth'],
+            suffixes = ('_pri', '_sec'),
+        )
+        merged['diff'] = merged['param_pri'] - merged['param_sec']
+        merged = merged.replace({pd.np.nan: None})
+        result = {
+            'depth': merged['depth'].tolist(),
+            'diff': merged['diff'].tolist(),
+        }
+
+        return result
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        data_set = self.get_object()
+        context['data_types'] = data_set.get_data_types(
+            min_depth = data_set.owner.profile.min_depth
+        )
+        form = self.form
+        if form.is_valid():
+            data = self.get_merge_data(
+                form.cleaned_data['primary'],
+                form.cleaned_data['secondary'],
+            )
+            context['merge_data'] = json.dumps(data)
+        context['form'] = form
+        return context

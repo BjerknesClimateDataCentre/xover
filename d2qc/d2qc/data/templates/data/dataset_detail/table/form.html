@@ -39,7 +39,7 @@
   border: none;
 }
 </style>
-<form class="mergeform" method="post">
+<form class="mergeform" method="post" action="{% url 'data_set_merge' object.id %}">
   {% csrf_token %}
   <div class="pri column">
     <h4>Pri.</h4>
