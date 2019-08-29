@@ -78,7 +78,6 @@ class MergeForm(forms.Form):
             self.cleaned_data['secondary'],
             min_depth = 0,
         )
-        # s.loc[s['depth'].isin(p['depth']) & s['station_number'].isin(p['station_number'])]
         merged = primary.merge(
             secondary[['depth_id','param']],
             how = 'inner',
