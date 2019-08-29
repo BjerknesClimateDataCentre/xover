@@ -41,9 +41,9 @@ class MergeForm(forms.Form):
         primary = DataType.objects.get(pk=self.cleaned_data['primary'])
         secondary = DataType.objects.get(pk=self.cleaned_data['secondary'])
         name = "{}#{}_{}".format(
+            self.cleaned_data['merge_type'],
             primary.original_label,
             secondary.original_label,
-            self.cleaned_data['merge_type'],
         )
         data = self.get_merge_data(data_set)
         data_type, found = DataType.objects.get_or_create(original_label=name)
