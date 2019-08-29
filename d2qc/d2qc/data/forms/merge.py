@@ -48,15 +48,31 @@ class MergeForm(forms.Form):
         data = self.get_merge_data(data_set)
         data_type, found = DataType.objects.get_or_create(original_label=name)
         for i, d in enumerate(data['depth_id']):
-            if self.cleaned_data['merge_type'] == '2':
-                if data['secondary'][i] is not None:
-                    value = DataValue(
-                        value = data['secondary'][i],
-                        qc_flag = 2,
-                        data_type = data_type
-                    )
-                    value.depth_id = d
-                    value.save()
+            merge_type = int(self.cleaned_data['merge_type'])
+            value = None
+            if merge_type in [2,3,4,7]:
+                name = 'secondary' if merge_type == 2 else 'primary'
+                value = DataValue(
+                    value = data[name][i],
+                    qc_flag = 2,
+                    data_type = data_type
+                )
+            else if merge_type == 5:
+                arr = [ v for v in [
+                    data['primary'][i],
+                    data['secondary'][i],
+                ] if v is not None]
+                value = DataValue(
+                    value = sum(arr)/len(arr),
+                    qc_flag = 2,
+                    data_type = data_type
+                )
+
+
+            if value is not None and value.value is not None:
+                value.depth_id = d
+                value.save()
+
         data_set.set_type_list(None)
 
     def get_merge_data(self, data_set):
