@@ -429,7 +429,14 @@ class DataSet(models.Model):
             min_depth,
         )
 
-        sql += " order by d.id, expocode, station_number, c_cast, depth"
+        sql += " order by d.id"
+
+        # wrap query as a sub-query to allow correct ordering
+        sql = """
+            select data.* from ({}) data
+            order by expocode, station_number, c_cast, depth
+        """.format(sql)
+
         _all = self._fetchall_query(sql)
         dataframe = pd.DataFrame(_all, columns=columns)
         # Use GSW to calculate sigma4
