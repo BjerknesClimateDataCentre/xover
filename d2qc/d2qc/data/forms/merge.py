@@ -1,6 +1,7 @@
 from django import forms
 from d2qc.data.models import DataType, DataValue, Depth, DataSet
 import pandas as pd
+import numpy as np
 
 class MergeForm(forms.Form):
     merge_type = forms.ChoiceField(
@@ -47,30 +48,19 @@ class MergeForm(forms.Form):
         )
         data = self.get_merge_data(data_set)
         data_type, found = DataType.objects.get_or_create(original_label=name)
-        for i, d in enumerate(data['depth_id']):
+        for i, row in data.iterrows():
             merge_type = int(self.cleaned_data['merge_type'])
-            value = None
+            value = DataValue(qc_flag=2,data_type=data_type)
+            value.depth_id = row['depth_id']
+
             if merge_type in [2,3,4,7]:
                 name = 'secondary' if merge_type == 2 else 'primary'
-                value = DataValue(
-                    value = data[name][i],
-                    qc_flag = 2,
-                    data_type = data_type
-                )
-            else if merge_type == 5:
-                arr = [ v for v in [
-                    data['primary'][i],
-                    data['secondary'][i],
-                ] if v is not None]
-                value = DataValue(
-                    value = sum(arr)/len(arr),
-                    qc_flag = 2,
-                    data_type = data_type
-                )
+                value.value = row[name]
+            elif merge_type == 5:
+                value.value = np.nanmean([row['primary'], row['secondary']])
 
 
-            if value is not None and value.value is not None:
-                value.depth_id = d
+            if not np.isnan(value.value):
                 value.save()
 
         data_set.set_type_list(None)
@@ -102,13 +92,9 @@ class MergeForm(forms.Form):
             suffixes = ('_pri', '_sec'),
         )
         merged['diff'] = merged['param_pri'] - merged['param_sec']
-        merged = merged.replace({pd.np.nan: None})
-        result = {
-            'depth': merged['depth'].tolist(),
-            'diff': merged['diff'].tolist(),
-            'depth_id': merged['depth_id'].tolist(),
-            'primary': merged['param_pri'].tolist(),
-            'secondary': merged['param_sec'].tolist(),
-        }
+        merged.rename(
+            columns={'param_pri':'primary', 'param_sec': 'secondary'},
+            inplace=True,
+        )
 
-        return result
+        return merged
