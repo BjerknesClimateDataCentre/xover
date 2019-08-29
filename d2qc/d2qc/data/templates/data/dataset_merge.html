@@ -100,7 +100,9 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
 }
 </style>
 <h3>
+  <a href="{% url 'data_set-detail' object.id %}">
     ID: {{ object.id }} - {{ object.expocode }}
+  </a>
 </h3>
 <div class="outer">
   <form class="mergeform" method="post">
