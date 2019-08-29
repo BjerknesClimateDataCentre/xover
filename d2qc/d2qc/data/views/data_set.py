@@ -22,6 +22,7 @@ import json
 import os
 import re
 import subprocess
+import pandas as pd
 
 class DataSetViewSet(viewsets.ModelViewSet):
 
@@ -249,12 +250,14 @@ class DataSetMerge(DetailView):
         )
         form = self.form
         if form.is_valid():
-            data = form.get_merge_data(
+            merge = form.get_merge_data(
                 data_set = self.get_object()
             )
-            data.pop('depth_id', None)
-            data.pop('primary', None)
-            data.pop('secondary', None)
+            merge = merge.replace({pd.np.nan: None})
+            data = {
+                'depth': merge['depth'].tolist(),
+                'diff': merge['diff'].tolist(),
+            }
             context['merge_data'] = json.dumps(data)
         context['form'] = form
         return context
