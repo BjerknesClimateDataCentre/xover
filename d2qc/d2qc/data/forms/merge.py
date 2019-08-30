@@ -2,6 +2,7 @@ from django import forms
 from d2qc.data.models import DataType, DataValue, Depth, DataSet
 import pandas as pd
 import numpy as np
+from copy
 
 class MergeForm(forms.Form):
     merge_type = forms.ChoiceField(
@@ -47,7 +48,15 @@ class MergeForm(forms.Form):
             secondary.original_label,
         )
         data = self.get_merge_data(data_set)
-        data_type, found = DataType.objects.get_or_create(original_label=name)
+
+        if DataType.objects.filter(original_label=name).exists():
+            data_type = DataType.objects.filter(original_label=name).first()
+        else:
+            data_type = copy.copy(primary)
+            data_type.id = None
+            data_type.original_label = name
+            data_type.save()
+
         merge_type = int(self.cleaned_data['merge_type'])
         if merge_type == 6:
             data.dropna(subset=['primary', 'secondary'], inplace=True)
@@ -57,7 +66,6 @@ class MergeForm(forms.Form):
                 1
             )
             data['secondary'] = (data['secondary'] - intercept) / slope
-            print("slope {} intercept {}".format(slope, intercept))
 
         for i, row in data.iterrows():
             value = DataValue(qc_flag=2,data_type=data_type)
