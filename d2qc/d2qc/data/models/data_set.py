@@ -33,11 +33,11 @@ class DataSet(models.Model):
         null=True
     )
     owner = models.ForeignKey(
-            User,
-            on_delete = models.PROTECT,
-            blank=True,
-            null=True,
-            editable=False
+        User,
+        on_delete = models.PROTECT,
+        blank=True,
+        null=True,
+        editable=False
     )
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -356,7 +356,8 @@ class DataSet(models.Model):
             self,
             stations: list,
             parameter_id,
-            min_depth=False,
+            min_depth = False,
+            only_this_parameter = False,
     ):
         """
         Get profiles for the stations and the given parameter_id.
@@ -422,9 +423,11 @@ class DataSet(models.Model):
             pres.data_type_id in (77, 45) AND
             s.id in({}) and depth>={}
         """
-
+        parameters = parameter_id
+        if not only_this_parameter:
+            parameters = self._in_datatype(parameter_id)
         sql = sql_tmpl.format(
-            self._in_datatype(parameter_id),
+            parameters,
             DataSet._in_stations(stations),
             min_depth,
         )
