@@ -87,11 +87,13 @@ class MergeForm(forms.Form):
             stations,
             self.cleaned_data['primary'],
             min_depth = 0,
+            only_this_parameter = True,
         )
         secondary = data_set.get_profiles_data(
             stations,
             self.cleaned_data['secondary'],
             min_depth = 0,
+            only_this_parameter = True,
         )
         merged = primary.merge(
             secondary[['depth_id','param']],
