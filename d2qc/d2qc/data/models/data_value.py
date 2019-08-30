@@ -27,3 +27,6 @@ class DataValue(models.Model):
             logger.error('Data Value ' + self.value + ' is not a float value')
         if not math.isnan(v) and int(v) != -9999:
             super(DataValue, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.value)
