@@ -2,7 +2,7 @@ from django import forms
 from d2qc.data.models import DataType, DataValue, Depth, DataSet
 import pandas as pd
 import numpy as np
-from copy
+import copy
 
 class MergeForm(forms.Form):
     merge_type = forms.ChoiceField(
