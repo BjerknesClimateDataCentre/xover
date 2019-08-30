@@ -48,17 +48,26 @@ class MergeForm(forms.Form):
         )
         data = self.get_merge_data(data_set)
         data_type, found = DataType.objects.get_or_create(original_label=name)
+        merge_type = int(self.cleaned_data['merge_type'])
+        if merge_type == 6:
+            data.dropna(subset=['primary', 'secondary'], inplace=True)
+            slope, intercept = np.polyfit(
+                data['primary'],
+                data['secondary'],
+                1
+            )
+            data['secondary'] = (data['secondary'] - intercept) / slope
+            print("slope {} intercept {}".format(slope, intercept))
+
         for i, row in data.iterrows():
-            merge_type = int(self.cleaned_data['merge_type'])
             value = DataValue(qc_flag=2,data_type=data_type)
             value.depth_id = row['depth_id']
-
-            if merge_type in [2,3,4,7]:
+            value.value = np.nan
+            if merge_type in [2, 3, 4, 7]:
                 name = 'secondary' if merge_type == 2 else 'primary'
                 value.value = row[name]
-            elif merge_type == 5:
+            elif merge_type in [5, 6]:
                 value.value = np.nanmean([row['primary'], row['secondary']])
-
 
             if not np.isnan(value.value):
                 value.save()
