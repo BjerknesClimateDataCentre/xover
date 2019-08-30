@@ -166,6 +166,7 @@ class DataSetDetail(DetailView):
                 data_set.get_profiles_data(
                     data_set_stations,
                     self.kwargs.get('parameter_id'),
+                    only_this_parameter = True,
                 )
             )
             context['dataset_interp_profiles'] = data_set.get_profiles_as_json(

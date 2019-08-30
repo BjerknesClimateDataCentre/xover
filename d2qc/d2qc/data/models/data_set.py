@@ -421,6 +421,7 @@ class DataSet(models.Model):
             temp.data_type_id in (39, 65) AND
             salt.data_type_id in (8, 33) AND
             pres.data_type_id in (77, 45) AND
+            dv.qc_flag in (2,6) AND
             s.id in({}) and depth>={}
         """
         parameters = parameter_id
