@@ -215,7 +215,7 @@ class DataFile(models.Model):
                 station = data.models.Station(
                         data_set = data_set,
                         position = Point(longitude, latitude),
-                        station_number = datagrid['STNNBR'][i]
+                        station_number = int(datagrid['STNNBR'][i])
                 )
                 station.save()
                 cast = None
@@ -227,7 +227,7 @@ class DataFile(models.Model):
                 # Add new cast
                 cast_ = 1
                 if 'CASTNO' in datagrid:
-                    cast_ = datagrid['CASTNO'][i]
+                    cast_ = int(datagrid['CASTNO'][i])
                 cast = data.models.Cast(
                         station = station,
                         cast = cast_
@@ -259,11 +259,17 @@ class DataFile(models.Model):
                 btlnbr = datagrid.get('BTLNBR', False)
                 depth = data.models.Depth(
                         cast = cast,
-                        depth = datagrid['EXC_CTDDEPTH'][i],
+                        depth = float(datagrid['EXC_CTDDEPTH'][i]),
                         bottle = 1 if btlnbr is False else btlnbr[i],
                         date_and_time = datagrid['EXC_DATETIME'][i],
                 )
-                depth.save()
+                try:
+                    depth.save()
+                except Exception as e:
+                    m = "Line {}, Error {}".format(i, str(e), )
+                    self._messages = [m]
+                    self._write_messages(append=True,save=True)
+                    raise e
             for key in datagrid.columns:
                 if key in IGNORE:
                     continue
