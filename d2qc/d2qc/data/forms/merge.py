@@ -2,6 +2,7 @@ from django import forms
 from d2qc.data.models import DataType, DataValue, Depth, DataSet
 import pandas as pd
 import numpy as np
+import glodap.util.stats as stats
 import copy
 
 class MergeForm(forms.Form):
@@ -60,13 +61,11 @@ class MergeForm(forms.Form):
             data_type.save()
 
         merge_type = int(self.cleaned_data['merge_type'])
+        slope, intercept = stats.linear_fit(
+            data['primary'].tolist(),
+            data['secondary'].tolist(),
+        )
         if merge_type == 6:
-            data.dropna(subset=['primary', 'secondary'], inplace=True)
-            slope, intercept = np.polyfit(
-                data['primary'],
-                data['secondary'],
-                1
-            )
             data['secondary'] = (data['secondary'] - intercept) / slope
 
         for i, row in data.iterrows():
