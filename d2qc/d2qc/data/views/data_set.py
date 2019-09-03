@@ -251,8 +251,9 @@ class DataSetMerge(DetailView):
         )
         form = self.form
         if form.is_valid():
-            merge = form.get_merge_data(
-                data_set = self.get_object()
+            merge = data_set.get_merge_data(
+                form.cleaned_data['primary'],
+                form.cleaned_data['secondary'],
             )
             merge = merge.replace({pd.np.nan: None})
             data = {

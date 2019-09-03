@@ -827,3 +827,39 @@ class DataSet(models.Model):
             cache.set(cache_key, result)
 
         return result
+
+    def get_merge_data(self, primary_parameter, secondary_parameter):
+        s1 = self.get_stations(
+            parameter_id=primary_parameter
+        )
+        s2 = self.get_stations(
+            parameter_id=secondary_parameter
+        )
+        stations = set(s1) and set(s2)
+
+        primary = self.get_profiles_data(
+            stations,
+            primary_parameter,
+            min_depth = 0,
+            only_this_parameter = True,
+        )
+        secondary = self.get_profiles_data(
+            stations,
+            secondary_parameter,
+            min_depth = 0,
+            only_this_parameter = True,
+        )
+        merged = primary.merge(
+            secondary[['depth_id','param']],
+            how = 'inner',
+            left_on = ['depth_id'],
+            right_on = ['depth_id'],
+            suffixes = ('_pri', '_sec'),
+        )
+        merged['diff'] = merged['param_pri'] - merged['param_sec']
+        merged.rename(
+            columns={'param_pri':'primary', 'param_sec': 'secondary'},
+            inplace=True,
+        )
+
+        return merged
