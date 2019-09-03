@@ -8,8 +8,7 @@ class MergeForm(forms.Form):
     merge_type = forms.ChoiceField(
         label = "Merge type action",
         choices=[
-            (0, "0 - Do not merge"),
-            (1, "1 - Merge using none"),
+            (1, "1 - Do not merge"),
             (2, "2 - Merge using only secondary, no primary parameter"),
             (3, "3 - Merge using only primary, no secondary parameter"),
             (4, "4 - Merge using primary (few or no secondary or primary>80%)."),
