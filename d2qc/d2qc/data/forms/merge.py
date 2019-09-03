@@ -46,7 +46,10 @@ class MergeForm(forms.Form):
             primary.original_label,
             secondary.original_label,
         )
-        data = self.get_merge_data(data_set)
+        data = data_set.get_merge_data(
+            self.cleaned_data['primary'],
+            self.cleaned_data['secondary'],
+        )
 
         if DataType.objects.filter(original_label=name).exists():
             data_type = DataType.objects.filter(original_label=name).first()
@@ -80,39 +83,3 @@ class MergeForm(forms.Form):
                 value.save()
 
         data_set.set_type_list(None)
-
-    def get_merge_data(self, data_set):
-        s1 = data_set.get_stations(
-            parameter_id=self.cleaned_data['primary']
-        )
-        s2 = data_set.get_stations(
-            parameter_id=self.cleaned_data['secondary']
-        )
-        stations = set(s1) and set(s2)
-
-        primary = data_set.get_profiles_data(
-            stations,
-            self.cleaned_data['primary'],
-            min_depth = 0,
-            only_this_parameter = True,
-        )
-        secondary = data_set.get_profiles_data(
-            stations,
-            self.cleaned_data['secondary'],
-            min_depth = 0,
-            only_this_parameter = True,
-        )
-        merged = primary.merge(
-            secondary[['depth_id','param']],
-            how = 'inner',
-            left_on = ['depth_id'],
-            right_on = ['depth_id'],
-            suffixes = ('_pri', '_sec'),
-        )
-        merged['diff'] = merged['param_pri'] - merged['param_sec']
-        merged.rename(
-            columns={'param_pri':'primary', 'param_sec': 'secondary'},
-            inplace=True,
-        )
-
-        return merged
