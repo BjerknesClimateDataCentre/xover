@@ -1,5 +1,7 @@
 from rest_framework import viewsets
 
+import glodap.util.stats as stats
+
 from d2qc.data.models import DataSet
 from d2qc.data.serializers import DataSetSerializer
 from d2qc.data.serializers import NestedDataSetSerializer
@@ -256,10 +258,17 @@ class DataSetMerge(DetailView):
                 form.cleaned_data['secondary'],
             )
             merge = merge.replace({pd.np.nan: None})
+            slope, intercept = stats.linear_fit(
+                merge['primary'].tolist(),
+                merge['secondary'].tolist(),
+            )
+
             data = {
                 'depth': merge['depth'].tolist(),
                 'diff': merge['diff'].tolist(),
             }
             context['merge_data'] = json.dumps(data)
+            context['slope'] = slope
+            context['intercept'] = intercept
         context['form'] = form
         return context
