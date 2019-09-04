@@ -4,10 +4,11 @@
 <link rel="stylesheet" type="text/css"
 href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/css/ol.css">
 <style>
-    #plot {
+    #diff_plot, #pri_vs_sec {
         height: 600px;
         width: 600px;
     }
+
     .outer {
       display: flex;
     }
@@ -149,13 +150,16 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
     <input class="mergebutton" type="submit"
     value="Save merge parameter" name="save_parameters"/>
   </form>
-  <div id="plot">
+  <div id="diff_plot">
+  </div>
+  <div id="pri_vs_sec">
   </div>
   {% if merge_data %}
   <script type="text/javascript">
+    var slope = {{ slope }}
+    var intercept = {{ intercept }}
     var merge_data =   JSON.parse('{{ merge_data | escapejs }}');
-
-    var plot = {
+    var diff = {
       x: merge_data.diff,
       y: merge_data.depth,
       type: 'scatter',
@@ -167,10 +171,60 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
     );
 
     var layout = {
-        yaxis: {autorange: 'reversed', rangemode: 'tozero'},
-        xaxis: {range: [-1 * (xmax + (xmax/10)), xmax + (xmax/10)]}
+        yaxis: {
+          autorange: 'reversed',
+          rangemode: 'tozero',
+          title: {
+            text: 'pressure'
+          }
+        },
+        xaxis: {
+          range: [-1 * (xmax + (xmax/10)), xmax + (xmax/10)],
+          title: {
+            text: 'Diff ' + merge_data.primary_type.label + ' minus '
+                  + merge_data.secondary_type.label
+          }
+        },
     };
-    var mergeplot = Plotly.newPlot('plot', [plot], layout);
+
+    Plotly.newPlot('diff_plot', [diff], layout);
+
+    var offset = {
+      x: merge_data.primary,
+      y: merge_data.secondary,
+      type: 'scatter',
+      mode: 'markers',
+      showlegend: false
+    }
+
+    pri_max = Math.max(...merge_data.primary)
+    pri_min = Math.min(...merge_data.primary)
+    var fit = {
+      x: [pri_min, pri_max],
+      y: [intercept + pri_min * slope, intercept + pri_max * slope ],
+      type: 'scatter',
+      mode: 'lines',
+      line: {
+        color: 'rgb(255,0,0)'
+      },
+      name: 'Linear fit'
+    }
+    fit_equation = 'y = ' + slope.toPrecision(5)
+    fit_equation += ' * x + ' + intercept.toPrecision(5)
+    var title = merge_data.primary_type.label
+    title += " vs " + merge_data.secondary_type.label
+    title += ": " + fit_equation
+    var layout2 = {
+      yaxis: {title: {text:merge_data.primary_type.label}},
+      xaxis: {title: {text:merge_data.secondary_type.label}},
+      legend: {
+        x: 0.1,
+        y: 1.07
+      },
+      title: title,
+    };
+    Plotly.newPlot('pri_vs_sec', [offset, fit], layout2);
+
   </script>
   {% else %}
   <p>Please choose parameters to display plot</p>
