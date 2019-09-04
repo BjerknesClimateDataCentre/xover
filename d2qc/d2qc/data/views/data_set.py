@@ -3,6 +3,7 @@ from rest_framework import viewsets
 import glodap.util.stats as stats
 
 from d2qc.data.models import DataSet
+from d2qc.data.models import DataType
 from d2qc.data.serializers import DataSetSerializer
 from d2qc.data.serializers import NestedDataSetSerializer
 from d2qc.data.forms import MergeForm
@@ -257,6 +258,12 @@ class DataSetMerge(DetailView):
                 form.cleaned_data['primary'],
                 form.cleaned_data['secondary'],
             )
+            primary_type = DataType.objects.get(
+                pk=form.cleaned_data['primary']
+            )
+            secondary_type = DataType.objects.get(
+                pk=form.cleaned_data['secondary']
+            )
             merge = merge.replace({pd.np.nan: None})
             slope, intercept = stats.linear_fit(
                 merge['primary'].tolist(),
@@ -266,6 +273,14 @@ class DataSetMerge(DetailView):
             data = {
                 'depth': merge['depth'].tolist(),
                 'diff': merge['diff'].tolist(),
+                'primary': merge['primary'].tolist(),
+                'secondary': merge['secondary'].tolist(),
+                'primary_type': {
+                    'label': primary_type.original_label,
+                },
+                'secondary_type': {
+                    'label': secondary_type.original_label,
+                },
             }
             context['merge_data'] = json.dumps(data)
             context['slope'] = slope
