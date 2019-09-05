@@ -52,29 +52,55 @@ DEV_ADMIN_PROPERTIES = {
     'password': '123',
     'email': 'jhe052@uib.no',
 }
-
-#LOGGING = {
-#    'version': 1,
-#    'disable_existing_loggers': False,
-#    'filters': {
-#        'require_debug_true': {
-#            '()': 'django.utils.log.RequireDebugTrue',
-#        }
-#    },
-#    'handlers': {
-#        'console': {
-#            'level': 'DEBUG',
-#            'filters': ['require_debug_true'],
-#            'class': 'logging.StreamHandler',
-#        }
-#    },
-#    'loggers': {
-#        'django.db.backends': {
-#            'level': 'DEBUG',
-#            'handlers': ['console'],
-#        }
+# # More info on logging: https://docs.djangoproject.com/en/2.2/topics/logging/
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'filters': {
+#         'require_debug_true': {
+#             '()': 'django.utils.log.RequireDebugTrue',
+#         }
+#     },
+#     # Loggers are responsible for passing log messages to handlers. If message
+#     # level is below the level set for the logger, the message will be
+#     # ignored.
+#     'loggers': {
+#         'django': {
+#             'level': 'DEBUG',
+#             'handlers': ['console','file'],
+#         }
+#         # Logging debug level from django.db.backends will print all sql
+#         # queries executed during requests.
+#         'django.db.backends': {
+#             'level': 'DEBUG',
+#             'handlers': ['console'],
+#         }
+#     }
+#    # You can define a root logger on the top level, to handle all log events.
+#    'root': {
+#        'level': 'DEBUG',
+#        'handlers': ['console','file'],
 #    }
-#}
+#     'handlers': {
+#         # Display debug info in the console. This makes sense for debugging if
+#         # you are using the built in Django development web server.
+#         'console': {
+#             'level': 'DEBUG',
+#             'filters': ['require_debug_true'],
+#             'class': 'logging.StreamHandler',
+#         },
+#         # Log errors to file. This can be used in production as well. In this
+#         # example, errors are logged to /vagrant/error.log. In production make
+#         # sure the error.log is on a different partition than the data and the
+#         # application, so that filling up the disk with log-data don't break
+#         # application.
+#         'file': {
+#             'level': 'ERROR',
+#             'class': 'logging.FileHandler',
+#             'filename': "{}/error.log".format(settings.PROJECT_DIR),
+#         },
+#     },
+# }
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = ''

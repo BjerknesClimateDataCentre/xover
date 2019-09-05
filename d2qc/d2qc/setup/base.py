@@ -35,6 +35,21 @@ PYTHON_ENV = os.path.join(PROJECT_DIR, '.env_vagrant', 'bin', 'python')
 
 ALLOWED_HOSTS = []
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': "{}/temp/error.log".format(PROJECT_DIR),
+        },
+    },
+    'root': {
+        'level': 'ERROR',
+        'handlers': ['file'],
+    },
+}
 
 
 # Application definition
