@@ -26,11 +26,11 @@ mean = {
   line: {
     color: red_profile
   },
-  name: 'Weighted mean',
+  name: 'Weighted mean ' + summary_stats.mean[0].toPrecision(4),
   hoverinfo: 'text',
   hovertext:
-    'Mean ' + summary_stats.mean[0].toFixed(4) + '<br>'
-      + 'Stdev &plusmn;' + summary_stats.stdev[0].toFixed(4)
+    'Mean ' + summary_stats.mean[0].toPrecision(4) + '<br>'
+      + 'Stdev &plusmn;' + summary_stats.stdev[0].toPrecision(4)
 };
 stdev = {
   x: summary_stats.date,
@@ -41,7 +41,7 @@ stdev = {
     color: red_profile,
     dash: 'dot'
   },
-  name: 'Stdev',
+  name: 'Stdev &#177;' + summary_stats.stdev[0].toPrecision(4),
   hoverinfo: 'skip'
 };
 stdev2 = {

@@ -40,7 +40,7 @@ var w_mean = {
   line: {
     color: red_profile
   },
-  name: 'Weighted mean'
+  name: 'Weighted mean ' + stats.w_mean.toPrecision(4)
 };
 var w_std_plus = {
   x: [stats.w_mean + stats.w_stdev, stats.w_mean + stats.w_stdev],
@@ -51,7 +51,7 @@ var w_std_plus = {
     color: red_profile,
     dash: 'dot'
   },
-  name: 'Weighted st. dev'
+  name: 'Weighted st. dev &#177;' + stats.w_stdev.toPrecision(4)
 };
 var w_std_min = {
   x: [stats.w_mean - stats.w_stdev, stats.w_mean - stats.w_stdev],
