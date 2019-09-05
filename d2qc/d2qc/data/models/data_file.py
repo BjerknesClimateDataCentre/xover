@@ -38,7 +38,6 @@ class DataFile(models.Model):
     id = models.AutoField(primary_key=True)
     filepath = models.FileField(
             upload_to=file_store_path,
-            blank=True,
             null=True
     )
     name = models.CharField(max_length=255, blank=True)
