@@ -1,5 +1,11 @@
 <div id="map">
 </div>
+<a href="{% url 'data_set-detail' object.id %}">
+        [Show all stations]
+</a>
+<a id="export-png" href="#">
+        [Download as PNG]
+</a>
 <script type="text/javascript">
 // Data
 var cruise_positions = '{{ cruise_positions }}';
@@ -96,4 +102,20 @@ var map = new ol.Map({
 });
 map.getView().fit(source.getExtent(), map.getSize())
 map.getView().setZoom(map.getView().getZoom() - 1)
+
+document.getElementById('export-png').addEventListener('click', function() {
+  map.once('rendercomplete', function(event) {
+    event.stopPropagation();
+    var canvas = event.context.canvas;
+    if (navigator.msSaveBlob) {
+      navigator.msSaveBlob(canvas.msToBlob(), 'map.png');
+    } else {
+      canvas.toBlob(function(blob) {
+        saveAs(blob, 'map.png');
+      });
+    }
+  });
+  map.renderSync();
+});
+
 </script>
