@@ -149,6 +149,9 @@ class DataSetDetail(DetailView):
             # within range of that crossover
             if self.kwargs.get('data_set_id') is not None:
                 context['crossover_data_set_id'] = self.kwargs.get('data_set_id')
+                context['crossover_expocode'] = DataSet.objects.get(
+                    pk = self.kwargs.get('data_set_id')
+                )
                 data_set_stations = data_set.get_crossover_stations(
                     data_set_id=self.kwargs.get('data_set_id'),
                     stations=crossover_stations,

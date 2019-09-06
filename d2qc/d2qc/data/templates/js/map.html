@@ -17,7 +17,7 @@ var stations_polygon = '{{ stations_polygon }}'
 var red_map = new ol.style.Style({
   image: new ol.style.Circle({
     fill: new ol.style.Fill({
-      color: [255,0,0,.4]
+      color: [255,0,0,.6]
     }),
     radius: 3,
   })
@@ -102,8 +102,39 @@ var map = new ol.Map({
 });
 map.getView().fit(source.getExtent(), map.getSize())
 map.getView().setZoom(map.getView().getZoom() - 1)
+map.on("moveend", drawTitle);
+map.on("rendercomplete", drawTitle);
 
-document.getElementById('export-png').addEventListener('click', function() {
+function drawTitle(canvas) {
+  if (!canvas.getContext) {
+    canvas = $('#map>div>canvas')[0]
+  }
+  var ctx = canvas.getContext("2d");
+  title = "Cruise {{ object.expocode }}";
+  subtitle = "";
+  x = 5
+  y = 295
+  yoffset = 20
+  {% if parameter %}
+  subtitle = "Stations with {{ parameter.original_label }}";
+  y -= yoffset
+  {% else %}
+  subtitle = "All stations"
+  y -= yoffset
+  {% endif %}
+  subtitle2 = ""
+  {% if crossover_expocode %}
+  subtitle2 = "Crossover cruise {{ crossover_expocode }}";
+  y -= yoffset
+  {% endif %}
+  ctx.font = "bold 20px Arial";
+  ctx.fillStyle = '#555555'
+  ctx.fillText(title, x, y);
+  ctx.font = "18px Arial";
+  ctx.fillText(subtitle, x, y + yoffset);
+  ctx.fillText(subtitle2, x, y + (2 * yoffset));
+}
+$('#export-png').click(function() {
   map.once('rendercomplete', function(event) {
     event.stopPropagation();
     var canvas = event.context.canvas;
@@ -117,5 +148,4 @@ document.getElementById('export-png').addEventListener('click', function() {
   });
   map.renderSync();
 });
-
 </script>
