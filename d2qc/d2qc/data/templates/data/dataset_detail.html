@@ -73,10 +73,8 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
                     {% endif %}
                 </h4>
                 {% include "lib/openlayers.html" %}
+                {% include "lib/filesaver.html" %}
                 {% include "js/map.html" %}
-                <a href="{% url 'data_set-detail' object.id %}">
-                        [Show all stations]
-                </a>
             </div>
         </div>
 
