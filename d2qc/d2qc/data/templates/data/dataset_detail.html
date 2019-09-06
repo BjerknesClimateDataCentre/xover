@@ -38,9 +38,6 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
 <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
 {% endblock %}
 {% block js %}
-<script type="text/javascript"
-src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/build/ol.js">
-</script>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 {% endblock%}
 {% block content %}
@@ -75,8 +72,8 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                     All stations
                     {% endif %}
                 </h4>
-                <div id="map">
-                </div>
+                {% include "lib/openlayers.html" %}
+                {% include "js/map.html" %}
                 <a href="{% url 'data_set-detail' object.id %}">
                         [Show all stations]
                 </a>
@@ -110,9 +107,9 @@ src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.
                 </dd>
             </dl>
         </div>
+        {% include "js/plot_colors.html" %}
+        <!-- Display the map -->
         <script type="text/javascript">
-        {% include "./dataset_detail/colors.js" %}
-        {% include "./dataset_detail/map.js" %}
         {% if dataset_profiles %}
           {% include "./dataset_detail/profile.js" %}
         {% endif %}

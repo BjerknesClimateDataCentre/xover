@@ -1,9 +1,44 @@
+<div id="map">
+</div>
+<script type="text/javascript">
 // Data
 var cruise_positions = '{{ cruise_positions }}';
 var cruise_polygon = '{{ cruise_polygon }}';
 var stations = '{{ station_positions }}';
 var crossovers = '{{ crossover_positions }}';
 var stations_polygon = '{{ stations_polygon }}'
+// Colors
+var red_map = new ol.style.Style({
+  image: new ol.style.Circle({
+    fill: new ol.style.Fill({
+      color: [255,0,0,.4]
+    }),
+    radius: 3,
+  })
+});
+var blue_map = new ol.style.Style({
+  image: new ol.style.Circle({
+    fill: new ol.style.Fill({
+      color: [0,0,255,1]
+    }),
+    radius: 3,
+  })
+});
+
+var blue_hole_map = new ol.style.Style({
+  image: new ol.style.Circle({
+    stroke: new ol.style.Stroke({
+      color: [0,0,255,.8]
+    }),
+    radius: 3,
+  })
+});
+
+var blue_line_map = new ol.style.Style({
+  stroke: new ol.style.Stroke({
+    color: [0,0,255,1],
+  })
+});
 
 // Map
 var raster = new ol.layer.Tile({
@@ -61,3 +96,4 @@ var map = new ol.Map({
 });
 map.getView().fit(source.getExtent(), map.getSize())
 map.getView().setZoom(map.getView().getZoom() - 1)
+</script>
