@@ -63,11 +63,15 @@ data = [
   stdev,
   stdev2
 ]
+
+title = 'Mean and stdev offsets for {{ object.expocode }} and matching '
+title += 'reference cruises'
 layout = {
     yaxis: {title: {text:'Offset'}},
     margin: {l: 60, r:0},
     legend: {orientation: 'h'},
-    hovermode: 'x'
+    hovermode: 'x',
+    title: title
 };
 
 Plotly.newPlot('summary-stats', data, layout);
