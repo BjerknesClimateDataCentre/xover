@@ -75,11 +75,15 @@ var data = [
   w_std_plus,
   w_std_min
 ];
+title = "Weighted mean diff."
+title += "<br>{{ parameter.original_label }}"
+title += "<br>{{ object.expocode }} vs. {{ crossover_expocode }}"
 var layout = {
   yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
   margin: {l: 60, r:0},
   legend: {orientation: 'h'},
-  hovermode: 'y'
+  hovermode: 'y',
+  title: title
 };
 
 Plotly.newPlot('stats', data, layout);

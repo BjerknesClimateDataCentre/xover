@@ -146,13 +146,15 @@ if (stats) {
   data.unshift(stats_fill)
   data.unshift(stats_limits)
 }
+title = "Cruise profiles, parameter: {{ parameter.original_label }}"
 
 var layout = {
   yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
   xaxis: {title: {text:profiles[0].parameter}},
   margin: {l: 60, r:0},
   legend: {orientation: 'h'},
-  hovermode: 'y'
+  hovermode: 'y',
+  title: title
 };
 Plotly.newPlot('profiles', data, layout);
 /* create a profile for the profile plot */
