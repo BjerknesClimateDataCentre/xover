@@ -1,6 +1,6 @@
 var summary_stats = JSON.parse('{{ summary_stats | escapejs }}');
 w_mean = {
-  x: summary_stats.date,
+  x: summary_stats.date.map(date => new Date(date)),
   y: summary_stats.w_mean,
   text: summary_stats.expocode,
   textposition: 'top',
