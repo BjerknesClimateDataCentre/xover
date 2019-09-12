@@ -273,10 +273,9 @@ class DataSet(models.Model):
             inner join d2qc_depths d on (d.cast_id = c.id)
         """
         where = """
-            where ds.id <> {} and d.depth >= {}
+            where d.depth >= {}
         """.format(
-                data_set_id or self.id,
-                min_depth
+                min_depth,
         )
 
         if parameter_id is not None:
@@ -304,6 +303,12 @@ class DataSet(models.Model):
                 and ds.id = {}
             """.format(
                     crossover_data_set_id
+            )
+        else:
+            where += """
+                and ds.id <> {}
+            """.format(
+                data_set_id or self.id,
             )
 
         sql = select + _from + where
