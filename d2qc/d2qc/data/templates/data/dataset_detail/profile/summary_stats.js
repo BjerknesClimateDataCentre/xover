@@ -56,12 +56,30 @@ stdev2 = {
   showlegend: false,
   hoverinfo: 'skip'
 };
+dataset = {
+  x: [new Date(summary_stats.eval_dataset_date)],
+  y: [0],
+  mode: 'markers',
+  type: 'scatter',
+  marker: {
+    symbol: 'line-ns',
+    size: 2000,
+    line: {
+      color: red_profile,
+      width: 3
+    }
+  },
+  name:  '{{ object.expocode }}',
+  hoverinfo: 'skip'
+};
+
 
 data = [
   w_mean,
   mean,
   stdev,
-  stdev2
+  stdev2,
+  dataset
 ]
 
 title = 'Mean and stdev offsets for {{ object.expocode }} and matching '
