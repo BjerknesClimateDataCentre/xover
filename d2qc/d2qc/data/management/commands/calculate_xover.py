@@ -80,14 +80,16 @@ class Command(NewlineCommand):
             'date': [],
         }
         for ds in data_sets:
+            # Get stations from this data set that falls within the crossover
+            # radius of the original data set
             crossover_stations = data_set.get_crossover_stations(
                 stations=data_set_stations,
                 parameter_id=parameter_id,
                 crossover_data_set_id=ds[0],
                 min_depth=min_depth,
             )
+            # Get stations from the original data set that match this data set
             crossed_data_set_stations = data_set.get_crossover_stations(
-                data_set_id=ds[0],
                 stations=crossover_stations,
                 parameter_id=parameter_id,
                 crossover_data_set_id=data_set_id,
