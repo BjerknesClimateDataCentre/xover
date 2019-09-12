@@ -144,6 +144,10 @@ class Command(NewlineCommand):
         ) = zip(*zipped)
         data['stdev'] = [stdev] * len(data['date'])
         data['mean'] = [mean] * len(data['date'])
+        _date = models.DataSet.objects.get(pk=data_set_id).get_timespan(
+            stations=data_set_stations
+        )[0]
+        data['eval_dataset_date'] = _date.strftime("%Y-%m-%dT00:00:00.0Z")
 
         data = json.dumps(data)
         cache.set(cache_key, data)
