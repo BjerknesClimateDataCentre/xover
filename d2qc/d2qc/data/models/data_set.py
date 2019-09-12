@@ -699,10 +699,11 @@ class DataSet(models.Model):
             min_depth = self.min_depth
 
         data_type = data.models.DataType.objects.get(pk=parameter_id)
-        cache_key = "get_profiles_stats-{}-{}-{}-{}-{}-{}".format(
+        cache_key = "get_profiles_stats-{}-{}-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
             hash(tuple(stations)),
+            hash(tuple(xover_stations)),
             crossover_radius,
             min_depth,
             data_type.offset_type.id,
