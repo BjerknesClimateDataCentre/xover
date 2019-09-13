@@ -834,7 +834,12 @@ class DataSet(models.Model):
 
         return result
 
-    def get_merge_data(self, primary_parameter, secondary_parameter):
+    def get_merge_data(
+        self,
+        primary_parameter,
+        secondary_parameter,
+        min_depth = 0,
+    ):
         s1 = self.get_stations(
             parameter_id=primary_parameter
         )
@@ -842,17 +847,17 @@ class DataSet(models.Model):
             parameter_id=secondary_parameter
         )
         stations = set(s1) and set(s2)
-
+        print(min_depth)
         primary = self.get_profiles_data(
             stations,
             primary_parameter,
-            min_depth = 0,
+            min_depth = min_depth,
             only_this_parameter = True,
         )
         secondary = self.get_profiles_data(
             stations,
             secondary_parameter,
-            min_depth = 0,
+            min_depth = min_depth,
             only_this_parameter = True,
         )
         merged = primary.merge(

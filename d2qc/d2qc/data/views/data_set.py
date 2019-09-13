@@ -260,6 +260,7 @@ class DataSetMerge(DetailView):
             merge = data_set.get_merge_data(
                 form.cleaned_data['primary'],
                 form.cleaned_data['secondary'],
+                min_depth = form.cleaned_data['merge_min_depth'],
             )
             primary_type = DataType.objects.get(
                 pk=form.cleaned_data['primary']

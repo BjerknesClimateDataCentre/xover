@@ -46,6 +46,13 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
     .save>* {
       margin: 0 0 20px;
     }
+    .merge_min_depth input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .merge_min_depth {
+      margin: 10px 0;
+    }
 </style>
 <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
 {% endblock %}
@@ -137,6 +144,10 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
     </div>
     <div class="mergeinfo">
       <p></p>
+    </div>
+    <div class="merge_min_depth">
+      {{ form.merge_min_depth.label }}:
+      {{ form.merge_min_depth }}
     </div>
     <input class="mergebutton" type="submit"
     value="Plot selected parameters" name="plot_parameters"/>
