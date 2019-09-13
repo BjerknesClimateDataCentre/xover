@@ -19,6 +19,13 @@ class MergeForm(forms.Form):
         ],
         initial = '1',
     )
+    merge_min_depth = forms.IntegerField(
+        initial = 0,
+        min_value = 0,
+        required = True,
+        label = "Minimum depth used to calculate linear fit",
+        widget = forms.TextInput,
+    )
 
     def __init__(self, *args, **kwargs):
         try:
@@ -26,6 +33,7 @@ class MergeForm(forms.Form):
         except KeyError:
             data_types = None
         super().__init__(*args, **kwargs)
+        self.fields['merge_min_depth'].initial = 0
         if data_types is not None:
             choices = [(t['id'], '') for t in data_types]
             self.fields['primary'] = forms.ChoiceField(
@@ -50,6 +58,7 @@ class MergeForm(forms.Form):
         data = data_set.get_merge_data(
             self.cleaned_data['primary'],
             self.cleaned_data['secondary'],
+            min_depth = self.cleaned_data['merge_min_depth']
         )
 
         if DataType.objects.filter(original_label=name).exists():
