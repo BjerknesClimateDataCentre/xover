@@ -65,11 +65,11 @@ dataset = {
     symbol: 'line-ns',
     size: 2000,
     line: {
-      color: red_profile,
+      color: blue_profile,
       width: 3
     }
   },
-  name:  '{{ object.expocode }}',
+  name:  'Date for data set {{ object.expocode }}',
   hoverinfo: 'skip'
 };
 
