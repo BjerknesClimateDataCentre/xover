@@ -17,7 +17,7 @@ class MergeForm(forms.Form):
             (6, "6 - Merge using mean of primary and fitted secondary."),
             (7, "7 - Merge using primary because bad fit of secondary."),
         ],
-        initial = '0',
+        initial = '1',
     )
 
     def __init__(self, *args, **kwargs):
