@@ -92,12 +92,14 @@ class DataSetDetail(DetailView):
         context['dataset_interp_profiles'] = None
         context['dataset_ref_profiles'] = None
         context['dataset_ref_interp_profiles'] = None
+        minimum_num_stations = 3
         if self.kwargs.get('parameter_id'):
-            cache_key_px = "_xover-{}-{}-{}-{}".format(
+            cache_key_px = "_xover-{}-{}-{}-{}-{}".format(
                 data_set.id,
                 self.kwargs.get('parameter_id'),
                 data_set.owner.profile.crossover_radius,
                 data_set.owner.profile.min_depth,
+                minimum_num_stations,
             )
 
             # Check if calculation has begun
@@ -118,7 +120,7 @@ class DataSetDetail(DetailView):
                     str(self.kwargs.get('parameter_id')),
                     str(data_set.owner.profile.crossover_radius),
                     str(data_set.owner.profile.min_depth),
-                    '--minimum_num_stations', '3',
+                    '--minimum_num_stations', str(minimum_num_stations),
                 ])
                 cache.set(calculating_key, True)
             elif value is not False:
