@@ -37,6 +37,12 @@ class Command(NewlineCommand):
             help='Use this minimum depth for calculations',
         )
         parser.add_argument(
+            '--minimum_num_stations',
+            type=int,
+            help='Only calculate if dataset has minimum_num_stations stations',
+            default=0,
+        )
+        parser.add_argument(
             '-d',
             '--data_return',
             help='Return the data (normally data is simply cached)',
@@ -48,13 +54,15 @@ class Command(NewlineCommand):
         radius = options['radius'][0]
         min_depth = options['min_depth'][0]
         data_return = options['data_return']
+        minimum_num_stations = options['minimum_num_stations']
 
         # Return cached value if exists
-        cache_key = "calculate_xover-{}-{}-{}-{}".format(
+        cache_key = "calculate_xover-{}-{}-{}-{}-{}".format(
             data_set_id,
             parameter_id,
             radius,
             min_depth,
+            minimum_num_stations,
         )
         value = cache.get(cache_key, False)
         if value is not False:
@@ -67,9 +75,10 @@ class Command(NewlineCommand):
         )
         data_sets = data_set.get_station_data_sets(
             data_set.get_crossover_stations(
-                stations=data_set_stations,
-                parameter_id=parameter_id,
-                min_depth=min_depth,
+                stations = data_set_stations,
+                parameter_id = parameter_id,
+                min_depth = min_depth,
+                minimum_num_stations = 3,
             )
         )
         data = {
@@ -87,6 +96,7 @@ class Command(NewlineCommand):
                 parameter_id=parameter_id,
                 crossover_data_set_id=ds[0],
                 min_depth=min_depth,
+                minimum_num_stations=minimum_num_stations,
             )
             # Get stations from the original data set that match this data set
             crossed_data_set_stations = data_set.get_crossover_stations(

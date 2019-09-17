@@ -118,6 +118,7 @@ class DataSetDetail(DetailView):
                     str(self.kwargs.get('parameter_id')),
                     str(data_set.owner.profile.crossover_radius),
                     str(data_set.owner.profile.min_depth),
+                    '--minimum_num_stations', '3',
                 ])
                 cache.set(calculating_key, True)
             elif value is not False:
@@ -128,7 +129,7 @@ class DataSetDetail(DetailView):
             crossover_stations = data_set.get_crossover_stations(
                 stations=data_set_stations,
                 parameter_id=self.kwargs.get('parameter_id'),
-                crossover_data_set_id=self.kwargs.get('data_set_id')
+                crossover_data_set_id=self.kwargs.get('data_set_id'),
             )
 
             # Get the positions of the crossover stations
@@ -140,7 +141,8 @@ class DataSetDetail(DetailView):
             context['crossover_datasets'] = data_set.get_station_data_sets(
                 data_set.get_crossover_stations(
                     stations=data_set_stations,
-                    parameter_id=self.kwargs.get('parameter_id')
+                    parameter_id=self.kwargs.get('parameter_id'),
+                    minimum_num_stations = 3,
                 )
             )
 
