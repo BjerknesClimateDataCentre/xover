@@ -86,10 +86,10 @@ class DataSet(models.Model):
 
     def get_stations(
             self,
-            parameter_id=None,
-            data_set_id=None,
-            crossover_radius=False,
-            min_depth=False,
+            parameter_id = None,
+            data_set_id = None,
+            crossover_radius = False,
+            min_depth = False,
     ):
         """
         Get the list of stations in data_set_id or the current data set,
@@ -240,17 +240,20 @@ class DataSet(models.Model):
 
     def get_crossover_stations(
             self,
-            data_set_id=None,
-            stations: list=None,
-            parameter_id=None,
-            crossover_data_set_id=None,
-            min_depth=False,
-            crossover_radius=False,
+            data_set_id = None,
+            stations: list = None,
+            parameter_id = None,
+            crossover_data_set_id = None,
+            min_depth = False,
+            crossover_radius = False,
+            minimum_num_stations = 1,
         ):
         """
         Get stations that are within the crossover range of stations in this
         data set (default 200km), for the given parameter. If data_set_id
-        is given, only get stations in the given data set.
+        is given, only get stations in the given data set. If
+        minimum_num_stations > 1, only return stations where there is at least
+        minimum_num_stations in the data set (for the given parameter_id).
         """
 
         if crossover_radius is False:
@@ -264,7 +267,7 @@ class DataSet(models.Model):
             min_depth = self.min_depth
 
         select = """
-            select distinct st.id
+            select string_agg(distinct st.id::text, ',')
         """
         _from = """
             from d2qc_stations st
@@ -277,6 +280,14 @@ class DataSet(models.Model):
         """.format(
                 min_depth,
         )
+        group_by = """
+            GROUP BY st.data_set_id
+        """
+        having = ""
+        if minimum_num_stations > 1:
+            having = """
+                HAVING count(distinct st.id) >= {}
+            """.format(minimum_num_stations)
 
         if parameter_id is not None:
             _from += """
@@ -311,9 +322,13 @@ class DataSet(models.Model):
                 data_set_id or self.id,
             )
 
-        sql = select + _from + where
+        sql = select + _from + where + group_by + having
 
-        return [row[0] for row in self._fetchall_query(sql)]
+        # Get a list with stations for each data set as a commaseparated list
+        stations_string_list = [row[0] for row in self._fetchall_query(sql)]
+
+        # ...and return a normal list with the stations
+        return ','.join(stations_string_list).split(',')
 
     def get_station_data_sets(
         self,
