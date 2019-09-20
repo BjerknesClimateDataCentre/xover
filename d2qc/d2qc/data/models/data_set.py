@@ -326,9 +326,11 @@ class DataSet(models.Model):
 
         # Get a list with stations for each data set as a commaseparated list
         stations_string_list = [row[0] for row in self._fetchall_query(sql)]
-
-        # ...and return a normal list with the stations
-        return ','.join(stations_string_list).split(',')
+        if stations_string_list and stations_string_list[0]:
+            # ...and return a normal list with the stations
+            return ','.join(stations_string_list).split(',')
+        else:
+            return []
 
     def get_station_data_sets(
         self,
