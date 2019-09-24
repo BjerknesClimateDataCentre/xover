@@ -3,6 +3,7 @@ from django.contrib.gis.db import models
 class DataTypeName(models.Model):
     class Meta:
         db_table = 'd2qc_data_type_names'
+        unique_together = ('name', 'is_reference')
 
     id = models.AutoField(primary_key=True)
     data_type = models.ForeignKey(
