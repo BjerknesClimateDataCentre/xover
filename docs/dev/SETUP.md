@@ -7,6 +7,8 @@ way to get started is to use the Vagrant setup:
 
 1. Install Vagrant on your machine
   * (https://www.vagrantup.com/intro/getting-started/)
+  * also install disksize-plugin with vagrant:
+    - `vagrant plugin install vagrant-disksize`
 2. Checkout the project
   * `git clone git@github.com:jonasfh/xover.git`
 3. `cd xover`

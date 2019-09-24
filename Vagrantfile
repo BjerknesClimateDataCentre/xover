@@ -13,6 +13,7 @@ Vagrant.configure(2) do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "ubuntu/bionic64"
+  config.disksize.size = '15GB'
   # Prevent TTY Errors (copied from laravel/homestead: "homestead.rb" file)...
   # By default this is "bash -l".
   config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
