@@ -7,12 +7,15 @@ import logging
 class DataValue(models.Model):
     class Meta:
         db_table = 'd2qc_data_values'
-        unique_together = ('depth', 'data_type')
+        unique_together = ('depth', 'data_type_name')
 
     id = models.AutoField(primary_key=True)
     depth = models.ForeignKey('Depth', related_name='data_values',
             on_delete=models.CASCADE)
-    data_type = models.ForeignKey('DataType', on_delete=models.CASCADE)
+    data_type_name = models.ForeignKey(
+        'DataTypeName',
+        on_delete = models.CASCADE,
+    )
     value = models.DecimalField(max_digits=16, decimal_places=8)
     qc_flag = models.IntegerField(blank=True, null=True)
     qc2_flag = models.IntegerField(blank=True, null=True)
