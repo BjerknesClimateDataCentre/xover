@@ -19,7 +19,7 @@ class DataSet(models.Model):
         db_table = 'd2qc_data_sets'
         ordering = ['expocode']
         unique_together = ('expocode', 'owner')
-    _single_data_type_ids = {}
+    _single_data_type_name_ids = {}
     _stations = {}
     _contains_polygon = {}
     id = models.AutoField(primary_key=True)
@@ -62,15 +62,16 @@ class DataSet(models.Model):
         if self._typelist:
             return self._typelist
 
-        sql = """select distinct dt.original_label, dt.identifier, dt.id
-            from d2qc_data_types dt
-            inner join d2qc_data_values dv on dv.data_type_id = dt.id
+        sql = """select distinct dtn.name, dt.identifier, dtn.id
+            from d2qc_data_type_names dtn
+            inner join d2qc_data_types dt on dtn.data_type_id=dt.id
+            inner join d2qc_data_values dv on dv.data_type_name_id = dtn.id
             inner join d2qc_depths d on d.id=dv.depth_id
             inner join d2qc_casts c on c.id=d.cast_id
             inner join d2qc_stations s on c.station_id=s.id
             where s.data_set_id = {}
             and d.depth >= {}
-            order by dt.original_label;""".format(
+            order by dtn.name;""".format(
                 self.id,
                 min_depth
             )
@@ -79,7 +80,7 @@ class DataSet(models.Model):
             'original_label': type[0],
             'identifier': type[1],
             'id': type[2],
-        } for type in self._fetchall_query(sql)]
+        } for type in DataSet._fetchall_query(sql)]
         # Set the cache
         self._typelist = typelist
         return typelist
@@ -119,15 +120,11 @@ class DataSet(models.Model):
         )
 
         if parameter_id is not None:
-            data_type_clause = """
-            and dv.data_type_id in ({})
-            """.format(
-                self._in_datatype(parameter_id)
-            )
+            sql += """
+                and dv.data_type_name_id = {}
+            """.format(parameter_id)
 
-            sql = sql + data_type_clause
-
-        return [ row[0] for row in self._fetchall_query(sql) ]
+        return [ row[0] for row in DataSet._fetchall_query(sql) ]
 
     def get_station_positions(
             self,
@@ -144,7 +141,7 @@ class DataSet(models.Model):
             select st_astext(st_collect(position))
             from d2qc_stations where id in ({})
         """.format(DataSet._in_stations(stations))
-        result = self._fetchall_query(sql, True)[0]
+        result = DataSet._fetchall_query(sql, True)[0]
         return result
 
     @staticmethod
@@ -185,7 +182,7 @@ class DataSet(models.Model):
                 DataSet._in_stations(stations),
         )
 
-        result = self._fetchall_query(sql, True)[0]
+        result = DataSet._fetchall_query(sql, True)[0]
 
         return result
 
@@ -215,7 +212,7 @@ class DataSet(models.Model):
             stations,
             crossover_radius=crossover_radius,
         ))
-        result = self._fetchall_query(sql, True)[0]
+        result = DataSet._fetchall_query(sql, True)[0]
 
         return result
 
@@ -225,18 +222,20 @@ class DataSet(models.Model):
 
         Returns a commaseparated list of data_set_id's
         """
-        if parameter_id not in self._single_data_type_ids:
+        if parameter_id not in self._single_data_type_name_ids:
             sql = """
-                select string_agg(dt2.id::text, ',') from d2qc_data_types dt
-                inner join d2qc_data_types dt2 on dt.identifier=dt2.identifier
-                where dt.id={}  OFFSET 0
+                select string_agg(distinct dtn2.id::text, ',')
+                from d2qc_data_type_names dtn
+                inner join d2qc_data_types dt on dtn.data_type_id=dt.id
+                inner join d2qc_data_type_names dtn2 on dtn2.data_type_id=dt.id
+                where dtn.id={}  OFFSET 0
             """.format(parameter_id)
-            self._single_data_type_ids[parameter_id] = self._fetchall_query(
+            self._single_data_type_name_ids[parameter_id] = DataSet._fetchall_query(
                 sql,
                 True,
             )[0]
 
-        return self._single_data_type_ids[parameter_id]
+        return self._single_data_type_name_ids[parameter_id]
 
     def get_crossover_stations(
             self,
@@ -294,7 +293,7 @@ class DataSet(models.Model):
                 inner join d2qc_data_values dv on (dv.depth_id = d.id)
             """
             where += """
-                and dv.data_type_id in ({})
+                and dv.data_type_name_id in ({})
             """.format(
                     self._in_datatype(parameter_id)
             )
@@ -325,7 +324,7 @@ class DataSet(models.Model):
         sql = select + _from + where + group_by + having
 
         # Get a list with stations for each data set as a commaseparated list
-        stations_string_list = [row[0] for row in self._fetchall_query(sql)]
+        stations_string_list = [row[0] for row in DataSet._fetchall_query(sql)]
         if stations_string_list and stations_string_list[0]:
             # ...and return a normal list with the stations
             return ','.join(stations_string_list).split(',')
@@ -358,11 +357,12 @@ class DataSet(models.Model):
             """.format(
                 DataSet._in_stations(stations)
             )
-            result = self._fetchall_query(sql)
+            result = DataSet._fetchall_query(sql)
 
         return result
 
-    def _fetchall_query(self, sql, only_one=False):
+    @staticmethod
+    def _fetchall_query(sql, only_one=False):
         """
         Executes an sql query, returning the resulting data.
         """
@@ -416,16 +416,21 @@ class DataSet(models.Model):
             'latitude',
             'depth_id',
         ]
+        # TODO Handle this for non reference stations, see issue #142
+        temp = DataSet.get_reference_parameter('SDN:P01::TEMPPR01')
+        salin = DataSet.get_reference_parameter('SDN:P01::PSALST01')
+        press = DataSet.get_reference_parameter('SDN:P01::PRESPR01')
+
         sql_tmpl = """
-            select distinct on(d.id) data_set_id, ds.expocode, s.station_number, c.cast as c_cast,
-            d.depth::float as depth, dv.value::float as param,
+            select distinct on(d.id) data_set_id, ds.expocode, s.station_number,
+            c.cast as c_cast, d.depth::float as depth, dv.value::float as param,
             temp.value::float as temp, salt.value::float as salin,
             pres.value::float as press,
             st_x(s.position) as longitude, st_y(s.position)  as latitude,
             d.id as depth_id
             from d2qc_depths d
             left join d2qc_data_values dv on (
-                dv.depth_id = d.id and dv.data_type_id in ({})
+                dv.depth_id = d.id and dv.data_type_name_id in ({})
             )
             left join d2qc_data_values temp on (
                 temp.depth_id = d.id
@@ -440,9 +445,9 @@ class DataSet(models.Model):
             inner join d2qc_stations s on (c.station_id = s.id)
             inner join d2qc_data_sets ds on (s.data_set_id = ds.id)
             where
-            temp.data_type_id in (39, 65) AND
-            salt.data_type_id in (8, 33) AND
-            pres.data_type_id in (77, 45) AND
+            temp.data_type_name_id = {} AND
+            salt.data_type_name_id = {} AND
+            pres.data_type_name_id = {} AND
             dv.qc_flag in (2,6) AND
             s.id in({}) and depth>={}
         """
@@ -451,6 +456,9 @@ class DataSet(models.Model):
             parameters = self._in_datatype(parameter_id)
         sql = sql_tmpl.format(
             parameters,
+            temp,
+            salin,
+            press,
             DataSet._in_stations(stations),
             min_depth,
         )
@@ -463,7 +471,7 @@ class DataSet(models.Model):
             order by expocode, station_number, c_cast, depth
         """.format(sql)
 
-        _all = self._fetchall_query(sql)
+        _all = DataSet._fetchall_query(sql)
         dataframe = pd.DataFrame(_all, columns=columns)
         # Use GSW to calculate sigma4
         dataframe['sigma4'] = gsw.density.sigma4(
@@ -478,6 +486,17 @@ class DataSet(models.Model):
         cache.set(cache_key, dataframe)
 
         return dataframe
+
+    @staticmethod
+    def get_reference_parameter(identifier):
+        sql = """
+            select dtn.id
+            from d2qc_data_types dt
+            inner join d2qc_data_type_names dtn on dt.id=dtn.data_type_id
+            where dtn.is_reference and dt.identifier = '{}'
+            limit 1
+        """.format(identifier)
+        return DataSet._fetchall_query(sql)[0][0]
 
     def get_profiles_as_json(
             self,
@@ -565,7 +584,7 @@ class DataSet(models.Model):
             sql += """
             AND s.id in ({})
             """.format(self._in_stations(stations))
-        return self._fetchall_query(sql)[0]
+        return DataSet._fetchall_query(sql)[0]
 
     def get_interp_profiles(
             self,

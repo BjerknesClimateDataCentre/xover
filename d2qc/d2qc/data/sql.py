@@ -89,7 +89,7 @@ def get_data_set_data(data_set_ids=[0], types=[], bounds=[], min_depth=0, max_de
     cursor = connection.cursor()
     result = []
     select = """
-        SELECT original_label, id from d2qc_data_types
+        SELECT name, id from d2qc_data_type_names
     """
     cursor.execute(select)
     typelist = dict([(type[0], type[1]) for type in cursor.fetchall()])
@@ -118,7 +118,7 @@ def get_data_set_data(data_set_ids=[0], types=[], bounds=[], min_depth=0, max_de
             select += ", {}.value AS {}_value".format(px, px)
             join += " LEFT OUTER JOIN d2qc_data_values {}".format(px)
             join += " ON (d.id = {}.depth_id".format(px)
-            join += " AND {}.data_type_id = '{}')".format(px, typelist[type])
+            join += " AND {}.data_type_name_id = '{}')".format(px, typelist[type])
             not_all_nulls.append("{}.value".format(px))
         if len(bounds) == 4:
             where += """
