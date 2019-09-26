@@ -739,7 +739,7 @@ class DataSet(models.Model):
         if min_depth is False:
             min_depth = self.min_depth
 
-        data_type = data.models.DataType.objects.get(pk=parameter_id)
+        data_type_name = data.models.DataTypeName.objects.get(pk=parameter_id)
         cache_key = "get_profiles_stats-{}-{}-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
@@ -747,7 +747,7 @@ class DataSet(models.Model):
             hash(tuple(xover_stations)),
             crossover_radius,
             min_depth,
-            data_type.offset_type.id,
+            data_type_name.data_type.offset_type.id,
         )
         value = cache.get(cache_key, False)
         if value is not False:
