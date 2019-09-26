@@ -72,11 +72,6 @@ class DataSet(models.Model):
     def get_data_types(self, min_depth=0):
         """Fetch all data types in this data set from the database"""
 
-        if min_depth is False:
-            min_depth = self.owner.profile.min_depth
-        if min_depth is False:
-            min_depth = self.min_depth
-
         if self._typelist:
             return self._typelist
 
@@ -107,23 +102,13 @@ class DataSet(models.Model):
             self,
             parameter_id = None,
             data_set_id = None,
-            crossover_radius = False,
-            min_depth = False,
+            crossover_radius = 200000,
+            min_depth = 0,
     ):
         """
         Get the list of stations in data_set_id or the current data set,
         possibly filtered by parameter_id
         """
-
-        if crossover_radius is False:
-            crossover_radius = self.owner.profile.crossover_radius
-        if crossover_radius is False:
-            crossover_radius = self.crossover_radius
-
-        if min_depth is False:
-            min_depth = self.owner.profile.min_depth
-        if min_depth is False:
-            min_depth = self.min_depth
 
         sql = """
             select distinct st.id from d2qc_stations st
@@ -177,13 +162,8 @@ class DataSet(models.Model):
     def _get_stations_buffer(
         self,
         stations: list=[],
-        crossover_radius=False,
+        crossover_radius=200000,
     ):
-
-        if crossover_radius is False:
-            crossover_radius = self.owner.profile.crossover_radius
-        if crossover_radius is False:
-            crossover_radius = self.crossover_radius
 
         """
         Get the search buffer for a set of stations
@@ -207,7 +187,7 @@ class DataSet(models.Model):
     def get_stations_polygon(
             self,
             stations: list,
-            crossover_radius=False,
+            crossover_radius=200000,
         ):
         """
         Get the polygon around stations that define the serach area for
@@ -217,11 +197,6 @@ class DataSet(models.Model):
         """
         if len(stations) == 0:
             return []
-
-        if crossover_radius is False:
-            crossover_radius = self.owner.profile.crossover_radius
-        if crossover_radius is False:
-            crossover_radius = self.crossover_radius
 
         result = None
         sql = """
@@ -261,8 +236,8 @@ class DataSet(models.Model):
             stations: list = None,
             parameter_id = None,
             crossover_data_set_id = None,
-            min_depth = False,
-            crossover_radius = False,
+            min_depth = 0,
+            crossover_radius = 200000,
             minimum_num_stations = 1,
         ):
         """
@@ -272,16 +247,6 @@ class DataSet(models.Model):
         minimum_num_stations > 1, only return stations where there is at least
         minimum_num_stations in the data set (for the given parameter_id).
         """
-
-        if crossover_radius is False:
-            crossover_radius = self.owner.profile.crossover_radius
-        if crossover_radius is False:
-            crossover_radius = self.crossover_radius
-
-        if min_depth is False:
-            min_depth = self.owner.profile.min_depth
-        if min_depth is False:
-            min_depth = self.min_depth
 
         select = """
             select string_agg(distinct st.id::text, ',')
@@ -396,7 +361,7 @@ class DataSet(models.Model):
             self,
             stations: list,
             parameter_id,
-            min_depth = False,
+            min_depth = 0,
             only_this_parameter = False,
     ):
         """
@@ -404,11 +369,6 @@ class DataSet(models.Model):
 
         Returns a pandas dataframe
         """
-
-        if min_depth is False:
-            min_depth = self.owner.profile.min_depth
-        if min_depth is False:
-            min_depth = self.min_depth
 
         cache_key = "get_profiles_data-{}-{}-{}-{}".format(
             self.id,
@@ -608,7 +568,7 @@ class DataSet(models.Model):
             self,
             stations,
             parameter_id,
-            min_depth=False,
+            min_depth=0,
     ):
         """
         Fetches profiles for the given stations, and interpolates these
@@ -616,11 +576,6 @@ class DataSet(models.Model):
         different depths initially. Returns a dataframe with same format as
         get_profiles_data
         """
-
-        if min_depth is False:
-            min_depth = self.owner.profile.min_depth
-        if min_depth is False:
-            min_depth = self.min_depth
 
         cache_key = "get_interp_profiles-{}-{}-{}-{}".format(
             self.id,
@@ -743,19 +698,9 @@ class DataSet(models.Model):
             stations: list,
             xover_stations: list,
             parameter_id: int,
-            crossover_radius=False,
-            min_depth=False,
+            crossover_radius=200000,
+            min_depth=0,
     ):
-
-        if crossover_radius is False:
-            crossover_radius = self.owner.profile.crossover_radius
-        if crossover_radius is False:
-            crossover_radius = self.crossover_radius
-
-        if min_depth is False:
-            min_depth = self.owner.profile.min_depth
-        if min_depth is False:
-            min_depth = self.min_depth
 
         data_type_name = data.models.DataTypeName.objects.get(pk=parameter_id)
         cache_key = "get_profiles_stats-{}-{}-{}-{}-{}-{}-{}".format(
@@ -901,7 +846,6 @@ class DataSet(models.Model):
             parameter_id=secondary_parameter
         )
         stations = set(s1) and set(s2)
-        print(min_depth)
         primary = self.get_profiles_data(
             stations,
             primary_parameter,

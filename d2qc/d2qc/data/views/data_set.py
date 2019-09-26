@@ -52,8 +52,11 @@ class DataSetDetail(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         data_set = self.get_object()
+        crossover_radius = self.request.user.profile.crossover_radius
+        min_depth = self.request.user.profile.min_depth
+
         context['data_types'] = data_set.get_data_types(
-            min_depth = data_set.owner.profile.min_depth
+            min_depth = self.request.user.profile.min_depth
         )
         for data_type in context['data_types']:
             if data_type['id'] == self.kwargs.get('parameter_id'):
@@ -62,9 +65,13 @@ class DataSetDetail(DetailView):
         form = MergeForm(data_types=context['data_types'])
         context['form'] = form
         # Get stations positions and polygons for the whole cruise
-        cruise_stations = data_set.get_stations()
+        cruise_stations = data_set.get_stations(
+            crossover_radius = crossover_radius,
+            min_depth = min_depth,
+        )
         context['cruise_polygon'] = data_set.get_stations_polygon(
-            cruise_stations
+            cruise_stations,
+            crossover_radius = crossover_radius,
         )
         context['cruise_positions'] = data_set.get_station_positions(
             cruise_stations
@@ -73,12 +80,15 @@ class DataSetDetail(DetailView):
         # Get the stations for the current data set,
         # filtering by parameter if required
         data_set_stations = data_set.get_stations(
-            parameter_id=self.kwargs.get('parameter_id')
+            parameter_id=self.kwargs.get('parameter_id'),
+            crossover_radius = crossover_radius,
+            min_depth = min_depth,
         )
 
         # Get the station buffer outline polygon
         context['stations_polygon'] = data_set.get_stations_polygon(
-            data_set_stations
+            data_set_stations,
+            crossover_radius = crossover_radius,
         )
 
         # Get the positions of the data set stations
@@ -97,8 +107,8 @@ class DataSetDetail(DetailView):
             cache_key_px = "_xover-{}-{}-{}-{}-{}".format(
                 data_set.id,
                 self.kwargs.get('parameter_id'),
-                data_set.owner.profile.crossover_radius,
-                data_set.owner.profile.min_depth,
+                self.request.user.profile.crossover_radius,
+                self.request.user.profile.min_depth,
                 minimum_num_stations,
             )
 
@@ -118,8 +128,8 @@ class DataSetDetail(DetailView):
                     'calculate_xover',
                     str(data_set.id),
                     str(self.kwargs.get('parameter_id')),
-                    str(data_set.owner.profile.crossover_radius),
-                    str(data_set.owner.profile.min_depth),
+                    str(self.request.user.profile.crossover_radius),
+                    str(self.request.user.profile.min_depth),
                     '--minimum_num_stations', str(minimum_num_stations),
                 ])
                 cache.set(calculating_key, True)
@@ -132,6 +142,8 @@ class DataSetDetail(DetailView):
                 stations=data_set_stations,
                 parameter_id=self.kwargs.get('parameter_id'),
                 crossover_data_set_id=self.kwargs.get('data_set_id'),
+                crossover_radius = crossover_radius,
+                min_depth = min_depth,
             )
 
             # Get the positions of the crossover stations
@@ -145,6 +157,8 @@ class DataSetDetail(DetailView):
                     stations=data_set_stations,
                     parameter_id=self.kwargs.get('parameter_id'),
                     minimum_num_stations = 3,
+                    crossover_radius = crossover_radius,
+                    min_depth = min_depth,
                 )
             )
 
@@ -160,7 +174,9 @@ class DataSetDetail(DetailView):
                     data_set_id=self.kwargs.get('data_set_id'),
                     stations=crossover_stations,
                     parameter_id=self.kwargs.get('parameter_id'),
-                    crossover_data_set_id=self.kwargs.get('pk')
+                    crossover_data_set_id=self.kwargs.get('pk'),
+                    crossover_radius = crossover_radius,
+                    min_depth = min_depth,
                 )
 
                 context['station_positions'] = data_set.get_station_positions(
@@ -168,7 +184,8 @@ class DataSetDetail(DetailView):
                 )
 
                 context['stations_polygon'] = data_set.get_stations_polygon(
-                    data_set_stations
+                    data_set_stations,
+                    crossover_radius = crossover_radius,
                 )
 
             # Get the profiles for the plot
@@ -177,12 +194,14 @@ class DataSetDetail(DetailView):
                     data_set_stations,
                     self.kwargs.get('parameter_id'),
                     only_this_parameter = True,
+                    min_depth = min_depth,
                 )
             )
             context['dataset_interp_profiles'] = data_set.get_profiles_as_json(
                 data_set.get_interp_profiles(
                     data_set_stations,
                     self.kwargs.get('parameter_id'),
+                    min_depth = min_depth,
                 )
             )
             context['dataset_stats'] = {}
@@ -192,18 +211,22 @@ class DataSetDetail(DetailView):
                     data_set.get_profiles_data(
                         crossover_stations,
                         self.kwargs.get('parameter_id'),
+                        min_depth = min_depth,
                     )
                 )
                 context['dataset_ref_interp_profiles'] = data_set.get_profiles_as_json(
                     data_set.get_interp_profiles(
                         crossover_stations,
                         self.kwargs.get('parameter_id'),
+                        min_depth = min_depth,
                     )
                 )
                 stats = data_set.get_profiles_stats(
                     data_set_stations,
                     crossover_stations,
                     self.kwargs.get('parameter_id'),
+                    min_depth = min_depth,
+                    crossover_radius = crossover_radius,
                 )
                 if stats:
                     context['dataset_stats'] = json.dumps(stats, allow_nan=False)
@@ -233,7 +256,7 @@ class DataSetMerge(DetailView):
     def post(self, request, *args, **kwargs):
         data_set = self.get_object()
         data_types = data_set.get_data_types(
-            min_depth = data_set.owner.profile.min_depth
+            min_depth = self.request.user.profile.min_depth
         )
         self.form = MergeForm(
             request.POST,
@@ -257,7 +280,7 @@ class DataSetMerge(DetailView):
         context = super().get_context_data(**kwargs)
         data_set = self.get_object()
         context['data_types'] = data_set.get_data_types(
-            min_depth = data_set.owner.profile.min_depth
+            min_depth = self.request.user.profile.min_depth
         )
         form = self.form
         if form.is_valid():

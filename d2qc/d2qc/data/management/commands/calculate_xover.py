@@ -25,7 +25,7 @@ class Command(NewlineCommand):
             help='Calculate for this parameter',
         )
         parser.add_argument(
-            'radius',
+            'crossover_radius',
             nargs='+',
             type=int,
             help='Select stations within this radius, in meters',
@@ -51,7 +51,7 @@ class Command(NewlineCommand):
     def handle(self, *args, **options):
         data_set_id = options['data_set_id'][0]
         parameter_id = options['parameter_id'][0]
-        radius = options['radius'][0]
+        crossover_radius = options['crossover_radius'][0]
         min_depth = options['min_depth'][0]
         data_return = options['data_return']
         minimum_num_stations = options['minimum_num_stations']
@@ -60,7 +60,7 @@ class Command(NewlineCommand):
         cache_key = "calculate_xover-{}-{}-{}-{}-{}".format(
             data_set_id,
             parameter_id,
-            radius,
+            crossover_radius,
             min_depth,
             minimum_num_stations,
         )
@@ -71,7 +71,9 @@ class Command(NewlineCommand):
 
         data_set = models.DataSet.objects.get(pk=data_set_id)
         data_set_stations = data_set.get_stations(
-            parameter_id=parameter_id
+            parameter_id = parameter_id,
+            crossover_radius = crossover_radius,
+            min_depth = min_depth,
         )
         data_sets = data_set.get_station_data_sets(
             data_set.get_crossover_stations(
@@ -79,6 +81,7 @@ class Command(NewlineCommand):
                 parameter_id = parameter_id,
                 min_depth = min_depth,
                 minimum_num_stations = 3,
+                crossover_radius = crossover_radius,
             )
         )
         data = {
@@ -92,18 +95,20 @@ class Command(NewlineCommand):
             # Get stations from this data set that falls within the crossover
             # radius of the original data set
             crossover_stations = data_set.get_crossover_stations(
-                stations=data_set_stations,
-                parameter_id=parameter_id,
-                crossover_data_set_id=ds[0],
-                min_depth=min_depth,
-                minimum_num_stations=minimum_num_stations,
+                stations = data_set_stations,
+                parameter_id = parameter_id,
+                crossover_data_set_id = ds[0],
+                min_depth = min_depth,
+                minimum_num_stations = minimum_num_stations,
+                crossover_radius = crossover_radius,
             )
             # Get stations from the original data set that match this data set
             crossed_data_set_stations = data_set.get_crossover_stations(
-                stations=crossover_stations,
-                parameter_id=parameter_id,
-                crossover_data_set_id=data_set_id,
-                min_depth=min_depth,
+                stations = crossover_stations,
+                parameter_id = parameter_id,
+                crossover_data_set_id = data_set_id,
+                min_depth = min_depth,
+                crossover_radius = crossover_radius,
             )
             if (
                     len(crossover_stations) == 0
@@ -114,6 +119,8 @@ class Command(NewlineCommand):
                 crossed_data_set_stations,
                 crossover_stations,
                 parameter_id,
+                min_depth = min_depth,
+                crossover_radius = crossover_radius,
             )
             if (
                     stats is not None
