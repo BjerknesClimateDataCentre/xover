@@ -39,6 +39,24 @@ class DataSet(models.Model):
         null=True,
         editable=False
     )
+    temp_aut = models.ForeignKey(
+        'DataTypeName',
+        on_delete = models.PROTECT,
+        null=True,
+        related_name='temp_aut',
+    )
+    press_aut = models.ForeignKey(
+        'DataTypeName',
+        on_delete = models.PROTECT,
+        null=True,
+        related_name='press_aut',
+    )
+    salin_aut = models.ForeignKey(
+        'DataTypeName',
+        on_delete = models.PROTECT,
+        null=True,
+        related_name='salin_aut',
+    )
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
