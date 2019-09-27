@@ -4,13 +4,13 @@ from django.contrib.gis.db import models
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 import os.path
-# from d2qc.data.models import DataSet
-# from d2qc.data.models import DataType
-# from d2qc.data.models import Station
-# from d2qc.data.models import Cast
-# from d2qc.data.models import Depth
-# from d2qc.data.models import DataValue
-import d2qc.data as data
+from d2qc.data.models import DataSet
+from d2qc.data.models import DataType
+from d2qc.data.models import DataTypeName
+from d2qc.data.models import Station
+from d2qc.data.models import Cast
+from d2qc.data.models import Depth
+from d2qc.data.models import DataValue
 from django.conf import settings
 import glodap.util.excread as excread
 from django.utils import timezone
@@ -65,7 +65,7 @@ class DataFile(models.Model):
     # Delete files as object is deleted
     def delete(self):
         # Dont delete file if file has related data set(s)
-        if not data.models.DataSet.objects.filter(data_file_id=self.id).exists():
+        if not DataSet.objects.filter(data_file_id=self.id).exists():
             self.filepath.delete()
         super().delete()
 
@@ -146,13 +146,15 @@ class DataFile(models.Model):
 
         # Import data types
         missing_vars = []
-        data_types = {str(type_):type_ for type_ in data.models.DataType.objects.all()}
+        data_type_names = {
+            str(type_):type_ for type_ in DataTypeName.objects.all()
+        }
         for var in datagrid.columns:
             if var in IGNORE:
                 continue
             if var.endswith(QC_SUFFIX):
                 continue
-            if var not in data_types:
+            if var not in data_type_names:
                 missing_vars.append(var)
 
         if missing_vars:
@@ -167,16 +169,25 @@ class DataFile(models.Model):
 
         missing_depth_warning = False # Indicate missing depth already warned
         missing_position_warning = False
+
+        # (Hopefully sensible) defaults for authoritative temp, salin, pressure
+        temp_aut = DataTypeName.objects.filter(name="CTDTMP").first()
+        salin_aut = DataTypeName.objects.filter(name="CTDSAL").first()
+        press_aut = DataTypeName.objects.filter(name="CTDPRS").first()
+
         for i, expo in enumerate(datagrid['EXPOCODE']):
             if not data_set or expo != data_set.expocode:
                 # Add new dataset
-                data_set = data.models.DataSet(
+                data_set = DataSet(
                     expocode=expo,
                     is_reference = False,
                     data_file = self,
-                    owner = self.owner
+                    owner = self.owner,
+                    temp_aut = temp_aut,
+                    salin_aut = salin_aut,
+                    press_aut = press_aut,
                 )
-                if data.models.DataSet.objects.filter(
+                if DataSet.objects.filter(
                             expocode=expo,
                             owner=self.owner
                 ).exists():
@@ -211,7 +222,7 @@ class DataFile(models.Model):
                     missing_position_warning = True
                     continue
                 # Add new station
-                station = data.models.Station(
+                station = Station(
                         data_set = data_set,
                         position = Point(longitude, latitude),
                         station_number = int(datagrid['STNNBR'][i])
@@ -227,7 +238,7 @@ class DataFile(models.Model):
                 cast_ = 1
                 if 'CASTNO' in datagrid:
                     cast_ = int(datagrid['CASTNO'][i])
-                cast = data.models.Cast(
+                cast = Cast(
                         station = station,
                         cast = cast_
                 )
@@ -256,7 +267,7 @@ class DataFile(models.Model):
 
                 # Add new depth
                 btlnbr = datagrid.get('BTLNBR', False)
-                depth = data.models.Depth(
+                depth = Depth(
                         cast = cast,
                         depth = float(datagrid['EXC_CTDDEPTH'][i]),
                         bottle = 1 if btlnbr is False else btlnbr[i],
@@ -272,17 +283,17 @@ class DataFile(models.Model):
             for key in datagrid.columns:
                 if key in IGNORE:
                     continue
-                if not key in data_types:
-                    # Variable not found in database
+                if not key in data_type_names:
+                    # Variable not found in database. Already reported.
                     continue
                 qc_flag = None
                 if key + QC_SUFFIX in datagrid:
                     qc_flag = int(datagrid[key + QC_SUFFIX][i])
-                value = data.models.DataValue(
+                value = DataValue(
                         depth = depth,
                         value = datagrid[key][i],
                         qc_flag = qc_flag,
-                        data_type = data_types[key]
+                        data_type_name = data_type_names[key]
                 )
                 value.save()
         self._write_messages()
