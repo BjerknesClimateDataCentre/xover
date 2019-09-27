@@ -763,12 +763,12 @@ class DataSet(models.Model):
                     for i, y in enumerate(y_all):
                         if not y in diffs:
                             diffs[y] = {'diff': []}
-                        if data_type.offset_type.id == 1:
+                        if data_type_name.data_type.offset_type.id == 1:
                             val = c_param[i] - r_param[i]
                             if val is None or math.isnan(val):
                                 continue
                             diffs[y]['diff'].append(val)
-                        elif data_type.offset_type.id == 2:
+                        elif data_type_name.data_type.offset_type.id == 2:
                             val = c_param[i] / r_param[i]
                             if val is None or math.isnan(val):
                                 continue
