@@ -76,7 +76,7 @@ var data = [
   w_std_min
 ];
 title = "Weighted mean diff."
-title += "<br>{{ parameter.original_label }}"
+title += "<br>{{ parameter.name }}"
 title += "<br>{{ object.expocode }} vs. {{ crossover_expocode }}"
 var layout = {
   yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},

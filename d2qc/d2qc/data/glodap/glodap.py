@@ -434,13 +434,17 @@ class Glodap:
                 # Import data types
                 vars = self.glodap_vars
                 idents = self.glodap_identificators
-                data_types = {}
+                data_type_names = {}
                 for var in vars:
-                    type = DataType.objects.get_or_create(
+                    data_type, created = DataType.objects.get_or_create(
                         identifier = DataTypeDict.getIdentFromVar(var),
                         original_label = var,
                     )
-                    data_types[var] = type[0]
+                    data_type_name = DataTypeName.objects.get_or_create(
+                        name = var,
+                        data_type = data_type
+                    )
+                    data_type_names[var] = data_type_name[0]
 
                 current_station = Station
                 current_cast = Cast
@@ -625,7 +629,7 @@ class Glodap:
                                         value = value,
                                         qc_flag = qc_flag,
                                         qc2_flag = qc2_flag,
-                                        data_type = data_types[key]
+                                        data_type_name = data_type_names[key]
                                 )
                                 current_value = model_value
                                 model_value.save()

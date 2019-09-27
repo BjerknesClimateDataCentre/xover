@@ -69,7 +69,7 @@ class DataSet(models.Model):
         """Reset list of types for this data set"""
         self._typelist = typelist
 
-    def get_data_types(self, min_depth=0):
+    def get_data_type_names(self, min_depth=0):
         """Fetch all data types in this data set from the database"""
 
         if self._typelist:
@@ -90,7 +90,7 @@ class DataSet(models.Model):
             )
 
         typelist = [{
-            'original_label': type[0],
+            'name': type[0],
             'identifier': type[1],
             'id': type[2],
         } for type in DataSet._fetchall_query(sql)]

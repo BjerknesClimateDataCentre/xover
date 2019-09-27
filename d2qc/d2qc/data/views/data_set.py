@@ -55,14 +55,14 @@ class DataSetDetail(DetailView):
         crossover_radius = self.request.user.profile.crossover_radius
         min_depth = self.request.user.profile.min_depth
 
-        context['data_types'] = data_set.get_data_types(
+        context['data_type_names'] = data_set.get_data_type_names(
             min_depth = self.request.user.profile.min_depth
         )
-        for data_type in context['data_types']:
-            if data_type['id'] == self.kwargs.get('parameter_id'):
-                context['parameter'] = data_type
+        for data_type_name in context['data_type_names']:
+            if data_type_name['id'] == self.kwargs.get('parameter_id'):
+                context['parameter'] = data_type_name
                 break
-        form = MergeForm(data_type_names=context['data_types'])
+        form = MergeForm(data_type_names=context['data_type_names'])
         context['form'] = form
         # Get stations positions and polygons for the whole cruise
         cruise_stations = data_set.get_stations(
@@ -255,19 +255,19 @@ class DataSetMerge(DetailView):
     template_name = 'data/dataset_merge.html'
     def post(self, request, *args, **kwargs):
         data_set = self.get_object()
-        data_types = data_set.get_data_types(
+        data_type_names = data_set.get_data_type_names(
             min_depth = self.request.user.profile.min_depth
         )
         self.form = MergeForm(
             request.POST,
-            data_type_names = data_types,
+            data_type_names = data_type_names,
         )
         if self.form.is_valid() and request.POST.get('save_parameters', False):
             self.form.save_merge_data(data_set = self.get_object())
             # Reloading this to get the new, inserted merge parameter
             self.form = MergeForm(
                 request.POST,
-                data_type_names = data_types,
+                data_type_names = data_type_names,
             )
         retval = super().get(request, *args, **kwargs)
         return retval
@@ -279,7 +279,7 @@ class DataSetMerge(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         data_set = self.get_object()
-        context['data_types'] = data_set.get_data_types(
+        context['data_type_names'] = data_set.get_data_type_names(
             min_depth = self.request.user.profile.min_depth
         )
         form = self.form
