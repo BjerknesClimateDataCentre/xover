@@ -17,12 +17,6 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
         justify-content: flex-start;
         align-items: flex-start;
     }
-    .dataset.data .selected,
-    .dataset.data .selected a {
-        background-color: black;
-        color: white;
-        font-weight: bold;
-    }
     .dataset.data td {
         vertical-align: top;
     }
@@ -79,9 +73,6 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
 .column h4 {
   width: 100%;
 }
-.column.params {
-  width: auto;
-}
 .column > * > li{
   display: block;
   height: 25px;
@@ -123,25 +114,7 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
       <h4>Secondary</h4>
       {{form.secondary}}
     </div>
-    <div class="params column">
-      <h4>Name</h4>
-      <ul>
-      {% for data_type_name in data_type_names %}
-      <li
-      {% if parameter.id == data_type_name.id %}
-      class="selected"
-      {% endif %}
-      title="{{ data_type_name.name }}"
-      >
-          <a
-            href="{% url 'data_set_parameter-detail' object.id data_type_name.id %}"
-          >
-            {{ data_type_name.name }}
-          </a>
-      </li>
-      {% endfor %}
-      </ul>
-    </div>
+    {% include "util/data_type_name_list.html" %}
     <div class="mergeinfo">
       <p></p>
     </div>
