@@ -1,5 +1,6 @@
 from django import forms
 from d2qc.data.models import DataTypeName, DataValue, Depth, DataSet
+from d2qc.data.models import Operation, OperationType
 import pandas as pd
 import numpy as np
 import glodap.util.stats as stats
@@ -90,4 +91,24 @@ class MergeForm(forms.Form):
             if not np.isnan(value.value):
                 value.save()
 
+        # Update operations table if successful
+        operation_type = OperationType.objects.filter(name='merge').first()
+        operation = Operation(
+            operation_type = operation_type,
+            data_type_name = data_type_name,
+            data_set = data_set,
+            name = f"{primary.name} vs {secondary.name}, type #{merge_type}",
+            data = {
+                'merge_type': merge_type,
+                'primary': {
+                    'name': primary.name,
+                    'id': primary.id,
+                },
+                'secondary': {
+                    'name': secondary.name,
+                    'id': secondary.id,
+                },
+            }
+        )
+        operation.save()
         data_set.set_type_list(None)
