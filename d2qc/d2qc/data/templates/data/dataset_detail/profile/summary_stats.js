@@ -58,7 +58,7 @@ stdev2 = {
 };
 dataset = {
   x: [new Date(summary_stats.eval_dataset_date)],
-  y: [0],
+  y: [summary_stats.mean[0]],
   mode: 'markers',
   type: 'scatter',
   marker: {
