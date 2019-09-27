@@ -1,5 +1,5 @@
 from django import forms
-from d2qc.data.models import DataType, DataValue, Depth, DataSet
+from d2qc.data.models import DataTypeName, DataValue, Depth, DataSet
 import pandas as pd
 import numpy as np
 import glodap.util.stats as stats
@@ -29,13 +29,13 @@ class MergeForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         try:
-            data_types = kwargs.pop('data_types')
+            data_type_names = kwargs.pop('data_type_names')
         except KeyError:
-            data_types = None
+            data_type_names = None
         super().__init__(*args, **kwargs)
         self.fields['merge_min_depth'].initial = 0
-        if data_types is not None:
-            choices = [(t['id'], '') for t in data_types]
+        if data_type_names is not None:
+            choices = [(t['id'], '') for t in data_type_names]
             self.fields['primary'] = forms.ChoiceField(
                 label = "Pri.",
                 widget = forms.RadioSelect,
@@ -48,12 +48,12 @@ class MergeForm(forms.Form):
             )
 
     def save_merge_data(self, data_set):
-        primary = DataType.objects.get(pk=self.cleaned_data['primary'])
-        secondary = DataType.objects.get(pk=self.cleaned_data['secondary'])
+        primary = DataTypeName.objects.get(pk=self.cleaned_data['primary'])
+        secondary = DataTypeName.objects.get(pk=self.cleaned_data['secondary'])
         name = "{}#{}_{}".format(
             self.cleaned_data['merge_type'],
-            primary.original_label,
-            secondary.original_label,
+            primary.name,
+            secondary.name,
         )
         data = data_set.get_merge_data(
             self.cleaned_data['primary'],
@@ -61,13 +61,13 @@ class MergeForm(forms.Form):
             min_depth = self.cleaned_data['merge_min_depth']
         )
 
-        if DataType.objects.filter(original_label=name).exists():
-            data_type = DataType.objects.filter(original_label=name).first()
+        if DataTypeName.objects.filter(name=name).exists():
+            data_type_name = DataTypeName.objects.filter(name=name).first()
         else:
-            data_type = copy.copy(primary)
-            data_type.id = None
-            data_type.original_label = name
-            data_type.save()
+            data_type_name = copy.copy(primary)
+            data_type_name.id = None
+            data_type_name.name = name
+            data_type_name.save()
 
         merge_type = int(self.cleaned_data['merge_type'])
         slope, intercept = stats.linear_fit(
@@ -78,7 +78,7 @@ class MergeForm(forms.Form):
             data['secondary'] = (data['secondary'] - intercept) / slope
 
         for i, row in data.iterrows():
-            value = DataValue(qc_flag=2,data_type=data_type)
+            value = DataValue(qc_flag=2,data_type_name=data_type_name)
             value.depth_id = row['depth_id']
             value.value = np.nan
             if merge_type in [2, 3, 4, 7]:

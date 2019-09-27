@@ -3,7 +3,7 @@ from rest_framework import viewsets
 import glodap.util.stats as stats
 
 from d2qc.data.models import DataSet
-from d2qc.data.models import DataType
+from d2qc.data.models import DataTypeName
 from d2qc.data.serializers import DataSetSerializer
 from d2qc.data.serializers import NestedDataSetSerializer
 from d2qc.data.forms import MergeForm
@@ -62,7 +62,7 @@ class DataSetDetail(DetailView):
             if data_type['id'] == self.kwargs.get('parameter_id'):
                 context['parameter'] = data_type
                 break
-        form = MergeForm(data_types=context['data_types'])
+        form = MergeForm(data_type_names=context['data_types'])
         context['form'] = form
         # Get stations positions and polygons for the whole cruise
         cruise_stations = data_set.get_stations(
@@ -260,14 +260,14 @@ class DataSetMerge(DetailView):
         )
         self.form = MergeForm(
             request.POST,
-            data_types = data_types,
+            data_type_names = data_types,
         )
         if self.form.is_valid() and request.POST.get('save_parameters', False):
             self.form.save_merge_data(data_set = self.get_object())
             # Reloading this to get the new, inserted merge parameter
             self.form = MergeForm(
                 request.POST,
-                data_types = data_types,
+                data_type_names = data_types,
             )
         retval = super().get(request, *args, **kwargs)
         return retval
@@ -289,10 +289,10 @@ class DataSetMerge(DetailView):
                 form.cleaned_data['secondary'],
                 min_depth = form.cleaned_data['merge_min_depth'],
             )
-            primary_type = DataType.objects.get(
+            primary_type = DataTypeName.objects.get(
                 pk=form.cleaned_data['primary']
             )
-            secondary_type = DataType.objects.get(
+            secondary_type = DataTypeName.objects.get(
                 pk=form.cleaned_data['secondary']
             )
             merge = merge.replace({pd.np.nan: None})
@@ -307,10 +307,10 @@ class DataSetMerge(DetailView):
                 'primary': merge['primary'].tolist(),
                 'secondary': merge['secondary'].tolist(),
                 'primary_type': {
-                    'label': primary_type.original_label,
+                    'label': primary_type.name,
                 },
                 'secondary_type': {
-                    'label': secondary_type.original_label,
+                    'label': secondary_type.name,
                 },
             }
             context['merge_data'] = json.dumps(data)
