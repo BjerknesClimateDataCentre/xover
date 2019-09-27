@@ -394,10 +394,6 @@ class DataSet(models.Model):
             'latitude',
             'depth_id',
         ]
-        # TODO Handle this for non reference stations, see issue #142
-        temp = DataSet.get_reference_parameter('SDN:P01::TEMPPR01')
-        salin = DataSet.get_reference_parameter('SDN:P01::PSALST01')
-        press = DataSet.get_reference_parameter('SDN:P01::PRESPR01')
 
         sql_tmpl = """
             select distinct on(d.id) data_set_id, ds.expocode, s.station_number,
@@ -423,9 +419,9 @@ class DataSet(models.Model):
             inner join d2qc_stations s on (c.station_id = s.id)
             inner join d2qc_data_sets ds on (s.data_set_id = ds.id)
             where
-            temp.data_type_name_id = {} AND
-            salt.data_type_name_id = {} AND
-            pres.data_type_name_id = {} AND
+            temp.data_type_name_id = ds.temp_aut_id AND
+            salt.data_type_name_id = ds.salin_aut_id AND
+            pres.data_type_name_id = ds.press_aut_id AND
             dv.qc_flag in (2,6) AND
             s.id in({}) and depth>={}
         """
@@ -434,9 +430,6 @@ class DataSet(models.Model):
             parameters = self._in_datatype(parameter_id)
         sql = sql_tmpl.format(
             parameters,
-            temp,
-            salin,
-            press,
             DataSet._in_stations(stations),
             min_depth,
         )
