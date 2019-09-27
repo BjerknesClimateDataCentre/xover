@@ -75,13 +75,20 @@ class DataSet(models.Model):
         if self._typelist:
             return self._typelist
 
-        sql = """select distinct dtn.name, dt.identifier, dtn.id
+        sql = """select distinct dtn.name, dt.identifier, dtn.id,
+            case
+                when (dtn.id = ds.temp_aut_id) then 'temperature'
+                when (dtn.id = ds.press_aut_id) then 'pressure'
+                when (dtn.id = ds.salin_aut_id) then 'salinity'
+                else null
+            end as authoritative
             from d2qc_data_type_names dtn
             inner join d2qc_data_types dt on dtn.data_type_id=dt.id
             inner join d2qc_data_values dv on dv.data_type_name_id = dtn.id
             inner join d2qc_depths d on d.id=dv.depth_id
             inner join d2qc_casts c on c.id=d.cast_id
             inner join d2qc_stations s on c.station_id=s.id
+            inner join d2qc_data_sets ds on s.data_set_id=ds.id
             where s.data_set_id = {}
             and d.depth >= {}
             order by dtn.name;""".format(
@@ -93,6 +100,7 @@ class DataSet(models.Model):
             'name': type[0],
             'identifier': type[1],
             'id': type[2],
+            'authoritative': type[3],
         } for type in DataSet._fetchall_query(sql)]
         # Set the cache
         self._typelist = typelist

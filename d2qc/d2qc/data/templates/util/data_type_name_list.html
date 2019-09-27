@@ -1,0 +1,35 @@
+<style media="screen">
+.column.params {
+  width: auto;
+}
+.column.params .selected,
+.column.params .selected a {
+  background-color: black;
+  color: white;
+  font-weight: bold;
+}
+</style>
+<div class="params column">
+  <h4>Name</h4>
+  <ul>
+  {% for data_type_name in data_type_names %}
+  <li
+  {% if parameter.id == data_type_name.id %}
+  class="selected"
+  {% endif %}
+  title="{{ data_type_name.name }}"
+  >
+      <a
+        href="{% url 'data_set_parameter-detail' object.id data_type_name.id %}"
+        title="{{ data_type_name.name }}{% if data_type_name.authoritative %}
+          Authoritative parameter for {{ data_type_name.authoritative }}{% endif %}"
+      >
+          {% if data_type_name.authoritative %}
+          *
+          {% endif %}
+          {{ data_type_name.name }}
+      </a>
+  </li>
+  {% endfor %}
+  </ul>
+</div>
