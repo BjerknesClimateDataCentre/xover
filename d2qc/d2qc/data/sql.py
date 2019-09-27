@@ -7,7 +7,7 @@ def get_data_set_data(data_set_ids=[0], types=[], bounds=[], min_depth=0, max_de
 
     Keyword args:
     data_set_ids -- The database id of the datasetself.
-    types       -- Commaseparated string, data types from the data_types table.
+    types       -- Commaseparated string, data types from the data_type_names table.
 
     Example: get_data_set_data(724, "CTDTMP,SALNTY")
 
