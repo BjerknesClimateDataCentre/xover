@@ -146,7 +146,7 @@ if (stats) {
   data.unshift(stats_fill)
   data.unshift(stats_limits)
 }
-title = "Cruise profiles, parameter: {{ parameter.original_label }}"
+title = "Cruise profiles, parameter: {{ parameter.name }}"
 
 var layout = {
   yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},

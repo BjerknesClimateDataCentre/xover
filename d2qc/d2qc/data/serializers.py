@@ -28,7 +28,7 @@ class DataValueSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'data_point',
-            'data_type',
+            'data_type_name',
             'value',
             'qc_flag',
             'qc2_flag',
@@ -38,7 +38,7 @@ class NestedDataValueSerializer(DataValueSerializer):
     class Meta(DataValueSerializer.Meta):
         fields = (
             'id',
-            'data_type',
+            'data_type_name',
             'value',
             'qc_flag',
             'qc2_flag',

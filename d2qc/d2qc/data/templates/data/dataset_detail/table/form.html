@@ -56,17 +56,17 @@
   <div class="params column">
     <h4>Name</h4>
     <ul>
-    {% for data_type in data_types %}
+    {% for data_type_name in data_type_names %}
     <li
-    {% if parameter.id == data_type.id %}
+    {% if parameter.id == data_type_name.id %}
     class="selected"
     {% endif %}
-    title="{{ data_type.original_label }}"
+    title="{{ data_type_name.name }}"
     >
         <a
-          href="{% url 'data_set_parameter-detail' object.id data_type.id %}"
+          href="{% url 'data_set_parameter-detail' object.id data_type_name.id %}"
         >
-          {{ data_type.original_label }}
+          {{ data_type_name.name }}
         </a>
     </li>
     {% endfor %}
@@ -74,7 +74,7 @@
   </div>
   <div class="mergeinfo">
     <p>
-      To merge sensordata with bottle data, select the desired primary and 
+      To merge sensordata with bottle data, select the desired primary and
       secondary parameters from the list above, and press Merge selected
       parameters. This will take you to a new screen for completing the merge.
     </p>

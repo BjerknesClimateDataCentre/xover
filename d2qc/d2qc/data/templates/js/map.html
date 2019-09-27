@@ -116,7 +116,7 @@ function drawTitle(canvas) {
   y = 295
   yoffset = 20
   {% if parameter %}
-  subtitle = "Stations with {{ parameter.original_label }}";
+  subtitle = "Stations with {{ parameter.name }}";
   y -= yoffset
   {% else %}
   subtitle = "All stations"
