@@ -280,6 +280,18 @@ class DataFile(models.Model):
                     self._messages = [m]
                     self._write_messages(append=True,save=True)
                     raise e
+            elif (
+                    depth.depth == datagrid['EXC_CTDDEPTH'][i]
+                    and datagrid['CASTNO'][i] == cast.cast
+                    and datagrid['STNNBR'][i] == station.station_number
+                    and expo == data_set.expocode
+            ):
+                # Implies duplicate line. Skip this line with a warning
+                m = "Line {}, Error {}".format(i, "Duplicate, ignores line")
+                self._messages = [m]
+                self._write_messages(append=True,save=True)
+                continue
+
             for key in datagrid.columns:
                 if key in IGNORE:
                     continue
