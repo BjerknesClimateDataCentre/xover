@@ -174,7 +174,7 @@ class DataFile(models.Model):
         temp_aut = DataTypeName.objects.filter(name="CTDTMP").first()
         salin_aut = DataTypeName.objects.filter(name="CTDSAL").first()
         press_aut = DataTypeName.objects.filter(name="CTDPRS").first()
-
+        value_list = []
         for i, expo in enumerate(datagrid['EXPOCODE']):
             if not data_set or expo != data_set.expocode:
                 # Add new dataset
@@ -295,7 +295,10 @@ class DataFile(models.Model):
                         qc_flag = qc_flag,
                         data_type_name = data_type_names[key]
                 )
-                value.save()
+                value_list.append(value)
+
+        # Save data values
+        DataValue.objects.bulk_create(value_list)
         self._write_messages()
         self.import_finnished = timezone.now()
         self.save()
