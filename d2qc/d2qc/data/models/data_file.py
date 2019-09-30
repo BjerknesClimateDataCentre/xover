@@ -303,7 +303,7 @@ class DataFile(models.Model):
                     qc_flag = int(datagrid[key + QC_SUFFIX][i])
                 value = DataValue(
                         depth = depth,
-                        value = datagrid[key][i],
+                        value = datagrid[key][i].item(),
                         qc_flag = qc_flag,
                         data_type_name = data_type_names[key]
                 )
