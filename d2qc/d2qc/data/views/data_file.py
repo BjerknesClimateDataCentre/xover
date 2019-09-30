@@ -126,7 +126,7 @@ class DataFileDetail(DetailView):
     exec = False
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        fileobject = DataFile.objects.get(pk=self.kwargs.get('pk'))
+        fileobject = self.get_object()
         context['import_mode'] = self.request.path.endswith('import')
         # Load data_file owner data:
         try:
