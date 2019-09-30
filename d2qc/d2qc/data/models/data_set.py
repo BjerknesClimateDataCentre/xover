@@ -69,19 +69,30 @@ class DataSet(models.Model):
         """Reset list of types for this data set"""
         self._typelist = typelist
 
-    def get_data_type_names(self, min_depth=0):
-        """Fetch all data types in this data set from the database"""
+    def get_data_type_names(self, min_depth=0, include_qc=[2,6]):
+        """
+        Fetch all data types in this data set from the database. By default only
+        includes values with qc-value 2 or 6. A bit counter-intuitively, if
+        include_qc is empty or None, all values will be returned, regardless of
+        qc value. Authoritative parameters are always returned.
+
+        min_depth:  Only values deeper than min_depth
+        include_qc: Values with QC-value in include_qc. All if include_qc = []
+        """
 
         if self._typelist:
             return self._typelist
 
-        sql = """select distinct dtn.name, dt.identifier, dtn.id,
+        select = """
+            select distinct dtn.name, dt.identifier, dtn.id,
             case
                 when (dtn.id = ds.temp_aut_id) then 'temperature'
                 when (dtn.id = ds.press_aut_id) then 'pressure'
                 when (dtn.id = ds.salin_aut_id) then 'salinity'
                 else null
             end as authoritative
+        """
+        _from = """
             from d2qc_data_type_names dtn
             inner join d2qc_data_types dt on dtn.data_type_id=dt.id
             inner join d2qc_data_values dv on dv.data_type_name_id = dtn.id
@@ -89,13 +100,27 @@ class DataSet(models.Model):
             inner join d2qc_casts c on c.id=d.cast_id
             inner join d2qc_stations s on c.station_id=s.id
             inner join d2qc_data_sets ds on s.data_set_id=ds.id
+        """
+        where = """
             where s.data_set_id = {}
             and d.depth >= {}
-            order by dtn.name;""".format(
-                self.id,
-                min_depth
+        """.format(
+            self.id,
+            min_depth
+        )
+        order = " order by dtn.name "
+        if include_qc:
+            # Filter by qc, but always include authoritative parameters
+            where += """
+                and (
+                    dv.qc_flag in ({})
+                    or dtn.id in (ds.temp_aut_id, ds.press_aut_id, ds.salin_aut_id)
+                )
+            """.format(
+                ','.join(map(str, include_qc)),
             )
 
+        sql = select + _from + where + order
         typelist = [{
             'name': type[0],
             'identifier': type[1],
@@ -112,10 +137,11 @@ class DataSet(models.Model):
             data_set_id = None,
             crossover_radius = 200000,
             min_depth = 0,
+            include_qc = [2,6],
     ):
         """
         Get the list of stations in data_set_id or the current data set,
-        possibly filtered by parameter_id
+        possibly filtered by parameter_id.
         """
 
         sql = """
@@ -130,10 +156,14 @@ class DataSet(models.Model):
                 min_depth
         )
 
-        if parameter_id is not None:
+        if parameter_id is not None and include_qc:
             sql += """
                 and dv.data_type_name_id = {}
-            """.format(parameter_id)
+                and dv.qc_flag in ({})
+            """.format(
+                parameter_id,
+                ','.join(map(str, include_qc)),
+            )
 
         return [ row[0] for row in DataSet._fetchall_query(sql) ]
 
@@ -247,6 +277,7 @@ class DataSet(models.Model):
             min_depth = 0,
             crossover_radius = 200000,
             minimum_num_stations = 1,
+            include_qc = [2,6],
         ):
         """
         Get stations that are within the crossover range of stations in this
@@ -288,6 +319,13 @@ class DataSet(models.Model):
             """.format(
                     self._in_datatype(parameter_id)
             )
+            if include_qc:
+                where += """
+                    and dv.qc_flag in ({})
+                """.format(
+                    ','.join(map(str, include_qc)),
+                )
+
 
         if stations is not None:
             where += """
@@ -371,6 +409,7 @@ class DataSet(models.Model):
             parameter_id,
             min_depth = 0,
             only_this_parameter = False,
+            include_qc = [2,6],
     ):
         """
         Get profiles for the stations and the given parameter_id.
@@ -427,11 +466,10 @@ class DataSet(models.Model):
             inner join d2qc_stations s on (c.station_id = s.id)
             inner join d2qc_data_sets ds on (s.data_set_id = ds.id)
             where
-            temp.data_type_name_id = ds.temp_aut_id AND
-            salt.data_type_name_id = ds.salin_aut_id AND
-            pres.data_type_name_id = ds.press_aut_id AND
-            dv.qc_flag in (2,6) AND
-            s.id in({}) and depth>={}
+            temp.data_type_name_id = ds.temp_aut_id
+            AND salt.data_type_name_id = ds.salin_aut_id
+            AND pres.data_type_name_id = ds.press_aut_id
+            AND s.id in({}) and depth>={}
         """
         parameters = parameter_id
         if not only_this_parameter:
@@ -441,6 +479,12 @@ class DataSet(models.Model):
             DataSet._in_stations(stations),
             min_depth,
         )
+        if include_qc:
+            sql += """
+                AND dv.qc_flag in ({})
+            """.format(
+                ','.join(map(str, include_qc)),
+            )
 
         sql += " order by d.id"
 
