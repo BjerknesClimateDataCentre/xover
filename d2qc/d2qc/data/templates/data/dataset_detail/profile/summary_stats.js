@@ -19,8 +19,8 @@ w_mean = {
   name: 'Weighted mean &plusmn; st. dev'
 };
 mean = {
-  x: summary_stats.date,
-  y: summary_stats.mean,
+  x: [...summary_stats.date, new Date(summary_stats.eval_dataset_date)],
+  y: [...summary_stats.mean, summary_stats.mean[0]],
   mode: 'lines',
   type: 'scatter',
   line: {
@@ -32,9 +32,15 @@ mean = {
     'Mean ' + summary_stats.mean[0].toPrecision(4) + '<br>'
       + 'Stdev &plusmn;' + summary_stats.stdev[0].toPrecision(4)
 };
+stdev_arr = [
+  ...summary_stats.mean.map(
+    function(x, i){return x + summary_stats.stdev[i];}
+  ),
+  summary_stats.mean[0] + summary_stats.stdev[0]
+]
 stdev = {
-  x: summary_stats.date,
-  y: summary_stats.mean.map(function(x, i){return x + summary_stats.stdev[i];}),
+  x: [...summary_stats.date, new Date(summary_stats.eval_dataset_date)],
+  y: stdev_arr,
   mode: 'lines',
   type: 'scatter',
   line: {
@@ -44,9 +50,15 @@ stdev = {
   name: 'Stdev &#177;' + summary_stats.stdev[0].toPrecision(4),
   hoverinfo: 'skip'
 };
+stdev2_arr = [
+  ...summary_stats.mean.map(
+    function(x, i){return x - summary_stats.stdev[i];}
+  ),
+  summary_stats.mean[0] - summary_stats.stdev[0]
+]
 stdev2 = {
-  x: summary_stats.date,
-  y: summary_stats.mean.map(function(x, i){return x - summary_stats.stdev[i];}),
+  x: [...summary_stats.date, new Date(summary_stats.eval_dataset_date)],
+  y: stdev2_arr,
   mode: 'lines',
   type: 'scatter',
   line: {
