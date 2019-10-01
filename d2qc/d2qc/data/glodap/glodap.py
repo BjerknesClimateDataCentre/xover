@@ -639,7 +639,6 @@ class Glodap:
                         print(line)
 #                        print('Timestamp error: ' + str(current_data_set.expocode) + ' - line: ' + str(line_count))
                         all_new = False
-                        return
                         continue
 
                     # Progress
