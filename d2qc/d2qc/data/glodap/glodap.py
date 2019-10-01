@@ -451,6 +451,7 @@ class Glodap:
                 current_data_set = DataSet
                 current_depth = Depth
                 platforms = {}
+                value_list = []
                 for line in infile:
                     line_count += 1
                     all_new = False
@@ -632,7 +633,7 @@ class Glodap:
                                         data_type_name = data_type_names[key]
                                 )
                                 current_value = model_value
-                                model_value.save()
+                                value_list.append(model_value)
                     except Exception as e:
                         print(e)
                         print(line)
@@ -643,11 +644,18 @@ class Glodap:
 
                     # Progress
                     if line_count % 10000 == 0:
+                        if value_list:
+                            DataValue.objects.bulk_create(value_list)
+                            value_list = []
                         print("Processed {}% of file {}".format(
                                 str(int(progress / filesize * 100)),
                                 filename
                         ))
                     all_new = False
+
+                if value_list:
+                    DataValue.objects.bulk_create(value_list)
+                    value_list = []
 
                 print("Processed {}% of file {}".format(
                         str(int(progress / filesize * 100)),
