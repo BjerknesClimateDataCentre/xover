@@ -175,7 +175,9 @@ class DataFile(models.Model):
         salin_aut = DataTypeName.objects.filter(name="CTDSAL").first()
         press_aut = DataTypeName.objects.filter(name="CTDPRS").first()
         value_list = []
+        line_no = 0
         for i, expo in enumerate(datagrid['EXPOCODE']):
+            line_no += 1
             if not data_set or expo != data_set.expocode:
                 # Add new dataset
                 data_set = DataSet(
@@ -309,8 +311,14 @@ class DataFile(models.Model):
                 )
                 value_list.append(value)
 
+            # Apply sql on every 500 line, so memory is not exhausted
+            if line_no % 500 == 0 and value_list:
+                DataValue.objects.bulk_create(value_list)
+                value_list = []
+
         # Save data values
-        DataValue.objects.bulk_create(value_list)
+        if value_list:
+            DataValue.objects.bulk_create(value_list)
         self._write_messages()
         self.import_finnished = timezone.now()
         self.save()
