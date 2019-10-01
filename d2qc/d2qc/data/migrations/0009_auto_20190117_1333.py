@@ -8,9 +8,14 @@ from d2qc.data.models import DataType
 
 def add_glodap_identifiers(apps, schema_editor):
     for var in DataTypeDict:
-        type_, created = DataType.objects.get_or_create(original_label=var)
-        type_.identifier = DataTypeDict[var]
-        type_.save()
+        migrations.RunSQL("""
+            INSERT INTO d2qc_data_types (original_label, identifier)
+            VALUES ('{}','{}')
+            ON CONFLICT DO NOTHING
+        """.format(
+            var,
+            DataTypeDict[var],
+        ))
 
 class Migration(migrations.Migration):
     dependencies = [
