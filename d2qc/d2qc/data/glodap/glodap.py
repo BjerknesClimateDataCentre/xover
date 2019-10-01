@@ -641,11 +641,14 @@ class Glodap:
                         all_new = False
                         continue
 
+                    # Insert the values in bulk
+                    if line_count % 500 == 0 and value_list:
+                        print('.', end='', flush=True)
+                        DataValue.objects.bulk_create(value_list)
+                        value_list = []
+
                     # Progress
                     if line_count % 10000 == 0:
-                        if value_list:
-                            DataValue.objects.bulk_create(value_list)
-                            value_list = []
                         print("Processed {}% of file {}".format(
                                 str(int(progress / filesize * 100)),
                                 filename
