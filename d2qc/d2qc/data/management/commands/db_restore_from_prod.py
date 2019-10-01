@@ -112,9 +112,9 @@ class Command(NewlineCommand):
         # Initalize database (install postgis etc)
         with open(initdb_path, 'r') as file:
             sql = file.read()
-        os.system(
-            "sudo -u postgres sh -c 'psql {} -c \"{}\"'".format(db_name, sql)
-        )
+            os.system(
+                "sudo -u postgres sh -c 'psql {} -c \"{}\"'".format(db_name, sql)
+            )
 
         # restore database from backup
         cmd = "pg_restore --schema public "
