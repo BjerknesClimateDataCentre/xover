@@ -10,9 +10,9 @@
 // Data
 var cruise_positions = '{{ cruise_positions }}';
 var cruise_polygon = '{{ cruise_polygon }}';
-var stations = '{{ station_positions }}';
-var crossovers = '{{ crossover_positions }}';
-var stations_polygon = '{{ stations_polygon }}'
+var station_positions = '{{ station_positions }}';
+var crossover_positions = '{{ crossover_positions }}';
+var stations_polygon = '{{ stations_polygon }}';
 // Colors
 var red_map = new ol.style.Style({
   image: new ol.style.Circle({
@@ -63,7 +63,7 @@ feature.setStyle(blue_hole_map)
 features.push(feature)
 
 
-feature = format.readFeature(stations, {
+feature = format.readFeature(station_positions, {
   dataProjection: 'EPSG:4326',
   featureProjection: 'EPSG:3857'
 });
@@ -72,8 +72,8 @@ feature.setStyle(blue_map)
 features.push(feature)
 
 var cross_feature = null
-if (crossovers && crossovers != 'None') {
-  cross_feature = format.readFeature(crossovers, {
+if (crossover_positions && crossover_positions != 'None') {
+  cross_feature = format.readFeature(crossover_positions, {
     dataProjection: 'EPSG:4326',
     featureProjection: 'EPSG:3857'
   });

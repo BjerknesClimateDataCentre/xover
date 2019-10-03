@@ -92,9 +92,6 @@ class DataSetDetail(DetailView):
         )
 
         # Get the positions of the data set stations
-        context['station_positions'] = data_set.get_station_positions(
-            data_set_stations
-        )
 
         if not context['stations_polygon']:
             context['stations_polygon'] = ''
@@ -103,7 +100,12 @@ class DataSetDetail(DetailView):
         context['dataset_ref_profiles'] = None
         context['dataset_ref_interp_profiles'] = None
         minimum_num_stations = 3
-        if self.kwargs.get('parameter_id'):
+
+        if not self.kwargs.get('parameter_id'):
+            context['station_positions'] = data_set.get_station_positions(
+                data_set_stations
+            )
+        else:
             cache_key_px = "_xover-{}-{}-{}-{}-{}".format(
                 data_set.id,
                 self.kwargs.get('parameter_id'),
