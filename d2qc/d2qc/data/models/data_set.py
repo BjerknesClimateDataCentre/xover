@@ -2,6 +2,7 @@ import math
 import gsw
 import pandas as pd
 import statistics as stat
+import re
 
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
@@ -209,18 +210,61 @@ class DataSet(models.Model):
         result = None
         sql = """
             select coalesce(
-                st_buffer(st_collect(position)::geography, {})::geometry,
+                st_collect(
+                    st_buffer(position::geography, {})::geometry
+                )::geography,
                 ST_GeomFromText('POLYGON EMPTY')
             )
             from d2qc_stations where id in ({})
         """.format(
-                crossover_radius,
-                DataSet._in_stations(stations),
+            crossover_radius,
+            DataSet._in_stations(stations),
         )
 
         result = DataSet._fetchall_query(sql, True)[0]
 
         return result
+
+    def _get_translated_stations_buffer(
+        self,
+        stations: list=[],
+        crossover_radius=200000,
+    ):
+
+        """
+        Get the buffer for a set of stations, translated 360 degrees around
+        the 180 degree mark to avoid plotting issues
+        """
+        result = None
+        sql = """
+                select st_astext(
+                    st_buffer(
+                        st_collect(position)::geography, {}
+                    )::geometry
+                )
+                from d2qc_stations where id in ({});
+        """.format(
+            crossover_radius,
+            DataSet._in_stations(stations),
+        )
+        result = DataSet._fetchall_query(sql)
+
+        multipolygon = ''
+
+        for multi in result:
+            polygon = []
+            singles = re.sub(r'[^0-9.\- ,()]', '', multi[0]).split(')),((')
+            for single in singles:
+                positions = re.sub(r'[^0-9.\- ,]', '', single).split(',')
+                ps=[]
+                for p in positions:
+                    lon,lat = map(float, p.split(' '))
+                    if lon < -90:
+                        lon += 360
+                    ps.append(f"{lon:.2f} {lat:.2f}")
+                polygon.append("(({}))".format(','.join(ps)))
+        multipolygon = "MULTIPOLYGON({})".format(','.join(polygon))
+        return multipolygon
 
     def get_stations_polygon(
             self,
@@ -239,7 +283,7 @@ class DataSet(models.Model):
         result = None
         sql = """
             select st_astext('{}')
-        """.format(self._get_stations_buffer(
+        """.format(self._get_translated_stations_buffer(
             stations,
             crossover_radius=crossover_radius,
         ))
@@ -329,7 +373,7 @@ class DataSet(models.Model):
 
         if stations is not None:
             where += """
-                and st_contains('{}', st.position)
+                and st_covers('{}', st.position::geography)
             """.format(
                 self._get_stations_buffer(
                     stations,
