@@ -101,11 +101,12 @@ class DataSetDetail(DetailView):
         context['dataset_ref_interp_profiles'] = None
         minimum_num_stations = 3
 
-        if not self.kwargs.get('parameter_id'):
+        if not self.kwargs.get('data_set_id'):
             context['station_positions'] = data_set.get_station_positions(
                 data_set_stations
             )
-        else:
+
+        if self.kwargs.get('parameter_id'):
             cache_key_px = "_xover-{}-{}-{}-{}-{}".format(
                 data_set.id,
                 self.kwargs.get('parameter_id'),
@@ -167,7 +168,7 @@ class DataSetDetail(DetailView):
             # If we are only looking at one crossover data set,
             # restrict the main data set to only those stations
             # within range of that crossover
-            if self.kwargs.get('data_set_id') is not None:
+            if self.kwargs.get('data_set_id'):
                 context['crossover_data_set_id'] = self.kwargs.get('data_set_id')
                 context['crossover_expocode'] = DataSet.objects.get(
                     pk = self.kwargs.get('data_set_id')
