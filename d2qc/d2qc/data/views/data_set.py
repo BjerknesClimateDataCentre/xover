@@ -54,6 +54,7 @@ class DataSetDetail(DetailView):
         data_set = self.get_object()
         crossover_radius = self.request.user.profile.crossover_radius
         min_depth = self.request.user.profile.min_depth
+        xtype = 'depth'
 
         context['data_type_names'] = data_set.get_data_type_names(
             min_depth = self.request.user.profile.min_depth
@@ -107,12 +108,13 @@ class DataSetDetail(DetailView):
             )
 
         if self.kwargs.get('parameter_id'):
-            cache_key_px = "_xover-{}-{}-{}-{}-{}".format(
+            cache_key_px = "_xover-{}-{}-{}-{}-{}-{}".format(
                 data_set.id,
                 self.kwargs.get('parameter_id'),
                 self.request.user.profile.crossover_radius,
                 self.request.user.profile.min_depth,
                 minimum_num_stations,
+                xtype,
             )
 
             # Check if calculation has begun
@@ -198,14 +200,17 @@ class DataSetDetail(DetailView):
                     self.kwargs.get('parameter_id'),
                     only_this_parameter = True,
                     min_depth = min_depth,
-                )
+                ),
+                xtype = xtype,
             )
             context['dataset_interp_profiles'] = data_set.get_profiles_as_json(
                 data_set.get_interp_profiles(
                     data_set_stations,
                     self.kwargs.get('parameter_id'),
                     min_depth = min_depth,
-                )
+                    xtype = xtype,
+                ),
+                xtype = xtype,
             )
             context['dataset_stats'] = {}
             if self.kwargs.get('data_set_id') is not None:
@@ -215,14 +220,17 @@ class DataSetDetail(DetailView):
                         crossover_stations,
                         self.kwargs.get('parameter_id'),
                         min_depth = min_depth,
-                    )
+                    ),
+                    xtype,
                 )
                 context['dataset_ref_interp_profiles'] = data_set.get_profiles_as_json(
                     data_set.get_interp_profiles(
                         crossover_stations,
                         self.kwargs.get('parameter_id'),
                         min_depth = min_depth,
-                    )
+                        xtype = xtype,
+                    ),
+                    xtype = xtype,
                 )
                 stats = data_set.get_profiles_stats(
                     data_set_stations,
@@ -230,6 +238,7 @@ class DataSetDetail(DetailView):
                     self.kwargs.get('parameter_id'),
                     min_depth = min_depth,
                     crossover_radius = crossover_radius,
+                    xtype = xtype,
                 )
                 if stats:
                     context['dataset_stats'] = json.dumps(stats, allow_nan=False)

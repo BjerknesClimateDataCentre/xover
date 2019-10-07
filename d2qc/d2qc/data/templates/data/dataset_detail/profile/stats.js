@@ -1,4 +1,5 @@
 // Plot stats
+var xtype_title = 'Depth'
 var data = []
 var mean = {
   x: stats.mean,
@@ -79,7 +80,7 @@ title = "Weighted mean diff."
 title += "<br>{{ parameter.name }}"
 title += "<br>{{ object.expocode }} vs. {{ crossover_expocode }}"
 var layout = {
-  yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
+  yaxis: {autorange: 'reversed',title: {text:xtype_title}},
   margin: {l: 60, r:0},
   legend: {orientation: 'h'},
   hovermode: 'y',
