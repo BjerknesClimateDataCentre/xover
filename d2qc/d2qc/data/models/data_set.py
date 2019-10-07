@@ -709,7 +709,7 @@ class DataSet(models.Model):
                 step=.001,
             )
         elif xtype == 'depth':
-            xtype_interp = interp.generate_regular_monotonus_series(
+            xtype_interp = interp.generate_regular_monotonus_squence(
                 _min=dataframe['depth'].min(),
                 _max=dataframe['depth'].max(),
                 step = 20
