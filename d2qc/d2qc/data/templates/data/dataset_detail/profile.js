@@ -5,6 +5,8 @@ var interp_profiles = [];
 var profiles_ref = [];
 var interp_profiles_ref = [];
 var stats = false;
+var xtype = 'depth'
+var xtype_title = 'Depth'
 
 // Profiles dataset
 {% if dataset_profiles %}
@@ -149,7 +151,7 @@ if (stats) {
 title = "Cruise profiles, parameter: {{ parameter.name }}"
 
 var layout = {
-  yaxis: {autorange: 'reversed',title: {text:'Sigma 4'}},
+  yaxis: {autorange: 'reversed',title: {text:xtype_title}},
   xaxis: {title: {text:profiles[0].parameter}},
   margin: {l: 60, r:0},
   legend: {orientation: 'h'},
@@ -165,7 +167,7 @@ function createProfile(p, color, showlegend, line) {
 
   var profile = {
     x: Object.values(p.param.data),
-    y: Object.values(p.sigma4.data),
+    y: Object.values(p[xtype].data),
     mode: 'markers',
     showlegend: showlegend,
     name: '',
