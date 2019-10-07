@@ -934,10 +934,12 @@ class DataSet(models.Model):
         min_depth = 0,
     ):
         s1 = self.get_stations(
-            parameter_id=primary_parameter
+            parameter_id=primary_parameter,
+            include_qc = False,
         )
         s2 = self.get_stations(
-            parameter_id=secondary_parameter
+            parameter_id=secondary_parameter,
+            include_qc = False,
         )
         stations = set(s1) and set(s2)
         primary = self.get_profiles_data(
@@ -945,12 +947,14 @@ class DataSet(models.Model):
             primary_parameter,
             min_depth = min_depth,
             only_this_parameter = True,
+            include_qc = False,
         )
         secondary = self.get_profiles_data(
             stations,
             secondary_parameter,
             min_depth = min_depth,
             only_this_parameter = True,
+            include_qc = False,
         )
         merged = primary.merge(
             secondary[['depth_id','param']],
