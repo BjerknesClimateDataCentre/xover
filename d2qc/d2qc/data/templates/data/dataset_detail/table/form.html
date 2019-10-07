@@ -23,10 +23,6 @@
   padding: 0;
   margin: 0;
 }
-.column input {
-  margin: 0;
-  padding: 0;
-}
 .column ul {
   padding: 0 4px;
   margin:0;
@@ -42,21 +38,20 @@
   {% csrf_token %}
   <input type="hidden" name="merge_type" value="1">
   <input type="hidden" name="merge_min_depth" value="0">
-  <div class="pri column">
-    <h4>Pri.</h4>
-    {{form.primary}}
-  </div>
-  <div class="sec column">
-    <h4>Sec.</h4>
-    {{form.secondary}}
-  </div>
+  <input type="hidden" name="primary" value="0">
+  <input type="hidden" name="secondary" value="0">
   {% include "util/data_type_name_list.html" %}
   <div class="mergeinfo">
     <p>
-      To merge sensordata with bottle data, select the desired primary and
-      secondary parameters from the list above, and press Merge selected
-      parameters. This will take you to a new screen for completing the merge.
+      To merge sensordata with bottle data, go to the
+      <a href="#" id="click_merge">Merge data</a> interface.
+      <script type="text/javascript">
+      $("#click_merge").click((e)=>{
+        $(e.target).parents('form').submit()
+        return false;
+      })
+      </script>
+
     </p>
   </div>
-  <input class="mergebutton" type="submit" value="Merge selected parameters" />
 </form>
