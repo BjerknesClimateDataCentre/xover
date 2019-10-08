@@ -41,6 +41,11 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 {% include "lib/jquery.html" %}
 {% endblock%}
+{% block options %}
+<aside class="options">
+  {% include "util/calculation_options.html" %}
+</aside>
+{% endblock %}
 {% block content %}
     <div>
         <div class="dataset-top">

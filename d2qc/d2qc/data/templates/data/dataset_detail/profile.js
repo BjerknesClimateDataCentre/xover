@@ -5,8 +5,8 @@ var interp_profiles = [];
 var profiles_ref = [];
 var interp_profiles_ref = [];
 var stats = false;
-var xtype = 'depth'
-var xtype_title = 'Depth'
+var xtype = '{{ xtype }}';
+var xtype_title = xtype == 'depth' ? 'Depth' : 'Sigma 4';
 
 // Profiles dataset
 {% if dataset_profiles %}

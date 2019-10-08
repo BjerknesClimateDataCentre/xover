@@ -6,7 +6,7 @@ from d2qc.data.models import DataSet
 from d2qc.data.models import DataTypeName
 from d2qc.data.serializers import DataSetSerializer
 from d2qc.data.serializers import NestedDataSetSerializer
-from d2qc.data.forms import MergeForm
+from d2qc.data.forms import MergeForm, CalculationOptionsForm
 
 from django import forms
 from django.conf import settings
@@ -49,13 +49,47 @@ class DataSetList(ListView):
 
 class DataSetDetail(DetailView):
     model = DataSet
+    calculation_options_form = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.calculation_options_form = CalculationOptionsForm(
+            request.POST,
+            user_id=request.user.id,
+        )
+        return self.get(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        if not self.calculation_options_form:
+            tmp = CalculationOptionsForm(user_id = request.user.id)
+            data = cache.get(
+                f"calculation_options_{request.user.id}",
+                {
+                    'depth_metric': tmp.fields['depth_metric'].initial,
+                    'show_bad':tmp.fields['show_bad'].initial,
+                },
+            )
+            self.calculation_options_form = CalculationOptionsForm(
+                data,
+                user_id = request.user.id
+            )
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         data_set = self.get_object()
         crossover_radius = self.request.user.profile.crossover_radius
         min_depth = self.request.user.profile.min_depth
-        xtype = 'depth'
-
+        opt_form = self.calculation_options_form
+        xtype = opt_form.fields['depth_metric'].initial
+        show_bad = opt_form.fields['show_bad'].initial
+        context['calculation_options_form'] = opt_form
+        if opt_form.is_valid():
+            xtype = opt_form.cleaned_data['depth_metric']
+            show_bad = opt_form.cleaned_data['show_bad']
+        context['xtype'] = xtype
         context['data_type_names'] = data_set.get_data_type_names(
             min_depth = self.request.user.profile.min_depth
         )
@@ -171,6 +205,7 @@ class DataSetDetail(DetailView):
             # restrict the main data set to only those stations
             # within range of that crossover
             if self.kwargs.get('data_set_id'):
+                context['data_set_id'] = self.kwargs.get('data_set_id')
                 context['crossover_data_set_id'] = self.kwargs.get('data_set_id')
                 context['crossover_expocode'] = DataSet.objects.get(
                     pk = self.kwargs.get('data_set_id')
