@@ -1,5 +1,5 @@
 // Plot stats
-var xtype_title = 'Depth'
+var xtype_title = xtype == 'depth' ? 'Depth' : 'Sigma 4';
 var data = []
 var mean = {
   x: stats.mean,

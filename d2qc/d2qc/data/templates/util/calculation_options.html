@@ -1,0 +1,28 @@
+<style media="screen">
+  #id_depth_metric{
+    list-style-type: none;
+    display: flex;
+  }
+</style>
+<div class="calculation_options">
+  <h4>Calculation preconditions</h4>
+  <div class="form">
+    <form method="post"
+    {% if data_set_id %}
+    action="{% url 'data_set_crossover' object.id parameter.id data_set_id %}"
+    {% elif parameter %}
+    action="{% url 'data_set_parameter-detail' object.id parameter.id %}"
+    {% else %}
+    action="{% url 'data_set-detail' object.id %}"
+    {% endif %}
+    >
+      {% csrf_token %}
+      {{ calculation_options_form }}
+      <input
+        type="submit"
+        name="replot with options"
+        value="Replot with options"
+      />
+    </form>
+  </div>
+</div>
