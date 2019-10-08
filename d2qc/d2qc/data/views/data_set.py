@@ -169,6 +169,7 @@ class DataSetDetail(DetailView):
                     str(self.kwargs.get('parameter_id')),
                     str(self.request.user.profile.crossover_radius),
                     str(self.request.user.profile.min_depth),
+                    xtype,
                     '--minimum_num_stations', str(minimum_num_stations),
                 ])
                 cache.set(calculating_key, True)
