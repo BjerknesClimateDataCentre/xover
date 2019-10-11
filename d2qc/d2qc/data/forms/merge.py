@@ -59,7 +59,7 @@ class MergeForm(forms.Form):
         data = data_set.get_merge_data(
             self.cleaned_data['primary'],
             self.cleaned_data['secondary'],
-            min_depth = self.cleaned_data['merge_min_depth']
+            min_depth = self.cleaned_data['merge_min_depth'],
         )
 
         if DataTypeName.objects.filter(name=name).exists():
