@@ -43,6 +43,12 @@ class Command(NewlineCommand):
             help = 'Use this as independent variable. Either depth or sigma4',
         )
         parser.add_argument(
+            'only_qc_controlled_data',
+            nargs = '+',
+            type=str,
+            help = 'Only use quality controlled data',
+        )
+        parser.add_argument(
             '--minimum_num_stations',
             type=int,
             help='Only calculate if dataset has minimum_num_stations stations',
@@ -61,16 +67,22 @@ class Command(NewlineCommand):
         min_depth = options['min_depth'][0]
         data_return = options['data_return']
         xtype = options['xtype'][0]
+        only_qc_controlled_data = options['only_qc_controlled_data'][0] not in [
+            'False',
+            '0',
+            'None',
+        ]
         minimum_num_stations = options['minimum_num_stations']
 
         # Return cached value if exists
-        cache_key = "calculate_xover-{}-{}-{}-{}-{}-{}".format(
+        cache_key = "calculate_xover-{}-{}-{}-{}-{}-{}-{}".format(
             data_set_id,
             parameter_id,
             crossover_radius,
             min_depth,
             minimum_num_stations,
             xtype,
+            only_qc_controlled_data,
         )
         value = cache.get(cache_key, False)
         if value is not False:
@@ -130,6 +142,7 @@ class Command(NewlineCommand):
                 min_depth = min_depth,
                 crossover_radius = crossover_radius,
                 xtype = xtype,
+                only_qc_controlled_data = only_qc_controlled_data,
             )
             if (
                     stats is not None

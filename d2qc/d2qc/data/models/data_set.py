@@ -23,6 +23,7 @@ class DataSet(models.Model):
     _single_data_type_name_ids = {}
     _stations = {}
     _contains_polygon = {}
+    _good_data = [2, 6]
     id = models.AutoField(primary_key=True)
     is_reference = models.BooleanField(default=False)
     expocode = models.CharField(max_length=255)
@@ -70,15 +71,18 @@ class DataSet(models.Model):
         """Reset list of types for this data set"""
         self._typelist = typelist
 
-    def get_data_type_names(self, min_depth=0, include_qc=[2,6]):
+    def get_data_type_names(
+        self,
+        min_depth = 0,
+        only_qc_controlled_data = True,
+    ):
         """
         Fetch all data types in this data set from the database. By default only
-        includes values with qc-value 2 or 6. A bit counter-intuitively, if
-        include_qc is empty or None, all values will be returned, regardless of
-        qc value. Authoritative parameters are always returned.
+        includes values with qc-value 2 or 6. Authoritative parameters are
+        returned even when not quality controlled.
 
         min_depth:  Only values deeper than min_depth
-        include_qc: Values with QC-value in include_qc. All if include_qc = []
+        only_qc_controlled_data: Set to False to include uncontrolled data
         """
 
         if self._typelist:
@@ -110,16 +114,20 @@ class DataSet(models.Model):
             min_depth
         )
         order = " order by dtn.name "
-        if include_qc:
-            # Filter by qc, but always include authoritative parameters
+        # Filter by qc, but always include authoritative parameters
+        where += """
+            and (
+                dv.qc_flag IN ({})
+                OR dtn.id IN (ds.temp_aut_id, ds.press_aut_id, ds.salin_aut_id)
+        """.format(
+            ','.join(map(str, self._good_data)),
+        )
+        if not only_qc_controlled_data:
             where += """
-                and (
-                    dv.qc_flag in ({})
-                    or dtn.id in (ds.temp_aut_id, ds.press_aut_id, ds.salin_aut_id)
-                )
-            """.format(
-                ','.join(map(str, include_qc)),
-            )
+                OR dv.qc_flag IS NULL
+            """
+        where += " )"
+
 
         sql = select + _from + where + order
         typelist = [{
@@ -138,7 +146,7 @@ class DataSet(models.Model):
             data_set_id = None,
             crossover_radius = 200000,
             min_depth = 0,
-            include_qc = [2,6],
+            only_qc_controlled_data = True,
     ):
         """
         Get the list of stations in data_set_id or the current data set,
@@ -157,14 +165,22 @@ class DataSet(models.Model):
                 min_depth
         )
 
-        if parameter_id is not None and include_qc:
+        if parameter_id is not None:
             sql += """
                 and dv.data_type_name_id = {}
-                and dv.qc_flag in ({})
             """.format(
                 parameter_id,
-                ','.join(map(str, include_qc)),
             )
+            sql += """
+                and ( dv.qc_flag in ({})
+            """.format(
+                ','.join(map(str, self._good_data)),
+            )
+            if not only_qc_controlled_data:
+                sql += """
+                    OR dv.qc_flag is null
+                """
+            sql += " )"
 
         return [ row[0] for row in DataSet._fetchall_query(sql) ]
 
@@ -321,7 +337,7 @@ class DataSet(models.Model):
             min_depth = 0,
             crossover_radius = 200000,
             minimum_num_stations = 1,
-            include_qc = [2,6],
+            only_qc_controlled_data = True,
         ):
         """
         Get stations that are within the crossover range of stations in this
@@ -363,13 +379,16 @@ class DataSet(models.Model):
             """.format(
                     self._in_datatype(parameter_id)
             )
-            if include_qc:
+            where += """
+                and ( dv.qc_flag in ({})
+            """.format(
+                ','.join(map(str, self._good_data)),
+            )
+            if not only_qc_controlled_data:
                 where += """
-                    and dv.qc_flag in ({})
-                """.format(
-                    ','.join(map(str, include_qc)),
-                )
-
+                    OR dv.qc_flag IS NULL
+                """
+            where += " )"
 
         if stations is not None:
             where += """
@@ -453,7 +472,7 @@ class DataSet(models.Model):
             parameter_id,
             min_depth = 0,
             only_this_parameter = False,
-            include_qc = [2,6],
+            only_qc_controlled_data = True,
     ):
         """
         Get profiles for the stations and the given parameter_id.
@@ -461,11 +480,12 @@ class DataSet(models.Model):
         Returns a pandas dataframe
         """
 
-        cache_key = "get_profiles_data-{}-{}-{}-{}".format(
+        cache_key = "get_profiles_data-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
             hash(tuple(stations)),
             min_depth,
+            only_qc_controlled_data,
         )
         value = cache.get(cache_key, False)
         if value is not False:
@@ -523,12 +543,16 @@ class DataSet(models.Model):
             DataSet._in_stations(stations),
             min_depth,
         )
-        if include_qc:
+        sql += """
+            AND ( dv.qc_flag in ({})
+        """.format(
+            ','.join(map(str, self._good_data)),
+        )
+        if not only_qc_controlled_data:
             sql += """
-                AND dv.qc_flag in ({})
-            """.format(
-                ','.join(map(str, include_qc)),
-            )
+                OR dv.qc_flag IS NULL
+            """
+        sql += " )"
 
         sql += " order by d.id"
 
@@ -659,6 +683,7 @@ class DataSet(models.Model):
             parameter_id,
             min_depth = 0,
             xtype = 'sigma4',
+            only_qc_controlled_data = True,
     ):
         """
         Fetches profiles for the given stations, and interpolates these
@@ -668,12 +693,13 @@ class DataSet(models.Model):
         xtype: String, independent variable, sigma4 or depth. Defaults to sigma4
         """
 
-        cache_key = "get_interp_profiles-{}-{}-{}-{}-{}".format(
+        cache_key = "get_interp_profiles-{}-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
             hash(tuple(stations)),
             min_depth,
             xtype,
+            only_qc_controlled_data,
         )
         value = cache.get(cache_key, False)
         if value is not False:
@@ -683,6 +709,7 @@ class DataSet(models.Model):
             stations,
             parameter_id,
             min_depth=min_depth,
+            only_qc_controlled_data = only_qc_controlled_data,
         )
         groups = dataframe.groupby(
             [
@@ -792,10 +819,11 @@ class DataSet(models.Model):
             crossover_radius = 200000,
             min_depth = 0,
             xtype = 'sigma4',
+            only_qc_controlled_data = True,
     ):
 
         data_type_name = data.models.DataTypeName.objects.get(pk=parameter_id)
-        cache_key = "get_profiles_stats-{}-{}-{}-{}-{}-{}-{}-{}".format(
+        cache_key = "get_profiles_stats-{}-{}-{}-{}-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
             hash(tuple(stations)),
@@ -804,6 +832,7 @@ class DataSet(models.Model):
             min_depth,
             data_type_name.data_type.offset_type.id,
             xtype,
+            only_qc_controlled_data,
         )
         value = cache.get(cache_key, False)
         if value is not False:
@@ -814,12 +843,14 @@ class DataSet(models.Model):
             parameter_id,
             min_depth=min_depth,
             xtype = xtype,
+            only_qc_controlled_data = only_qc_controlled_data,
         )
         reference_stations = self.get_interp_profiles(
             xover_stations,
             parameter_id,
             min_depth=min_depth,
             xtype = xtype,
+            only_qc_controlled_data = only_qc_controlled_data,
         )
         if reference_stations.size == 0 or current_stations.size == 0:
             cache.set(cache_key, {})
@@ -932,14 +963,15 @@ class DataSet(models.Model):
         primary_parameter,
         secondary_parameter,
         min_depth = 0,
+        only_qc_controlled_data = False,
     ):
         s1 = self.get_stations(
             parameter_id=primary_parameter,
-            include_qc = False,
+            only_qc_controlled_data = only_qc_controlled_data,
         )
         s2 = self.get_stations(
             parameter_id=secondary_parameter,
-            include_qc = False,
+            only_qc_controlled_data = only_qc_controlled_data,
         )
         stations = set(s1) and set(s2)
         primary = self.get_profiles_data(
@@ -947,14 +979,14 @@ class DataSet(models.Model):
             primary_parameter,
             min_depth = min_depth,
             only_this_parameter = True,
-            include_qc = False,
+            only_qc_controlled_data = only_qc_controlled_data,
         )
         secondary = self.get_profiles_data(
             stations,
             secondary_parameter,
             min_depth = min_depth,
             only_this_parameter = True,
-            include_qc = False,
+            only_qc_controlled_data = only_qc_controlled_data,
         )
         merged = primary.merge(
             secondary[['depth_id','param']],

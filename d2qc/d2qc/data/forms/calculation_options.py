@@ -11,8 +11,8 @@ class CalculationOptionsForm(forms.Form):
             ('depth', "Pressure (dbar)"),
         ]
     )
-    show_bad = forms.BooleanField(
-        label = "Also show uncontrolled data",
+    only_qc_controlled_data = forms.BooleanField(
+        label = "Only show QC controlled data",
         initial = False,
         required = False,
     )
