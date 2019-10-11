@@ -1,5 +1,6 @@
 import re
 import math
+import numpy
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
@@ -301,7 +302,10 @@ class DataFile(models.Model):
                     # Variable not found in database. Already reported.
                     continue
                 qc_flag = None
-                if key + QC_SUFFIX in datagrid:
+                if (
+                        key + QC_SUFFIX in datagrid
+                        and not numpy.isnan(datagrid[key + QC_SUFFIX][i])
+                ):
                     qc_flag = int(datagrid[key + QC_SUFFIX][i])
                 value = DataValue(
                         depth = depth,
