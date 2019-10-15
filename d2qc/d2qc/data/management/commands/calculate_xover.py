@@ -43,9 +43,8 @@ class Command(NewlineCommand):
             help = 'Use this as independent variable. Either depth or sigma4',
         )
         parser.add_argument(
-            'only_qc_controlled_data',
-            nargs = '+',
-            type=str,
+            '--only_qc_controlled_data',
+            action='store_true',
             help = 'Only use quality controlled data',
         )
         parser.add_argument(
@@ -67,11 +66,7 @@ class Command(NewlineCommand):
         min_depth = options['min_depth'][0]
         data_return = options['data_return']
         xtype = options['xtype'][0]
-        only_qc_controlled_data = options['only_qc_controlled_data'][0] not in [
-            'False',
-            '0',
-            'None',
-        ]
+        only_qc_controlled_data = options['only_qc_controlled_data']
         minimum_num_stations = options['minimum_num_stations']
 
         # Return cached value if exists

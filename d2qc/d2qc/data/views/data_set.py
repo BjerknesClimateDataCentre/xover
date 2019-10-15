@@ -6,7 +6,7 @@ from d2qc.data.models import DataSet
 from d2qc.data.models import DataTypeName
 from d2qc.data.serializers import DataSetSerializer
 from d2qc.data.serializers import NestedDataSetSerializer
-from d2qc.data.forms import MergeForm, CalculationOptionsForm
+from d2qc.data.forms import MergeForm, ProfileForm
 
 from django import forms
 from django.conf import settings
@@ -49,34 +49,22 @@ class DataSetList(ListView):
 
 class DataSetDetail(DetailView):
     model = DataSet
-    calculation_options_form = None
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    profile_form = None
 
     def post(self, request, *args, **kwargs):
-        self.calculation_options_form = CalculationOptionsForm(
-            request.POST,
-            user_id=request.user.id,
-        )
+        if request.POST.get('replot_with_options', False):
+            self.profile_form = ProfileForm(
+                request.POST,
+                instance = request.user.profile,
+            )
+            if self.profile_form.is_valid():
+                self.profile_form.save()
+
         return self.get(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        if not self.calculation_options_form:
-            tmp = CalculationOptionsForm(user_id = request.user.id)
-            data = cache.get(
-                f"calculation_options_{request.user.id}",
-                {
-                    'depth_metric': tmp.fields['depth_metric'].initial,
-                    'only_qc_controlled_data':(
-                        tmp.fields['only_qc_controlled_data'].initial
-                    ),
-                },
-            )
-            self.calculation_options_form = CalculationOptionsForm(
-                data,
-                user_id = request.user.id
-            )
+        if not self.profile_form:
+            self.profile_form = ProfileForm(instance = request.user.profile)
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -84,14 +72,9 @@ class DataSetDetail(DetailView):
         data_set = self.get_object()
         crossover_radius = self.request.user.profile.crossover_radius
         min_depth = self.request.user.profile.min_depth
-        opt_form = self.calculation_options_form
-        xtype = opt_form.fields['depth_metric'].initial
-        only_qc_controlled_data = opt_form.fields['only_qc_controlled_data'].initial
-        context['calculation_options_form'] = opt_form
-        if opt_form.is_valid():
-            xtype = opt_form.cleaned_data['depth_metric']
-            only_qc_controlled_data = opt_form.cleaned_data['only_qc_controlled_data']
-        context['xtype'] = xtype
+        only_qc_controlled_data = self.request.user.profile.only_qc_controlled_data
+        context['profile_form'] = self.profile_form
+        context['xtype'] = self.request.user.profile.depth_metric
         context['data_type_names'] = data_set.get_data_type_names(
             min_depth = self.request.user.profile.min_depth,
             only_qc_controlled_data = only_qc_controlled_data,
@@ -100,8 +83,8 @@ class DataSetDetail(DetailView):
             if data_type_name['id'] == self.kwargs.get('parameter_id'):
                 context['parameter'] = data_type_name
                 break
-        form = MergeForm(data_type_names=context['data_type_names'])
-        context['form'] = form
+        merge_form = MergeForm(data_type_names=context['data_type_names'])
+        context['merge_form'] = merge_form
         # Get stations positions and polygons for the whole cruise
         cruise_stations = data_set.get_stations(
             crossover_radius = crossover_radius,
@@ -153,7 +136,7 @@ class DataSetDetail(DetailView):
                 self.request.user.profile.crossover_radius,
                 self.request.user.profile.min_depth,
                 minimum_num_stations,
-                xtype,
+                self.request.user.profile.depth_metric,
                 only_qc_controlled_data,
             )
 
@@ -167,7 +150,7 @@ class DataSetDetail(DetailView):
             context['summary_stats'] = None
             if calculating_value is False:
                 # Spawn process to calculate weighted mean for parameter
-                subprocess.Popen([
+                args = [
                     settings.PYTHON_ENV,
                     os.path.join(settings.BASE_DIR,"manage.py"),
                     'calculate_xover',
@@ -175,10 +158,12 @@ class DataSetDetail(DetailView):
                     str(self.kwargs.get('parameter_id')),
                     str(self.request.user.profile.crossover_radius),
                     str(self.request.user.profile.min_depth),
-                    xtype,
-                    str(only_qc_controlled_data),
+                    self.request.user.profile.depth_metric,
                     '--minimum_num_stations', str(minimum_num_stations),
-                ])
+                ]
+                if only_qc_controlled_data:
+                    args.append('--only_qc_controlled_data')
+                subprocess.Popen(args)
                 cache.set(calculating_key, True)
             elif value is not False:
                 context['summary_stats'] = value
@@ -248,17 +233,17 @@ class DataSetDetail(DetailView):
                     min_depth = min_depth,
                     only_qc_controlled_data = only_qc_controlled_data,
                 ),
-                xtype = xtype,
+                xtype = self.request.user.profile.depth_metric,
             )
             context['dataset_interp_profiles'] = data_set.get_profiles_as_json(
                 data_set.get_interp_profiles(
                     data_set_stations,
                     self.kwargs.get('parameter_id'),
                     min_depth = min_depth,
-                    xtype = xtype,
+                    xtype = self.request.user.profile.depth_metric,
                     only_qc_controlled_data = only_qc_controlled_data,
                 ),
-                xtype = xtype,
+                xtype = self.request.user.profile.depth_metric,
             )
             context['dataset_stats'] = {}
             if self.kwargs.get('data_set_id') is not None:
@@ -270,17 +255,17 @@ class DataSetDetail(DetailView):
                         min_depth = min_depth,
                         only_qc_controlled_data = only_qc_controlled_data,
                     ),
-                    xtype,
+                    self.request.user.profile.depth_metric,
                 )
                 context['dataset_ref_interp_profiles'] = data_set.get_profiles_as_json(
                     data_set.get_interp_profiles(
                         crossover_stations,
                         self.kwargs.get('parameter_id'),
                         min_depth = min_depth,
-                        xtype = xtype,
+                        xtype = self.request.user.profile.depth_metric,
                         only_qc_controlled_data = only_qc_controlled_data,
                     ),
-                    xtype = xtype,
+                    xtype = self.request.user.profile.depth_metric,
                 )
                 stats = data_set.get_profiles_stats(
                     data_set_stations,
@@ -288,7 +273,7 @@ class DataSetDetail(DetailView):
                     self.kwargs.get('parameter_id'),
                     min_depth = min_depth,
                     crossover_radius = crossover_radius,
-                    xtype = xtype,
+                    xtype = self.request.user.profile.depth_metric,
                     only_qc_controlled_data = only_qc_controlled_data,
                 )
                 if stats:
@@ -316,23 +301,51 @@ class DataSetDelete(DeleteView):
 class DataSetMerge(DetailView):
     model = DataSet
     template_name = 'data/dataset_merge.html'
+    profile_form = None
+    merge_form = None
+
     def post(self, request, *args, **kwargs):
         data_set = self.get_object()
+        if request.POST.get('replot_with_options', False):
+            self.profile_form = ProfileForm(
+                request.POST,
+                instance = request.user.profile
+            )
+            if self.profile_form.is_valid():
+                self.profile_form.save()
+        else:
+            self.profile_form = ProfileForm(instance=request.user.profile)
+
+        only_qc_controlled_data = request.user.profile.only_qc_controlled_data
         data_type_names = data_set.get_data_type_names(
-            min_depth = self.request.user.profile.min_depth,
+            min_depth = request.user.profile.min_depth,
             only_qc_controlled_data = only_qc_controlled_data,
         )
-        self.form = MergeForm(
-            request.POST,
-            data_type_names = data_type_names,
-        )
-        if self.form.is_valid() and request.POST.get('save_parameters', False):
-            self.form.save_merge_data(data_set = self.get_object())
-            # Reloading this to get the new, inserted merge parameter
-            self.form = MergeForm(
+        if request.POST.get('save_parameters'):
+            self.merge_form = MergeForm(
                 request.POST,
                 data_type_names = data_type_names,
             )
+            if self.merge_form.is_valid():
+                self.merge_form.save_merge_data(data_set = self.get_object())
+                # Reloading this to get the new, inserted merge parameter
+                self.merge_form = MergeForm(
+                    request.POST,
+                    data_type_names = data_set.get_data_type_names(
+                        min_depth = request.user.profile.min_depth,
+                        only_qc_controlled_data = only_qc_controlled_data,
+                    ),
+                )
+        elif request.POST.get('plot_parameters'):
+            self.merge_form = MergeForm(
+                request.POST,
+                data_type_names = data_type_names,
+            )
+        else:
+            self.merge_form = MergeForm(
+                data_type_names = data_type_names,
+            )
+
         retval = super().get(request, *args, **kwargs)
         return retval
 
@@ -343,23 +356,30 @@ class DataSetMerge(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         data_set = self.get_object()
+
+        only_qc_controlled_data = (
+            self.request.user.profile.only_qc_controlled_data
+        )
+
+        xtype = self.request.user.profile.depth_metric
+        context['profile_form'] = self.profile_form
+
         context['data_type_names'] = data_set.get_data_type_names(
             min_depth = self.request.user.profile.min_depth,
             only_qc_controlled_data = only_qc_controlled_data,
         )
-        form = self.form
-        if form.is_valid():
+        if self.merge_form and self.merge_form.is_valid():
             merge = data_set.get_merge_data(
-                form.cleaned_data['primary'],
-                form.cleaned_data['secondary'],
-                min_depth = form.cleaned_data['merge_min_depth'],
+                self.merge_form.cleaned_data['primary'],
+                self.merge_form.cleaned_data['secondary'],
+                min_depth = self.merge_form.cleaned_data['merge_min_depth'],
                 only_qc_controlled_data = only_qc_controlled_data,
             )
             primary_type = DataTypeName.objects.get(
-                pk=form.cleaned_data['primary']
+                pk=self.merge_form.cleaned_data['primary']
             )
             secondary_type = DataTypeName.objects.get(
-                pk=form.cleaned_data['secondary']
+                pk=self.merge_form.cleaned_data['secondary']
             )
             merge = merge.replace({pd.np.nan: None})
             slope, intercept = stats.linear_fit(
@@ -382,5 +402,5 @@ class DataSetMerge(DetailView):
             context['merge_data'] = json.dumps(data)
             context['slope'] = slope
             context['intercept'] = intercept
-        context['form'] = form
+        context['merge_form'] = self.merge_form
         return context

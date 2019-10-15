@@ -1,7 +1,7 @@
 from .data_file import DataFileForm
 from .merge import MergeForm
-from .calculation_options import CalculationOptionsForm
+from .profile import ProfileForm
 
 __all__ = [
-    "DataFileForm", "MergeForm", "CalculationOptionsForm"
+    "DataFileForm", "MergeForm", "ProfileForm"
 ]
