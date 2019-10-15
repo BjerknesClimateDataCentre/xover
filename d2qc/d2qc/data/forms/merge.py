@@ -5,8 +5,12 @@ import pandas as pd
 import numpy as np
 import glodap.util.stats as stats
 import copy
+from django.core.cache import cache
 
 class MergeForm(forms.Form):
+    _cache_name = "merge_form"
+    INITIAL_MERGE_TYPE = 1
+    INITIAL_MERGE_MIN_DEPTH = 0
     merge_type = forms.ChoiceField(
         label = "Merge type action",
         choices=[
@@ -18,10 +22,10 @@ class MergeForm(forms.Form):
             (6, "6 - Merge using mean of primary and fitted secondary."),
             (7, "7 - Merge using primary because bad fit of secondary."),
         ],
-        initial = '1',
+        initial = INITIAL_MERGE_TYPE,
     )
     merge_min_depth = forms.IntegerField(
-        initial = 0,
+        initial = INITIAL_MERGE_MIN_DEPTH,
         min_value = 0,
         required = True,
         label = "Minimum depth used to calculate linear fit",
@@ -33,20 +37,91 @@ class MergeForm(forms.Form):
             data_type_names = kwargs.pop('data_type_names')
         except KeyError:
             data_type_names = None
-        super().__init__(*args, **kwargs)
-        self.fields['merge_min_depth'].initial = 0
-        if data_type_names is not None:
+
+        if data_type_names:
+            primary = int(cache.get(f"{self._cache_name}__primary"))
+            secondary = int(cache.get(f"{self._cache_name}__secondary"))
+            merge_min_depth = cache.get(
+                f"{self._cache_name}__merge_min_depth",
+                self.INITIAL_MERGE_MIN_DEPTH,
+            )
+            merge_type = cache.get(
+                f"{self._cache_name}__merge_type",
+                self.INITIAL_MERGE_TYPE,
+            )
+            # Only use cache data if data types exists in data_type_names
+            if (
+                    MergeForm.in_data_type_names(
+                        primary,
+                        secondary,
+                        data_type_names,
+                    )
+            ):
+                if len(args) == 0 and not 'data' in kwargs:
+                    data = {
+                        'primary': primary,
+                        'secondary': secondary,
+                        'merge_min_depth': merge_min_depth,
+                        'merge_type': merge_type,
+                    }
+                    kwargs['data'] = data
+            else:
+                primary = None
+                secondary = None
+
             choices = [(t['id'], '') for t in data_type_names]
-            self.fields['primary'] = forms.ChoiceField(
+            primary_field = forms.ChoiceField(
                 label = "Pri.",
                 widget = forms.RadioSelect,
-                choices=choices
+                choices = choices,
+                initial = primary,
             )
-            self.fields['secondary'] = forms.ChoiceField(
+            secondary_field = forms.ChoiceField(
                 label = "Sec.",
                 widget = forms.RadioSelect,
-                choices=choices
+                choices=choices,
+                initial = secondary,
             )
+        super().__init__(*args, **kwargs)
+        self.fields['primary'] = primary_field
+        self.fields['secondary'] = secondary_field
+
+    @staticmethod
+    def in_data_type_names(primary:int,secondary:int,data_type_names:list=[]):
+        """
+        return true if primary and secondary are found both found in
+        data_type_names id. data_type_names is an array of dicts with an
+        id property: data_type_names=[{'id':1},{'id':2},...]
+        """
+        p = 0
+        s = 0
+        for d in data_type_names:
+            if int(d['id']) == int(primary):
+                p = 1
+            if int(d['id']) == int(secondary):
+                s = 1
+        return s + p == 2
+
+    def is_valid(self):
+        retval = super().is_valid()
+        if retval:
+            cache.set(
+                f"{self._cache_name}__primary",
+                self.cleaned_data['primary']
+            )
+            cache.set(
+                f"{self._cache_name}__secondary",
+                self.cleaned_data['secondary']
+            )
+            cache.set(
+                f"{self._cache_name}__merge_min_depth",
+                self.cleaned_data['merge_min_depth']
+            )
+            cache.set(
+                f"{self._cache_name}__merge_type",
+                self.cleaned_data['merge_type']
+            )
+        return retval
 
     def save_merge_data(self, data_set):
         primary = DataTypeName.objects.get(pk=self.cleaned_data['primary'])
