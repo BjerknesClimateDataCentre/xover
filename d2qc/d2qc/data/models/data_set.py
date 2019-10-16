@@ -118,7 +118,6 @@ class DataSet(models.Model):
         where += """
             and (
                 dv.qc_flag IN ({})
-                OR dtn.id IN (ds.temp_aut_id, ds.press_aut_id, ds.salin_aut_id)
         """.format(
             ','.join(map(str, self._good_data)),
         )
