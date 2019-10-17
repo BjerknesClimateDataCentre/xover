@@ -1,0 +1,82 @@
+{% load mathfilters %}
+<style media="screen">
+  #summary_table_wrapper {
+    max-width: 1300px;
+  }
+</style>
+<table id="summary_table">
+  <thead>
+    <tr>
+      <th>Expocode</th>
+      <th>Startdate</th>
+      <th>Weighted mean offset</th>
+      <th>Weighted offset stdev (&plusmn;)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <script type="text/javascript">
+    for( i=0; i<summary_stats.expocode.length; i++){
+      document.write('<tr>');
+      document.write('<td>' + summary_stats.expocode[i] + '</td>');
+      document.write(
+        '<td>'
+        + new Date(summary_stats.date[i]).toISOString().slice(0, 10)
+        + '</td>'
+      );
+      document.write('<td>' + summary_stats.w_mean[i] + '</td>');
+      document.write('<td>' + summary_stats.w_stdev[i] + '</td>');
+      document.write('</tr>');
+    }
+
+    </script>
+  </tbody>
+  <tfoot>
+    <script type="text/javascript">
+    // DataSet beeing evaluated
+    document.write('<tr>');
+    document.write('<td>' + '{{ object.expocode }}' + '</td>');
+    document.write(
+      '<td>'
+      + new Date(summary_stats.eval_dataset_date).toISOString().slice(0, 10)
+      + '</td>'
+    );
+    document.write(
+      '<td>Total weighted mean offset: <br/>'
+      + summary_stats.mean[0]
+      + '</td>'
+    );
+    document.write(
+      '<td>Total weighted offset stdev: <br/>'
+      + summary_stats.stdev[0]
+      + '</td>'
+    );
+    document.write('</tr>');
+    </script>
+  </tfoot>
+</table>
+<script type="text/javascript">
+$(document).ready(function() {
+  $('#summary_table').append(
+    '<caption style="caption-side: top">'
+    + '<h1>Crossover results for {{ object.expocode }}: {{ parameter.name }}</h1>'
+    + '</caption>'
+  );
+  $('#summary_table').DataTable({
+    dom: 'Bfrtip',
+    order: [[ 1, "asc" ]],
+    buttons: [{
+      extend: 'excel',
+      text: 'Export data to Excel',
+      messageTop: "## Preconditions ##"
+      + "\n Parameter name: {{ parameter.name }} m,"
+      + "\n Min depth: {{ user.profile.min_depth }} m,"
+      + "\nCrossover radius: {{ user.profile.crossover_radius |div:1000 }} km"
+      + "\nSigma4 or Depth: {{ user.profile.depth_metric }}"
+      + "\nUsing only quality controlled data: "
+      + "{{ user.profile.only_qc_controlled_data }}"
+      + "\n## Preconditions ##",
+      footer: true
+    }],
+  });
+} );
+</script>

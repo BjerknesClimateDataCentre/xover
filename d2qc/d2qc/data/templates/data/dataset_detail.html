@@ -40,6 +40,7 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
 {% block js %}
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 {% include "lib/jquery.html" %}
+{% include "lib/datatables.html" %}
 {% endblock%}
 {% block options %}
 <aside class="options">
@@ -112,12 +113,16 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
             </dl>
         </div>
         {% include "js/plot_colors.html" %}
-        <!-- Display the map -->
         <script type="text/javascript">
         {% if dataset_profiles %}
           {% include "./dataset_detail/profile.js" %}
         {% endif %}
         </script>
+        <div class="exports">
+          {% if dataset_profiles%}
+          {% include "./dataset_detail/data_table.html" %}
+          {% endif %}
+        </div>
 
         <a href="{% url 'data_set-delete' object.id %}">[Delete dataset]</a>
     </div>
