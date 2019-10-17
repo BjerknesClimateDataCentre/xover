@@ -1,6 +1,7 @@
 import re
 import math
 import numpy
+import gsw
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
@@ -295,6 +296,7 @@ class DataFile(models.Model):
                 self._write_messages(append=True,save=True)
                 continue
 
+            temp_val = salin_val = press_val = None
             for key in datagrid.columns:
                 if key in IGNORE:
                     continue
@@ -302,6 +304,13 @@ class DataFile(models.Model):
                     # Variable not found in database. Already reported.
                     continue
                 v = datagrid[key][i].item()
+                # collect temp, press, salin values
+                if key == temp_aut.name:
+                    temp_val = v
+                if key == salin_aut.name:
+                    salin_val = v
+                if key == press_aut.name:
+                    press_val = v
                 # Don't import missing values:
                 if numpy.isnan(v) or v < -10:
                     continue
@@ -318,6 +327,26 @@ class DataFile(models.Model):
                         data_type_name = data_type_names[key]
                 )
                 value_list.append(value)
+
+            # If all are set, we can calculate sigma4
+            if not None in [temp_val, salin_val, press_val]:
+                try:
+                    sigma4 = gsw.density.sigma4(
+                        gsw.conversions.SA_from_SP(
+                            salin_val,
+                            press_val,
+                            longitude,
+                            latitude,
+                        ),
+                        temp_val,
+                    )
+                    depth.sigma4 = sigma4
+                    depth.save()
+                except Exception as e:
+                    m = "Line {}, Error {}".format(i, str(e), )
+                    self._messages = [m]
+                    self._write_messages(append=True,save=True)
+                    raise e
 
             # Apply sql on every 500 line, so memory is not exhausted
             if line_no % 500 == 0 and value_list:
