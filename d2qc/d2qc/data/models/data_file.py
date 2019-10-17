@@ -301,6 +301,10 @@ class DataFile(models.Model):
                 if not key in data_type_names:
                     # Variable not found in database. Already reported.
                     continue
+                v = datagrid[key][i].item()
+                # Don't import missing values:
+                if numpy.isnan(v) or v < -10:
+                    continue
                 qc_flag = None
                 if (
                         key + QC_SUFFIX in datagrid
@@ -309,7 +313,7 @@ class DataFile(models.Model):
                     qc_flag = int(datagrid[key + QC_SUFFIX][i])
                 value = DataValue(
                         depth = depth,
-                        value = datagrid[key][i].item(),
+                        value = v,
                         qc_flag = qc_flag,
                         data_type_name = data_type_names[key]
                 )
