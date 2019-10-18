@@ -63,6 +63,94 @@ class DataSet(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     _typelist = None
+    _autoritative = None
+    _orig_temp_aut = _orig_press_aut = _orig_salin_aut = None
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._autoritative = [
+            self.temp_aut.id,
+            self.salin_aut.id,
+            self.press_aut.id,
+        ]
+
+    def save(self, *args, **kwargs):
+        _new = set([self.temp_aut.id, self.salin_aut.id, self.press_aut.id])
+        super().save(*args, **kwargs)
+        if _new != set(self._autoritative):
+            self.update_sigma4()
+
+    def update_sigma4(self):
+        # First clear current sigma4 values
+        update = """
+            UPDATE d2qc_depths SET sigma4 = NULL
+            FROM d2qc_casts c INNER JOIN d2qc_stations s  ON c.station_id=s.id
+            WHERE cast_id=c.id and s.data_set_id=%s
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(update, [self.id])
+
+
+        sql = f"""
+            SELECT t.value AS temp, s.value AS salin, p.value AS pressure,
+                st_x(st.position) as longitude, st_y(st.position)  as latitude,
+                d.id
+            FROM d2qc_data_sets ds
+            INNER JOIN d2qc_stations st ON ds.id=st.data_set_id
+            INNER JOIN d2qc_casts c ON c.station_id=st.id
+            INNER JOIN d2qc_depths d ON d.cast_id=c.id
+            INNER JOIN d2qc_data_values t ON t.depth_id=d.id
+            INNER JOIN d2qc_data_values s ON s.depth_id=d.id
+            INNER JOIN d2qc_data_values p ON p.depth_id=d.id
+            WHERE st.data_set_id = {self.id}
+            AND t.data_type_name_id = ds.temp_aut_id
+            AND s.data_type_name_id = ds.salin_aut_id
+            AND p.data_type_name_id = ds.press_aut_id
+            AND
+            (
+                (
+                    ds.is_reference
+                    /* and t.qc_flag in (0,2) */
+                    and s.qc_flag in (0,2)
+                    /* and p.qc_flag in (0,2) */
+                )
+                OR
+                (
+                    NOT ds.is_reference
+                    and t.qc_flag in (2,6)
+                    and s.qc_flag in (2,6)
+                    and p.qc_flag in (2,6)
+                )
+            )
+        """
+        resultset = self._fetchall_query(sql)
+        update = ""
+        counter = 1
+        for row in resultset:
+            if row[0] and row[1] and row[2] and row[3] and row[4]:
+                sigma4 = gsw.density.sigma4(
+                    gsw.conversions.SA_from_SP(
+                        row[1],
+                        row[2],
+                        row[3],
+                        row[4],
+                    ),
+                    row[0],
+                )
+                if not math.isnan(sigma4):
+                    counter += 1
+                    update += f"""
+                        update d2qc_depths
+                        set sigma4={sigma4} where id={row[5]};
+                    """
+            if counter % 50 == 0:
+                with connection.cursor() as cursor:
+                    cursor.execute(update)
+                update = ""
+        if update:
+            with connection.cursor() as cursor:
+                if update:
+                    cursor.execute(update)
+
 
     def __str__(self):
         return self.expocode
