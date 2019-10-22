@@ -23,12 +23,16 @@ class DataFile(models.Model):
 
     # Make sure files get unique filenames
     def file_store_path(self, filename):
+        id = self.owner.id if self.owner else 0
+        return DataFile.get_file_store_path(filename, user_id=id)
+
+    @staticmethod
+    def get_file_store_path(filename, user_id = 0):
         # clear filename of illegal characters
         filename = re.sub('[^a-zA-Z0-9\.\-\_]', '', filename)
-        id = self.owner.id
         path = os.path.join(
                 settings.DATA_FOLDER,
-                'UID_{}'.format(id)
+                'UID_{}'.format(user_id)
         )
         i = 0
         name = '{}__{}'.format(i, filename)
@@ -62,7 +66,7 @@ class DataFile(models.Model):
     _messages = []
 
     def __str__(self):
-        return self.name if self.name else self.filepath
+        return self.name if self.name else str(self.filepath)
 
     # Delete files as object is deleted
     def delete(self):
