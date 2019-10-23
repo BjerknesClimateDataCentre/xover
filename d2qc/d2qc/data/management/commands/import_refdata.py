@@ -38,32 +38,10 @@ class Command(NewlineCommand):
         '''Restore the database
         '''
 
-        data_filename = options['data_filename'][0]
-        fn, data_file_extension = os.path.splitext(data_filename)
-        expocode_filename = options['expocode_filename'][0]
-        data_basename = os.path.basename(data_filename)
-        tmpfiles = []
         try:
-            if data_filename[0:4] == 'http': # is url
-                print(f"Downloading {data_filename}...")
-                fd, path = tempfile.mkstemp()
-                tmpfiles.append(path)
-                with contextlib.ExitStack() as stack:
-                    _from = stack.enter_context(urlopen(data_filename))
-                    _to = stack.enter_context(open(path, 'wb'))
-                    shutil.copyfileobj(_from, _to)
-                data_filename = path
-            if data_file_extension == '.zip':
-                print(f"Extracting {data_filename}...")
-                zip_file = zipfile.ZipFile(data_filename, 'r')
-                fd, path = tempfile.mkstemp()
-                tmpfiles.append(path)
-                with contextlib.ExitStack() as stack:
-                    _from = stack.enter_context(zip_file.open(zip_file.namelist()[0]))
-                    _to = stack.enter_context(open(path, 'wb'))
-                    shutil.copyfileobj(_from, _to)
-                    data_filename = path
-                data_basename = data_basename[:-4]
+            data_filename, data_basename = self.get_and_unpack(
+                options['data_filename'][0]
+            )
 
             final_path = DataFile.get_file_store_path(data_basename)
             final_dir = os.path.dirname(final_path)
@@ -73,8 +51,48 @@ class Command(NewlineCommand):
                 _from = stack.enter_context(open(data_filename))
                 _to = stack.enter_context(open(final_path, 'w'))
                 shutil.copyfileobj(_from, _to)
+                os.remove(data_filename)
                 data_filename = final_path
-            print("In the end: " + data_filename)
+
+            expocode_filename, expocode_basename = self.get_and_unpack(
+                options['expocode_filename'][0]
+            )
+            expocodes = None
+            with open(expocode_filename) as f:
+                expo = f.read().split()
+                # print(expo)
+                expocodes = dict(zip([int(f) for f in expo[0::2]], expo[1::2]))
+                # print(expocodes)
+            if expocodes:
+                glodap = Glodap(data_filename, expocodes)
+                glodap.fileImport()
+
         finally:
-            for f in tmpfiles:
-                os.remove(f)
+            os.remove(expocode_filename)
+
+    def get_and_unpack(self, uri):
+        fn, uri_extension = os.path.splitext(uri)
+        uri_basename = os.path.basename(uri)
+        if uri[0:4] == 'http': # is url
+            print(f"Downloading {uri}...")
+            fd, path = tempfile.mkstemp()
+            with contextlib.ExitStack() as stack:
+                _from = stack.enter_context(urlopen(uri))
+                _to = stack.enter_context(open(path, 'wb'))
+                shutil.copyfileobj(_from, _to)
+            uri = path
+        if uri_extension == '.zip':
+            print(f"Extracting {uri}...")
+            zip_file = zipfile.ZipFile(uri, 'r')
+            fd, path = tempfile.mkstemp()
+            with contextlib.ExitStack() as stack:
+                _from = stack.enter_context(zip_file.open(zip_file.namelist()[0]))
+                _to = stack.enter_context(open(path, 'wb'))
+                shutil.copyfileobj(_from, _to)
+                try:
+                    os.remove(uri)
+                except OSError as e:
+                    pass
+                uri = path
+            uri_basename = uri_basename[:-4]
+        return (uri, uri_basename)

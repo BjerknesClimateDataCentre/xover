@@ -68,9 +68,9 @@ class DataSet(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._autoritative = [
-            self.temp_aut.id,
-            self.salin_aut.id,
-            self.press_aut.id,
+            self.temp_aut.id if self.temp_aut else 0,
+            self.salin_aut.id if self.salin_aut else 0,
+            self.press_aut.id if self.press_aut else 0,
         ]
 
     def save(self, *args, **kwargs):
