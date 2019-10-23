@@ -4,12 +4,15 @@ import datetime
 import calendar
 from django.contrib.gis.geos import Point
 import os
-# from d2qc.data.glodap.glodap import Glodap; Glodap().fileImport()
+import gsw
+from django.contrib.auth import authenticate, login
 
 class Glodap:
     """
     Functionality to import glodap reference data
     """
+    data_file_path = None
+    expocodes = None
 
     glodap_identificators = {
         'cruise': 0,
@@ -26,25 +29,6 @@ class Glodap:
         'bottle': 12,
         'depth': 14,
     }
-
-    # These lines are possibly not trustworthy?
-    # At least remove the h3 - data from these
-    error_lines = {
-        'h3':[
-            # h3f - column has data values and not flags.
-            19932,19934,19936,19938,19941,19942,19943,19944,19947,19948,19949,
-            19950,19951,19957,19961,19965,19969,19972,19974,19977,19979,19981,
-            19983,19990,19992,19995,19997,19998,20000,20003,20006,20007,20011,
-            20012,20013,20014,20015,20016,20019,20022,20025,20030,20031,20032,
-        ],
-    }
-    # The bad h3f - values:
-    #       0.136,0.103,0.106,0.111,0.098,0.104,0.077,0.061,0.085,0.067,0.058,
-    #       0.069,0.084,0.16 ,0.092,0.089,0.129,0.094,0.091,0.089,0.252,0.275,
-    #       0.277,0.002,0.201,0.133,0.112,0.034,0.026,0.055,0.179,0.003,0.007,
-    #       0.009,0.325,0.291,0.268,0.336,0.255,0.232,0.181,0.053,0.038,0.028,
-
-    # Bad lines - 31 days in april: line 414278 to 414301. Switch these to next day
 
     glodap_vars = {
         'pressure': {
@@ -260,136 +244,147 @@ class Glodap:
         'c13': {
             'index': 72,
             'qcindex': 73,
-            'qc2index': None,
+            'qc2index': 74,
             'qcname': 'c13f',
-            'qc2name': None,
+            'qc2name': 'c13qc',
         },
         'c14': {
-            'index': 74,
-            'qcindex': 75,
+            'index': 75,
+            'qcindex': 76,
             'qc2index': None,
             'qcname': 'c14f',
             'qc2name': None,
         },
         'c14err': {
-            'index': 76,
+            'index': 77,
             'qcindex': None,
             'qc2index': None,
             'qcname': None,
             'qc2name': None,
         },
         'h3': {
-            'index': 77,
-            'qcindex': 78, #0.136 line 9932 + 10000
+            'index': 78,
+            'qcindex': 79, #0.136 line 9932 + 10000
             'qc2index': None,
             'qcname': 'h3f',
             'qc2name': None,
         },
         'h3err': {
-            'index': 79,
+            'index': 80,
             'qcindex': None,
             'qc2index': None,
             'qcname': None,
             'qc2name': None,
         },
         'he3': {
-            'index': 80,
-            'qcindex': 81,
+            'index': 81,
+            'qcindex': 82,
             'qc2index': None,
             'qcname': 'he3f',
             'qc2name': None,
         },
         'he3err': {
-            'index': 82,
+            'index': 83,
             'qcindex': None,
             'qc2index': None,
             'qcname': None,
             'qc2name': None,
         },
         'he': {
-            'index': 83,
-            'qcindex': 84,
+            'index': 84,
+            'qcindex': 85,
             'qc2index': None,
             'qcname': 'hef',
             'qc2name': None,
         },
         'heerr': {
-            'index': 85,
+            'index': 86,
             'qcindex': None,
             'qc2index': None,
             'qcname': None,
             'qc2name': None,
         },
         'neon': {
-            'index': 86,
-            'qcindex': 87,
+            'index': 87,
+            'qcindex': 88,
             'qc2index': None,
             'qcname': 'neonf',
             'qc2name': None,
         },
         'neonerr': {
-            'index': 88,
+            'index': 89,
             'qcindex': None,
             'qc2index': None,
             'qcname': None,
             'qc2name': None,
         },
         'o18': {
-            'index': 89,
-            'qcindex': 90,
+            'index': 90,
+            'qcindex': 91,
             'qc2index': None,
             'qcname': 'o18f',
             'qc2name': None,
         },
         'toc': {
-            'index': 91,
-            'qcindex': 92,
+            'index': 92,
+            'qcindex': 93,
             'qc2index': None,
             'qcname': 'tocf',
             'qc2name': None,
         },
         'doc': {
-            'index': 93,
-            'qcindex': 94,
+            'index': 94,
+            'qcindex': 95,
             'qc2index': None,
             'qcname': 'docf',
             'qc2name': None,
         },
         'don': {
-            'index': 95,
-            'qcindex': 96,
+            'index': 96,
+            'qcindex': 97,
             'qc2index': None,
             'qcname': 'donf',
             'qc2name': None,
         },
         'tdn': {
-            'index': 97,
-            'qcindex': 98,
+            'index': 98,
+            'qcindex': 99,
             'qc2index': None,
             'qcname': 'tdnf',
             'qc2name': None,
         },
         'chla': {
-            'index': 99,
-            'qcindex': 100,
+            'index': 100,
+            'qcindex': 101,
             'qc2index': None,
             'qcname': 'chlaf',
             'qc2name': None,
         },
     }
 
-    def fileImport(self, path = None, expocode_path = None, reference = True):
-        if not path:
-            # data/GLODAPv2 Merged Master File.csv
-            path = os.path.join(
-                    os.path.dirname(__file__),
-                    'data/GLODAPv2_sorted.csv'
-            )
-        if not expocode_path:
-            expocode_path = os.path.join(
-                    os.path.dirname(__file__),
-                    'data/EXPOCODES.txt'
-            )
+    def __init__(self, data_file_path, expocodes):
+        """
+        Initalize the Glodap object with a path to the file with glodap data
+        (can be an url) and a dict containing {int: 'expocode', ...}
+        The data file only contains an integer cruise number, so this needs to
+        match the int in the expocode dict to obtain the expocodes.
+        Files can be downloaded from https://www.glodap.info
+
+        data_file_path  Url or file path to a (possibly zipped) glodap
+                        dataset file
+        expocodes       dict with format {int:expocode ...} like
+                        {1:'06AQ19840719', 2:'06AQ19860627',...}
+        """
+        self.data_file_path = data_file_path
+        self.expocodes = expocodes
+
+    def fileImport(self, reference = True):
+        """
+        Import Glodap reference file to the database. This will take time ...
+
+        reference       If set to True, data-sets are stored with the
+                        is_reference - flag set to true.
+        """
         line_no = 1
         # Make error_lines more useful as dicts
         for key in self.error_lines:
@@ -399,13 +394,11 @@ class Glodap:
             ))
 
         try:
-            filesize = os.path.getsize(path)
+            filesize = os.path.getsize(self.data_file_path)
             progress = 0
-            expo = open(expocode_path).read().split()
-            expocodes = dict(zip(expo[0::2], expo[1::2]))
 
-            with open(path) as infile:
-                filename = os.path.basename(path)
+            with open(self.data_file_path) as infile:
+                filename = os.path.basename(self.data_file_path)
                 if DataFile.objects.filter(filepath=filename).exists():
                     print('File already exists')
                     return
@@ -446,10 +439,14 @@ class Glodap:
                     )
                     data_type_names[var] = data_type_name[0]
 
-                current_station = Station
-                current_cast = Cast
-                current_data_set = DataSet
-                current_depth = Depth
+                temp_aut = DataTypeName.objects.filter(name="temperature").first()
+                salin_aut = DataTypeName.objects.filter(name="salinity").first()
+                press_aut = DataTypeName.objects.filter(name="pressure").first()
+
+                current_station = Station()
+                current_cast = Cast()
+                current_data_set = DataSet()
+                current_depth = Depth()
                 platforms = {}
                 value_list = []
                 for line in infile:
@@ -459,12 +456,15 @@ class Glodap:
                     data = line.split(',')
                     try:
                         # DataSet
-                        expocode = expocodes[data[idents['cruise']]]
+                        expocode = self.expocodes[int(float(data[idents['cruise']]))]
                         if expocode != current_data_set.expocode:
                             data_set, created = DataSet.objects.get_or_create(
                                     expocode = expocode,
                                     is_reference = True,
-                                    data_file = current_data_file
+                                    data_file = current_data_file,
+                                    temp_aut = temp_aut,
+                                    salin_aut = salin_aut,
+                                    press_aut = press_aut,
                             )
                             current_data_set = data_set
                             all_new = True
@@ -492,14 +492,14 @@ class Glodap:
                         # Cast
                         cast_no = -1
                         if data[idents['cast']]:
-                            cast_no = int(data[idents['cast']])
+                            cast_no = int(float(data[idents['cast']]))
                         if (
                                 all_new
                                 or cast_no != current_cast.cast
                         ):
                             current_cast = Cast(
                                     station = current_station,
-                                    cast = cast_no
+                                    cast = int(float(cast_no))
                             )
                             current_cast.save()
                             all_new = True
@@ -507,11 +507,11 @@ class Glodap:
                         # Create date object from current line
                         try:
                             thetime = datetime.datetime(
-                                    year=int(data[idents['year']]),
-                                    month=int(data[idents['month']]),
-                                    day=int(data[idents['day']]),
-                                    hour=int(data[idents['hour']]),
-                                    minute=int(data[idents['minute']]),
+                                    year=int(float(data[idents['year']])),
+                                    month=int(float(data[idents['month']])),
+                                    day=int(float(data[idents['day']])),
+                                    hour=int(float(data[idents['hour']])),
+                                    minute=int(float(data[idents['minute']])),
                                     second=0,
                                     tzinfo=datetime.timezone.utc
                             )
@@ -525,10 +525,10 @@ class Glodap:
                             # the month, and add the same value to the date
                             # object.
                             mon_days = calendar.monthrange(
-                                    int(data[idents['year']]),
-                                    int(data[idents['month']])
+                                    int(float(data[idents['year']])),
+                                    int(float(data[idents['month']])),
                             )[1]
-                            if int(data[idents['hour']]) > 23:
+                            if int(float(data[idents['hour']])) > 23:
                                 print(
                                         "Error hour {}, line {}" . format(
                                                 data[idents['hour']],
@@ -536,16 +536,16 @@ class Glodap:
                                         )
                                 )
                                 thetime = datetime.datetime(
-                                        year=int(data[idents['year']]),
-                                        month=int(data[idents['month']]),
-                                        day=int(data[idents['day']]),
-                                        hour=int(data[idents['hour']]) - 24,
-                                        minute=int(data[idents['minute']]),
+                                        year=int(float(data[idents['year']])),
+                                        month=int(float(data[idents['month']])),
+                                        day=int(float(data[idents['day']])),
+                                        hour=int(float(data[idents['hour']])) - 24,
+                                        minute=int(float(data[idents['minute']])),
                                         second=0,
                                         tzinfo=datetime.timezone.utc
                                 )
                                 thetime += datetime.timedelta(hours=24)
-                            elif int(data[idents['day']]) > mon_days:
+                            elif int(float(data[idents['day']])) > mon_days:
                                 print(
                                         "Error day {}, line {}" . format(
                                                 data[idents['day']],
@@ -553,16 +553,16 @@ class Glodap:
                                         )
                                 )
                                 thetime = datetime.datetime(
-                                        year=int(data[idents['year']]),
-                                        month=int(data[idents['month']]),
-                                        day=int(data[idents['day']]) - mon_days,
-                                        hour=int(data[idents['hour']]),
-                                        minute=int(data[idents['minute']]),
+                                        year=int(float(data[idents['year']])),
+                                        month=int(float(data[idents['month']])),
+                                        day=int(float(data[idents['day']])) - mon_days,
+                                        hour=int(float(data[idents['hour']])),
+                                        minute=int(float(data[idents['minute']])),
                                         second=0,
                                         tzinfo=datetime.timezone.utc
                                 )
                                 thetime += datetime.timedelta(days=mon_days)
-                            elif int(data[idents['minute']]) == 81:
+                            elif int(float(data[idents['minute']])) == 81:
                                 # Random error, set minute to 0
                                 print(
                                         "Error minute {}, line {}" . format(
@@ -571,10 +571,10 @@ class Glodap:
                                         )
                                 )
                                 thetime = datetime.datetime(
-                                        year=int(data[idents['year']]),
-                                        month=int(data[idents['month']]),
-                                        day=int(data[idents['day']]),
-                                        hour=int(data[idents['hour']]),
+                                        year=int(float(data[idents['year']])),
+                                        month=int(float(data[idents['month']])),
+                                        day=int(float(data[idents['day']])),
+                                        hour=int(float(data[idents['hour']])),
                                         minute=0,
                                         second=0,
                                         tzinfo=datetime.timezone.utc
@@ -587,7 +587,7 @@ class Glodap:
 
 
                         depth = float(data[idents['depth']])
-                        bottle = int(data[idents['bottle']])
+                        bottle = int(float(data[idents['bottle']]))
 
                         # Depth
                         if (
@@ -606,7 +606,9 @@ class Glodap:
                             model_depth.save()
                             all_new = True
 
+                            temp_val = salin_val = press_val = None
                             # Now insert the actual data
+                            append_to_list = []
                             for key, var in self.glodap_vars.items():
                                 if (
                                         key in self.error_lines
@@ -621,10 +623,10 @@ class Glodap:
                                 value = float(data[var['index']])
                                 qc_flag = None
                                 if var['qcindex']:
-                                    qc_flag = int(data[var['qcindex']])
+                                    qc_flag = int(float(data[var['qcindex']]))
                                 qc2_flag = None
                                 if var['qc2index']:
-                                    qc2_flag = int(data[var['qc2index']])
+                                    qc2_flag = int(float(data[var['qc2index']]))
                                 model_value = DataValue(
                                         depth = current_depth,
                                         value = value,
@@ -633,16 +635,46 @@ class Glodap:
                                         data_type_name = data_type_names[key]
                                 )
                                 current_value = model_value
-                                value_list.append(model_value)
+                                append_to_list.append(model_value)
+                                # collect temp, press, salin values
+                                # value = -999 or similar means missing value
+                                value = value if value > -8 else None
+                                if key == temp_aut.name:
+                                    temp_val = value
+                                if key == salin_aut.name:
+                                    salin_val = value
+                                if key == press_aut.name:
+                                    press_val = value
+
+                            # If all are set, we can calculate sigma4
+                            if not None in [temp_val, salin_val, press_val]:
+                                try:
+                                    sigma4 = gsw.density.sigma4(
+                                        gsw.conversions.SA_from_SP(
+                                            salin_val,
+                                            press_val,
+                                            longitude,
+                                            latitude,
+                                        ),
+                                        temp_val,
+                                    )
+                                    current_depth.sigma4 = sigma4
+                                    current_depth.save()
+                                    value_list += append_to_list
+
+                                except Exception as e:
+                                    pass
                     except Exception as e:
+                        print(f"Line no {line_count}: ", end='')
                         print(e)
-                        print(line)
-#                        print('Timestamp error: ' + str(current_data_set.expocode) + ' - line: ' + str(line_count))
                         all_new = False
+                        if value_list:
+                            DataValue.objects.bulk_create(value_list)
+                            value_list = []
                         continue
 
                     # Insert the values in bulk
-                    if line_count % 500 == 0 and value_list:
+                    if line_count % 300 == 0 and value_list:
                         print('.', end='', flush=True)
                         DataValue.objects.bulk_create(value_list)
                         value_list = []
