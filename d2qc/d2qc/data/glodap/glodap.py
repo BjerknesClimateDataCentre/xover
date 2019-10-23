@@ -386,12 +386,6 @@ class Glodap:
                         is_reference - flag set to true.
         """
         line_no = 1
-        # Make error_lines more useful as dicts
-        for key in self.error_lines:
-            self.error_lines[key] = dict(zip(
-                    self.error_lines[key],
-                    [True] * len(self.error_lines[key])
-            ))
 
         try:
             filesize = os.path.getsize(self.data_file_path)
@@ -610,16 +604,6 @@ class Glodap:
                             # Now insert the actual data
                             append_to_list = []
                             for key, var in self.glodap_vars.items():
-                                if (
-                                        key in self.error_lines
-                                        and line_count in self.error_lines[key]
-                                ):
-                                    # some issue with this parameter
-                                    print(
-                                            'Skipping line ' + str(line_count)
-                                            + ' for parameter ' + key
-                                    )
-                                    continue
                                 value = float(data[var['index']])
                                 qc_flag = None
                                 if var['qcindex']:
