@@ -16,8 +16,18 @@ import zipfile
 
 class Command(NewlineCommand):
     help = """
-        Import reference data from merged and adjusted glodap master file,
-        see https://glodap.info
+        Import reference data from merged and adjusted glodap master file.
+        See https://glodap.info for data files.
+        Usage:
+        manage.py import_refdata https://glodap.info/datafile.csv.zip \
+            https://glodap.info/EXPOCODES.txt
+
+        This will copy datafile.csv to the user data store, and import the data
+        to the database, flagged as reference data. Data will be saved as user
+        id 0, as you are not logged in as a user. You might need to clean out
+        the database first. To start with a pristine database, you can use:
+
+        manage.py clear_db -m
     """
 
     def add_arguments(self, parser):
