@@ -25,7 +25,12 @@ class Command(NewlineCommand):
         This will copy datafile.csv to the user data store, and import the data
         to the database, flagged as reference data. Data will be saved as user
         id 0, as you are not logged in as a user. You might need to clean out
-        the database first. To start with a pristine database, you can use:
+        the database first.
+
+        To clear reference data first, you can use:
+        manage.py clear_refdata
+
+        To start with a pristine database, you can use:
 
         manage.py clear_db -m
     """

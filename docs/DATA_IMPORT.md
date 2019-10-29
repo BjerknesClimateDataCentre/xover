@@ -16,9 +16,11 @@ find the current production or development servers.
 2.  Navigate to /vagrant/d2qc on your server
 3.  Activate the python environment:
     `$ source .env_vagrant/bin/activate`
-4.  Youll probably need to clean the database in some way. To remove ALL DATA,
-    you can use `$  manage.py clear_db -m`. This clears all data and
-    initializes the tables
+4.  Youll probably need to clean the database in some way. To simply remove the 
+    reference data before import, use: `$ manage.py clear_refdata`. This removes
+    all data sets marked as is_reference.
+    To remove ALL DATA, you can use `$  manage.py clear_db -m`. This clears all
+    data in the database, and initializes the tables.
 5.  Now to import the reference data. This will take some hours. Eg:
     ```
     $ m import_refdata \
