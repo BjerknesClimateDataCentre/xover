@@ -4,7 +4,7 @@ Django management functionality
 
 Djangos build in management functionality is reached through the d2qc/manage.py
 file (se [aliases](ALIASES.md) for shortcuts. Below I use `m` as alias for
-manage.py)
+./manage.py)
 
 List available functionality (only displaying custom funcitonality here):
 
@@ -15,10 +15,14 @@ $ m
     add_dev_admin_user
     calculate_xover
     cc
+    clear_db
+    clear_refdata
     db_restore_from_prod
     dbbackup
     import_exc_file
+    import_refdata
     import_testdata
+    init_refdata
 ```
 
 ### For each function under [data] ###

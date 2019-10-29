@@ -5,7 +5,8 @@ Development setup information
 The server software is written in Python with the Django framework. The easiest
 way to get started is to use the Vagrant setup:
 
-1. Install Vagrant on your machine
+1. Install Vagrant on your machine. If your vagrant is old, upgrade to a recent
+    version.
   * (https://www.vagrantup.com/intro/getting-started/)
   * also install disksize-plugin with vagrant:
     - `vagrant plugin install vagrant-disksize`
@@ -36,4 +37,5 @@ Vagrant / Django development setup functionality
 ----------------------------------------------
 
 The setup includes Django with setup and services to ease the development
-process. Frequently used commands are added as aliases on the vagrant box:
+process. Frequently used commands are added as aliases on the vagrant box,
+see [Aliases](ALIASES.md)
