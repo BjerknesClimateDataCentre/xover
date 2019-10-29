@@ -143,27 +143,4 @@ This way you can keep backups and file data here
 
 ### Import reference data to the development server ###
 
-The reference data is available from the [GLODAP website](http://glodap.info).
-Links provided below might change. The importscript without parameters looks
-for a file called GLODAPv2_sorted.csv, and another called EXPOCODES.txt, both
-residing in the folder /vagrant/d2qc/d2qc/data/glodap/data.
-
-* `cd /vagrant/d2qc/d2qc/data/glodap`
-* `mkdir data`
-* `cd data`
-* `wget https://www.nodc.noaa.gov/archive/arc0107/0162565/1.1/data/0-data/data_product/EXPOCODES.txt`
-* `wget https://www.nodc.noaa.gov/archive/arc0107/0162565/1.1/data/0-data/data_product/GLODAPv2%20Merged%20Master%20File.csv.zip`
-
-* Install unzip and unzip file:
-* `sudo apt install unzip`
-* `unzip GLODAPv2\ Merged\ Master\ File.csv.zip`
-
-* Sort the dataset
-* `/vagrant/scripts/db/sort_GLODAPv2_dataset.sh <GLODAPv2\ Merged\ Master\ File.csv >GLODAPv2_sorted.csv`
-
-* Run the import script. This takes a LOOOOONG time (about 24 hours?)
-* `cd /vagrant`
-* `source .env_vagrant/bin/activate`
-* `cd d2qc`
-* `python manage.py shell -c \
-    'from d2qc.data.glodap.glodap import Glodap; Glodap().fileImport()'`
+Data import is described in [DATA_IMPORT.md](../DATA_IMPORT.md)
