@@ -6,22 +6,11 @@ from d2qc.data.glodap.glodap import Glodap
 from glodap.util.data_type_dict import DataTypeDict
 from d2qc.data.models import DataType
 
-def add_glodap_identifiers(apps, schema_editor):
-    for var in DataTypeDict:
-        migrations.RunSQL("""
-            INSERT INTO d2qc_data_types (original_label, identifier)
-            VALUES ('{}','{}')
-            ON CONFLICT DO NOTHING
-        """.format(
-            var,
-            DataTypeDict[var],
-        ))
-
 class Migration(migrations.Migration):
+    # Do nothing. Caused unneccessary issues...
     dependencies = [
         ('data', '0008_auto_20190115_1525'),
     ]
 
     operations = [
-        migrations.RunPython(add_glodap_identifiers),
     ]

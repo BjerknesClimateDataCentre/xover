@@ -422,9 +422,10 @@ class Glodap:
                 vars = self.glodap_vars
                 idents = self.glodap_identificators
                 data_type_names = {}
+                data_type_dict = DataTypeDict()
                 for var in vars:
                     data_type, created = DataType.objects.get_or_create(
-                        identifier = DataTypeDict.getIdentFromVar(var),
+                        identifier = data_type_dict.getIdentifier(var),
                         original_label = var,
                     )
                     data_type_name = DataTypeName.objects.get_or_create(
