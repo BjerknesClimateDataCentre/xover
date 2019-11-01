@@ -10,6 +10,8 @@ class DataTypeName(models.Model):
         'DataType',
         related_name = 'data_type_names',
         on_delete = models.CASCADE,
+        blank = True,
+        null = True,
     )
     name = models.CharField(max_length=255)
     is_reference = models.BooleanField(default=False)

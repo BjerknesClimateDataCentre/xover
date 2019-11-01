@@ -75,9 +75,7 @@ class Command(NewlineCommand):
             expocodes = None
             with open(expocode_filename) as f:
                 expo = f.read().split()
-                # print(expo)
                 expocodes = dict(zip([int(f) for f in expo[0::2]], expo[1::2]))
-                # print(expocodes)
             if expocodes:
                 glodap = Glodap(data_filename, expocodes)
                 glodap.fileImport()
