@@ -2,7 +2,7 @@ Importing Glodap reference data
 -------------------------------
 
 Some scripts are provided for importing glodap reference data, and a brief
-recipe is provided here. The poor quality of the Glodap data set does however
+recipe is provided here. Issues with the Glodap data set does however
 cause the import to produce a few errors.
 
 To use the import functionality, you need access to a server running the xover

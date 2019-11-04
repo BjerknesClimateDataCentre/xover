@@ -21,8 +21,7 @@ $ m
     dbbackup
     import_exc_file
     import_refdata
-    import_testdata
-    init_refdata
+    init_data_types
 ```
 
 ### For each function under [data] ###
@@ -33,7 +32,10 @@ in the data section (more info in the help):
 * add_dev_admin_user: adds user: admin, password: 123
 * calculate_xover: internal command to calculate crossovers in the background
 * cc: clear cache
+* clear_db: Drop and restore the database, optionally initialize it
+* clear_refdata: Delete all reference data from the database, keeping other data
 * db_restore_from_prod: download and restore the prod database to your computer
 * dbbackup: backs up your current database
 * import_exc_file: Internal function to import file in the background
-* import_testdata: Imports a couple of data files, for testing purpose
+* import_refdata: Funtionality to import glodap reference data
+* init_data_types: Funtionality to initialize data types in the database.
