@@ -1,4 +1,5 @@
 astroid==2.3.2
+autopep8==1.4.4
 cftime==1.0.1
 Click==7.0
 cotede==0.19.2
@@ -22,6 +23,7 @@ Pillow==5.2.0
 pkg-resources==0.0.0
 psycopg2-binary==2.7.5
 pyArgo==0.0.4
+pycodestyle==2.5.0
 pylint==2.4.3
 pyparsing==2.2.1
 pyproj==1.9.5.1
