@@ -74,7 +74,11 @@ class DataSet(models.Model):
         ]
 
     def save(self, *args, **kwargs):
-        _new = set([self.temp_aut.id, self.salin_aut.id, self.press_aut.id])
+        _new = set([
+            self.temp_aut.id if self.temp_aut else 0,
+            self.salin_aut.id if self.salin_aut else 0,
+            self.press_aut.id if self.press_aut else 0,
+        ])
         super().save(*args, **kwargs)
         if _new != set(self._autoritative):
             self.update_sigma4()

@@ -37,10 +37,12 @@ class MergeForm(forms.Form):
             data_type_names = kwargs.pop('data_type_names')
         except KeyError:
             data_type_names = None
+        primary_field = None
+        secondary_field = None
 
         if data_type_names:
-            primary = int(cache.get(f"{self._cache_name}__primary"))
-            secondary = int(cache.get(f"{self._cache_name}__secondary"))
+            primary = int(cache.get(f"{self._cache_name}__primary", 0))
+            secondary = int(cache.get(f"{self._cache_name}__secondary", 0))
             merge_min_depth = cache.get(
                 f"{self._cache_name}__merge_min_depth",
                 self.INITIAL_MERGE_MIN_DEPTH,
@@ -79,7 +81,7 @@ class MergeForm(forms.Form):
             secondary_field = forms.ChoiceField(
                 label = "Sec.",
                 widget = forms.RadioSelect,
-                choices=choices,
+                choices = choices,
                 initial = secondary,
             )
         super().__init__(*args, **kwargs)
