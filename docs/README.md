@@ -23,5 +23,4 @@ $ ssh ubuntu@158.39.77.221
 
 #### Other stuff ####
 * [Set up production environment](PRODUCTION.md)
-* [Admin data management](ADMIN.md)
 * [Import reference data](DATA_IMPORT.md)
