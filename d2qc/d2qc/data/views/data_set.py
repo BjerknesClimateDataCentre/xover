@@ -6,7 +6,7 @@ from d2qc.data.models import DataSet
 from d2qc.data.models import DataTypeName
 from d2qc.data.serializers import DataSetSerializer
 from d2qc.data.serializers import NestedDataSetSerializer
-from d2qc.data.forms import MergeForm, ProfileForm
+from d2qc.data.forms import MergeForm, ProfileForm, NormalizeForm
 
 from django import forms
 from django.conf import settings
@@ -404,3 +404,15 @@ class DataSetMerge(DetailView):
             context['intercept'] = intercept
         context['merge_form'] = self.merge_form
         return context
+
+class DataSetNormalization(DetailView):
+    model = DataSet
+    template_name = 'data/dataset_normalize.html'
+    normalize_form = None
+
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        retval = super().get(request, *args, **kwargs)
+        return retval

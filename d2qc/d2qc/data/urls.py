@@ -38,6 +38,7 @@ update = '/update'
 import_ = '/import'
 delete = '/delete'
 merge = '/merge'
+normalize = '/normalize'
 data_set = 'data_set'
 profile = 'profile'
 parameter = 'parameter'
@@ -114,6 +115,11 @@ urlpatterns = [
         data_set + merge + '/<int:pk>/',
         DataSetMerge.as_view(),
         name='data_set_merge'
+    ),
+    path(
+        data_set + normalize + '/<int:pk>/',
+        DataSetNormalization.as_view(),
+        name='data_set_normalize'
     ),
     path(
             data_set + delete + '/<int:pk>',

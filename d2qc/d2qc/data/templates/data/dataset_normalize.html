@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load mathfilters %}
+{% block css %}
+<link rel="stylesheet" type="text/css"
+href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/css/ol.css">
+<style>
+    #diff_plot, #pri_vs_sec {
+        height: 600px;
+        width: 600px;
+    }
+
+    .outer {
+      display: flex;
+    }
+    .normalizeform {
+      display: flex;
+      flex-wrap: wrap;
+      width: 400px;
+      justify-content: center;
+    }
+    .normalizebutton {
+      width: 100%
+    }
+</style>
+{% endblock %}
+{% block js %}
+{% endblock%}
+{% block content %}
+<h3>
+  <a href="{% url 'data_set-detail' object.id %}">
+    ID: {{ object.id }} - {{ object.expocode }}
+  </a>
+</h3>
+<div class="outer">
+  <form class="normalizeform" method="post">
+    {% csrf_token %}
+    <input class="normalizebutton" type="submit"
+    value="Normalize selected parameters" name="normalize"/>
+  </form>
+</div>
+{% endblock %}
