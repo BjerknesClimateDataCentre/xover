@@ -28,6 +28,10 @@ source .env_vagrant/bin/activate
 # Upgrade pip
 pip install --upgrade pip
 
+# Install django from submodule
+pip install -e /vagrant/django
+export PYTHONPATH=$PYTHONPATH:/vagrant/django
+
 # Initialize pip with requirements
 pip install -r scripts/setup/requirements.txt
 
