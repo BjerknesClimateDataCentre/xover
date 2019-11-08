@@ -50,3 +50,7 @@ service apache2 restart
 
 # Upgrade pip to latest version
 pip3 install --upgrade pip
+
+# Increase max_user_watches to avoid vagrant shared folder issues
+echo fs.inotify.max_user_watches=524288 >> /etc/sysctl.conf
+sysctl -p

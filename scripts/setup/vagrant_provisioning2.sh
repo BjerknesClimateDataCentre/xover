@@ -14,15 +14,14 @@ cd /vagrant
 git submodule init
 git submodule update
 
-# Add Virtualenv install folder to path:
-echo 'PATH="$PATH:/home/vagrant/.local/bin"' >> ~/.profile
-source ~/.profile
-
 # Remove possibly existing environment folder
-rm -rf .env_vagrant
-python3 -m venv .env_vagrant
+rm -rf ~/.env_vagrant
+python3 -m venv ~/.env_vagrant
 
-source .env_vagrant/bin/activate
+# Make sure django is on the activated path
+echo 'export PYTHONPATH=$PYTHONPATH:/vagrant/django' >> ~/.env_vagrant/bin/activate
+
+source ~/.env_vagrant/bin/activate
 
 
 # Upgrade pip
@@ -30,7 +29,6 @@ pip install --upgrade pip
 
 # Install django from submodule
 pip install -e /vagrant/django
-export PYTHONPATH=$PYTHONPATH:/vagrant/django
 
 # Initialize pip with requirements
 pip install -r scripts/setup/requirements.txt
@@ -40,10 +38,10 @@ pip install https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz
 
 # Set backend to default Agg by commenting line
 sed -i 's/^\( *backend *:.*\)$/# \1/' \
-    /vagrant/.env_vagrant/lib/python3.*/site-packages/matplotlib/mpl-data/matplotlibrc
+    ~/.env_vagrant/lib/python3.*/site-packages/matplotlib/mpl-data/matplotlibrc
 
 # Shortcuts:
-echo "alias a='source /vagrant/.env_vagrant/bin/activate'" >> ~/.profile
+echo "alias a='source ~/.env_vagrant/bin/activate'" >> ~/.profile
 echo "alias m='python manage.py'" >> ~/.profile
 echo "alias dev='python manage.py runserver 0.0.0.0:8000'" >> ~/.profile
 source ~/.profile
@@ -64,6 +62,7 @@ then
 fi
 
 cd d2qc
+
 # Fetch database from prod
 python manage.py db_restore_from_prod --verbosity 1
 # Run django migrations
