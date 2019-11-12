@@ -13,3 +13,23 @@ class ProfileForm(ModelForm):
         widgets = {
             'depth_metric': RadioSelect(attrs={'cols': 80, 'rows': 20}),
         }
+
+class MergeProfileForm(ProfileForm):
+    class Meta:
+        model = Profile
+        fields = [
+            'only_qc_controlled_data',
+        ]
+
+class DataSetDetailsProfileForm(ProfileForm):
+    class Meta:
+        model = Profile
+        fields = [
+            'min_depth',
+            'crossover_radius',
+            'depth_metric',
+            'only_qc_controlled_data',
+        ]
+        widgets = {
+            'depth_metric': RadioSelect(attrs={'cols': 80, 'rows': 20}),
+        }

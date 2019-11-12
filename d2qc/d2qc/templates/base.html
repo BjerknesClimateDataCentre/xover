@@ -6,6 +6,12 @@
     <title>
         {% block title %}GLODAP Cross-over{% endblock %}
     </title>
+    <style>
+            #{{ request.resolver_match.url_name }} {
+                color: white;
+                background-color: black;
+            }
+    </style>
     {% block css %}
     {% endblock %}
     {% block js %}
@@ -33,33 +39,67 @@
         <nav>
             <ul>
                 <li>
-                    <a href="{% url 'data' %}">Home</a>
+                    <a
+                        id="data"
+                        href="{% url 'data' %}">Home</a>
                 </li>
                 {% if request.user.is_authenticated %}
                 <li>
-                    <a href="{% url 'data_file-list' %}">Files</a>
+                    <a
+                        id="data_file-list"
+                        href="{% url 'data_file-list' %}"
+                    >
+                        Files
+                    </a>
                 </li>
                 <li>
-                    <a href="{% url 'data_file-create' %}">Add file</a>
+                    <a
+                        id="data_file-create"
+                        href="{% url 'data_file-create' %}"
+                    >
+                        Add file
+                    </a>
                 </li>
                 <li>
-                    <a href="{% url 'data_set-list' %}">Data sets</a>
+                    <a
+                        id="data_set-list"
+                        href="{% url 'data_set-list' %}"
+                    >
+                        Data sets
+                    </a>
+                    {% block dataset_detail_menu %}
+                    {% endblock %}
                 </li>
                 <li>
-                    <a href="{% url 'profile-update' %}">Settings</a>
+                    <a
+                        id="profile-update"
+                        href="{% url 'profile-update' %}"
+                    >
+                        Settings
+                    </a>
                 </li>
                 <li>
-                    <a href="{% url 'account-logout' %}">Logout</a>
+                    <a
+                        id="account-logout"
+                        href="{% url 'account-logout' %}"
+                    >
+                        Logout
+                    </a>
                 </li>
                 {% else %}
                 <li>
-                    <a href="{% url 'account-login' %}">Login</a>
+                    <a
+                        id="account-login"
+                        href="{% url 'account-login' %}"
+                    >
+                        Login
+                    </a>
                 </li>
                 {% endif %}
             </ul>
         </nav>
         {% block options %}
-        {% endblock%}
+        {% endblock %}
         {% if messages %}
         <div class="messages">
             <ul class="messages">

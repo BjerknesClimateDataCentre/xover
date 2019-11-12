@@ -2,11 +2,11 @@ from rest_framework import viewsets
 
 import glodap.util.stats as stats
 
-from d2qc.data.models import DataSet
-from d2qc.data.models import DataTypeName
+from d2qc.data.models import DataSet, DataTypeName, DataType
 from d2qc.data.serializers import DataSetSerializer
 from d2qc.data.serializers import NestedDataSetSerializer
-from d2qc.data.forms import MergeForm, ProfileForm, NormalizeForm
+from d2qc.data.forms import MergeForm, NormalizeForm
+from d2qc.data.forms import MergeProfileForm, DataSetDetailsProfileForm
 
 from django import forms
 from django.conf import settings
@@ -26,6 +26,26 @@ import os
 import re
 import subprocess
 import pandas as pd
+
+
+class NormalizableMixin:
+    ALKALINITY = 'SDN:P01::ALKYZZXX'
+    CO2 = 'SDN:P01::PCO2XXXX'
+
+    def normalizableParameters(self):
+        profile = self.request.user.profile
+        params = []
+        data_types = self.object.get_data_type_names(
+            min_depth = profile.min_depth,
+            only_qc_controlled_data = profile.only_qc_controlled_data,
+            in_area = settings.ARCTIC_REGION
+        )
+        for obj in data_types:
+            if obj['identifier'] == self.ALKALINITY:
+                params.append((obj['id'], obj['name']))
+            if obj['identifier'] == self.CO2:
+                params.append((obj['id'], obj['name']))
+        return params
 
 class DataSetViewSet(viewsets.ModelViewSet):
 
@@ -47,13 +67,14 @@ class DataSetList(ListView):
             queryset = DataSet.objects.filter(owner_id=self.request.user.id)
         return queryset
 
-class DataSetDetail(DetailView):
+class DataSetDetail(DetailView, NormalizableMixin,):
     model = DataSet
     profile_form = None
+    template_name = 'data/dataset_detail/detail.html'
 
     def post(self, request, *args, **kwargs):
         if request.POST.get('replot_with_options', False):
-            self.profile_form = ProfileForm(
+            self.profile_form = DataSetDetailsProfileForm(
                 request.POST,
                 instance = request.user.profile,
             )
@@ -64,7 +85,7 @@ class DataSetDetail(DetailView):
 
     def get(self, request, *args, **kwargs):
         if not self.profile_form:
-            self.profile_form = ProfileForm(instance = request.user.profile)
+            self.profile_form = DataSetDetailsProfileForm(instance = request.user.profile)
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -278,15 +299,16 @@ class DataSetDetail(DetailView):
                 )
                 if stats:
                     context['dataset_stats'] = json.dumps(stats, allow_nan=False)
-
+        context['is_normalizable'] = (
+            True if self.normalizableParameters() else False
+        )
         return context
 
 class DataSetDelete(DeleteView):
     model = DataSet
     success_url = reverse_lazy('data_set-list')
-    def delete(self, request, *args, **kwargs):
-        rex = re.compile('^[a-zA-Z_/]+delete/([0-9]+)')
 
+    def delete(self, request, *args, **kwargs):
         data_file = self.model.objects.get(pk=kwargs['pk']).data_file
         messages.success(
             self.request,
@@ -298,23 +320,23 @@ class DataSetDelete(DeleteView):
         data_file.save()
         return retval
 
-class DataSetMerge(DetailView):
+class DataSetMerge(DetailView, NormalizableMixin,):
     model = DataSet
-    template_name = 'data/dataset_merge.html'
+    template_name = 'data/dataset_detail/dataset_merge.html'
     profile_form = None
     merge_form = None
 
     def post(self, request, *args, **kwargs):
         data_set = self.get_object()
         if request.POST.get('replot_with_options', False):
-            self.profile_form = ProfileForm(
+            self.profile_form = MergeProfileForm(
                 request.POST,
                 instance = request.user.profile
             )
             if self.profile_form.is_valid():
                 self.profile_form.save()
         else:
-            self.profile_form = ProfileForm(instance=request.user.profile)
+            self.profile_form = MergeProfileForm(instance=request.user.profile)
 
         only_qc_controlled_data = request.user.profile.only_qc_controlled_data
         data_type_names = data_set.get_data_type_names(
@@ -403,16 +425,61 @@ class DataSetMerge(DetailView):
             context['slope'] = slope
             context['intercept'] = intercept
         context['merge_form'] = self.merge_form
+        context['is_normalizable'] = (
+            True if self.normalizableParameters() else False
+        )
         return context
 
-class DataSetNormalization(DetailView):
+class DataSetNormalization(
+    FormView,
+    SingleObjectMixin,
+    NormalizableMixin,
+):
     model = DataSet
-    template_name = 'data/dataset_normalize.html'
-    normalize_form = None
+    template_name = 'data/dataset_detail/dataset_normalize.html'
+    form_class = NormalizeForm
+    is_normalizable = False
+    success_url = None
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['data_set_id'] = self.object.id
+        profile = self.request.user.profile
+        kwargs['params_opts'] = self.normalizableParameters()
+        if kwargs['params_opts']:
+            self.is_normalizable = True
+        return kwargs
 
     def get(self, request, *args, **kwargs):
-        return self.post(request, *args, **kwargs)
+        self.object = self.get_object()
+        return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        retval = super().get(request, *args, **kwargs)
+        self.object = self.get_object()
+        retval = super().post(request, *args, **kwargs)
         return retval
+
+    def form_valid(self, form):
+        self.success_url = reverse('data_set_normalize', args=[self.object.id])
+        retval = super().form_valid(form)
+        if retval:
+            saved_data = form.save_normalization_data(
+                self.object,
+                self.request.user
+            )
+            if saved_data:
+                messages.success(
+                    self.request,
+                    "Normalized variables for data set: {}".format(
+                        ', '.join([
+                            f"{r['name']}=>{r['norm_name']}" for r in saved_data
+                        ])
+                    )
+                )
+
+        return retval
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_normalizable'] = self.is_normalizable
+        return context

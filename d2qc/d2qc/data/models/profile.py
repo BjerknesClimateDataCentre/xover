@@ -32,10 +32,10 @@ class Profile(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        str = {
+        _str = {
             'min_depth': self.min_depth,
             'crossover_radius': self.crossover_radius,
             'depth_metric': self.depth_metric,
             'only_qc_controlled_data': self.only_qc_controlled_data,
         }
-        return str(str)
+        return str(_str)
