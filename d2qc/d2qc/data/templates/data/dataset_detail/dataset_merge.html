@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "data/dataset_detail.html" %}
 {% block css %}
 {% load mathfilters %}
 <link rel="stylesheet" type="text/css"
@@ -50,6 +50,7 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
 </style>
 <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
 {% endblock %}
+{% include "./menu.html" %}
 {% block js %}
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 {% endblock%}

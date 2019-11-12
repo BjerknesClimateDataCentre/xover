@@ -1,129 +1,31 @@
 {% extends "base.html" %}
-{% block css %}
-{% load mathfilters %}
-<link rel="stylesheet" type="text/css"
-href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3.0/css/ol.css">
-<style>
-    #map {
-        height: 300px;
-        width: 450px;
-    }
-    .dataset.data{
-        display: flex;
-        justify-content: flex-start;
-        align-items: flex-start;
-    }
-    .dataset.data .selected,
-    .dataset.data .selected a {
-        background-color: black;
-        color: white;
-        font-weight: bold;
-    }
-    .dataset.data td {
-        vertical-align: top;
-    }
-    .dataset-top {
-        display: flex;
-        justify-content: flex-start;
-    }
-    .head-wrapper {
-      order: 2;
-      padding: 10px;
-    }
-    .map-wrapper {
-      order: 1;
-      padding: 10px;
-    }
-</style>
-<link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
-{% endblock %}
-{% block js %}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-{% include "lib/jquery.html" %}
-{% include "lib/datatables.html" %}
-{% endblock%}
-{% block options %}
-<aside class="options">
-  {% include "util/calculation_options.html" %}
-</aside>
-{% endblock %}
-{% block content %}
-    <div>
-        <div class="dataset-top">
-            <div class="head-wrapper">
-                <h3>
-                    ID: {{ object.id }} - {{ object.expocode }}
-                </h3>
-                {% if object.is_reference %}
-                <h4>
-                    This data set is a reference data set
-                </h4>
-                {% endif %}
-                <aside>
-                    <div class="query_setup">
-                        <h4>Current setup</h4>
-                        <dl>
-                            <dt>Query radius (km)</dt>
-                            <dd>{{ user.profile.crossover_radius |div:1000 }}</dd>
-                            <dt>Minimum depth</dt>
-                            <dd>{{ user.profile.min_depth }}</dd>
-                        </dl>
-                    </div>
-                </aside>
-            </div>
-            <div class="map-wrapper">
-                <h4>
-                    {% if parameter %}
-                    Stations with {{ parameter.name }} sampling
-                    {% else %}
-                    All stations
-                    {% endif %}
-                </h4>
-                {% include "lib/openlayers.html" %}
-                {% include "lib/filesaver.html" %}
-                {% include "js/map.html" %}
-            </div>
-        </div>
-
-        <div class="dataset data">
-            <dl>
-                <dt>ID</dt>
-                <dd>{{ object.id }}</dd>
-                <dt>Expocode</dt>
-                <dd>{{ object.expocode }}</dd>
-                <dt>Parent file</dt>
-                <dd>{{ object.data_file.name }}</dd>
-                <dt>Variables in this data set
-                </dt>
-                <dd>
-                {% include "./dataset_detail/table.html" %}
-                </dd>
-                <dd>
-                  <div class="summary-wrapper">
-                    {% if summary_stats %}
-                    <div id="summary-stats"
-                        style="width: 100%; height: 600px">
-                    </div>
-                    {% elif parameter %}
-                    <img src="https://i.gifer.com/8vEg.gif" width="100" />
-                    <p>Calculating summary statistics</p>
-                    {% endif %}
-                  </div>
-                </dd>
-            </dl>
-        </div>
-        {% include "js/plot_colors.html" %}
-        {% if dataset_profiles %}
-          <script type="text/javascript">
-            {% include "./dataset_detail/profile.js" %}
-          </script>
-          {% if summary_stats %}
-          <div class="exports">
-              {% include "./dataset_detail/profile/data_table.html" %}
-          </div>
-          {% endif %}
+{% block dataset_detail_menu %}
+<ul><li>
+    <a
+    id="data_set-detail"
+    href="{% url 'data_set-detail' object.id %}"
+    >
+        {{ object.expocode }}
+    </a>
+    <ul>
+        <li>
+            <a
+                id="data_set_merge"
+                href="{% url 'data_set_merge' object.id %}"
+            >
+                Merge data
+            </a>
+        </li>
+        {% if is_normalizable %}
+        <li>
+            <a
+                id="data_set_normalize"
+                href="{% url 'data_set_normalize' object.id %}"
+            >
+                Normalize
+            </a>
+        </li>
         {% endif %}
-
-        <a href="{% url 'data_set-delete' object.id %}">[Delete dataset]</a>
-    </div>
+    </ul>
+</li></ul>
 {% endblock %}

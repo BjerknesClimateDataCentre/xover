@@ -157,3 +157,13 @@ REST_FRAMEWORK = {
 
 LOGIN_REDIRECT_URL = '/data'
 LOGOUT_REDIRECT_URL = '/data'
+
+# Polygon covering the Arctic region. Includes all points north
+# of 46.8670°N
+ARCTIC_REGION = """
+    POLYGON((
+    -75 46.8670,-25 46.8670,25 46.8670,
+    75 46.8670,125 46.8670,175 46.8670,
+    -175 46.8670,-125 46.8670,-75 46.8670
+))
+"""

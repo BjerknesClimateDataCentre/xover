@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "data/dataset_detail.html" %}
 {% load mathfilters %}
 {% block css %}
 <link rel="stylesheet" type="text/css"
@@ -23,8 +23,9 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
     }
 </style>
 {% endblock %}
+
 {% block js %}
-{% endblock%}
+{% endblock %}
 {% block content %}
 <h3>
   <a href="{% url 'data_set-detail' object.id %}">
@@ -32,10 +33,15 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
   </a>
 </h3>
 <div class="outer">
+  {% if is_normalizable %}
   <form class="normalizeform" method="post">
     {% csrf_token %}
+    {{ form.as_ul }}
     <input class="normalizebutton" type="submit"
     value="Normalize selected parameters" name="normalize"/>
   </form>
+  {% else %}
+  <h3>No parameters to normalize for this data set</h3>
+  {% endif %}
 </div>
 {% endblock %}

@@ -8,12 +8,14 @@ from django.contrib.gis.db import models
 from django.contrib.auth.models import User
 from django.db import connection
 from django.core.cache import cache
+from .data_type_name import DataTypeName
 
 import glodap.util.interp as interp
 import glodap.util.stats as stats
 import glodap.util.geo as geo
 
 import d2qc.data as data
+from d2qc.data.utils import shash
 
 class DataSet(models.Model):
     class Meta:
@@ -167,6 +169,7 @@ class DataSet(models.Model):
         self,
         min_depth = 0,
         only_qc_controlled_data = True,
+        in_area = None,
     ):
         """
         Fetch all data types in this data set from the database. By default only
@@ -205,6 +208,14 @@ class DataSet(models.Model):
             self.id,
             min_depth
         )
+        if in_area:
+            where += f""" AND
+                st_covers(
+                    ST_GeogFromText('{in_area}'),
+                    position::geography
+                )
+            """
+
         order = " order by dtn.name "
         # Filter by qc, but always include authoritative parameters
         where += """
@@ -574,7 +585,7 @@ class DataSet(models.Model):
         cache_key = "get_profiles_data-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
-            hash(tuple(stations)),
+            shash(stations),
             min_depth,
             only_qc_controlled_data,
         )
@@ -787,7 +798,7 @@ class DataSet(models.Model):
         cache_key = "get_interp_profiles-{}-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
-            hash(tuple(stations)),
+            shash(stations),
             min_depth,
             xtype,
             only_qc_controlled_data,
@@ -917,8 +928,8 @@ class DataSet(models.Model):
         cache_key = "get_profiles_stats-{}-{}-{}-{}-{}-{}-{}-{}-{}".format(
             self.id,
             parameter_id,
-            hash(tuple(stations)),
-            hash(tuple(xover_stations)),
+            shash(stations),
+            shash(xover_stations),
             crossover_radius,
             min_depth,
             data_type_name.data_type.offset_type.id,
@@ -1093,3 +1104,53 @@ class DataSet(models.Model):
         )
 
         return merged
+
+    @staticmethod
+    def get_norm_regression_intercept(
+            data_type_name_id,
+            area_polygon,
+            max_depth = 50,
+    ):
+        """
+        Get the regression intercept value between a parameter (either carbon
+        or alkalinity) and salinity, calculated for the whole region north of
+        lat_min degrees north.
+        """
+
+        cache_key = "get_norm_regression_intercept-{}-{}-{}".format(
+            data_type_name_id,
+            shash(area_polygon),
+            max_depth,
+        )
+        value = cache.get(cache_key, False)
+        if value is not False:
+            return value
+
+        data_type_name = DataTypeName.objects.get(pk = data_type_name_id)
+        ref_id = DataSet.get_reference_parameter(
+            data_type_name.data_type.identifier
+        )
+        salin_id = DataTypeName.objects.filter(name='salinity').first().id
+        sql = f"""
+            SELECT salin.value, param.value
+            FROM d2qc_data_sets ds
+            INNER JOIN d2qc_stations s ON s.data_set_id=ds.id
+            INNER JOIN d2qc_casts c ON c.station_id=s.id
+            INNER JOIN d2qc_depths d ON d.cast_id=c.id
+            INNER JOIN d2qc_data_values param ON param.depth_id=d.id
+            INNER JOIN d2qc_data_values salin ON salin.depth_id=d.id
+            WHERE st_covers(ST_GeogFromText('{area_polygon}'), position::geography)
+            AND param.data_type_name_id={ref_id}
+            AND salin.data_type_name_id={salin_id}
+            AND ds.is_reference
+            AND d.depth < {max_depth}
+        """
+        param = []
+        salin = []
+        for row in DataSet._fetchall_query(sql):
+            param.append(float(row[0]))
+            salin.append(float(row[1]))
+
+        intercept = stats.linear_fit(salin, param)[1]
+        cache.set(cache_key, intercept)
+        return intercept
