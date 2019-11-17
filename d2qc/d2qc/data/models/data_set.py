@@ -9,10 +9,13 @@ from django.contrib.auth.models import User
 from django.db import connection
 from django.core.cache import cache
 from .data_type_name import DataTypeName
+from .profile import Profile
+from django.conf import settings
 
 import glodap.util.interp as interp
 import glodap.util.stats as stats
 import glodap.util.geo as geo
+from glodap.util.data_type_dict import DataTypeDict
 
 import d2qc.data as data
 from d2qc.data.utils import shash
@@ -1154,3 +1157,24 @@ class DataSet(models.Model):
         intercept = stats.linear_fit(salin, param)[1]
         cache.set(cache_key, intercept)
         return intercept
+
+    def getNormalizableParameters(self, profile = None):
+        if not profile:
+            profile = Profile()
+        params = []
+        data_types = self.get_data_type_names(
+            min_depth = profile.min_depth,
+            only_qc_controlled_data = profile.only_qc_controlled_data,
+            in_area = settings.ARCTIC_REGION
+        )
+        data_type_dict = DataTypeDict()
+        for obj in data_types:
+            if obj['identifier'] == data_type_dict.getIdentifier(
+                'talk'
+            ):
+                params.append((obj['id'], obj['name']))
+            if obj['identifier'] == data_type_dict.getIdentifier(
+                'tco2'
+            ):
+                params.append((obj['id'], obj['name']))
+        return params

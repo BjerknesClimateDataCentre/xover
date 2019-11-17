@@ -26,6 +26,16 @@
             </a>
         </li>
         {% endif %}
+        {% if has_operations %}
+        <li>
+            <a
+                id="data_set_operations"
+                href="{% url 'data_set_operations' object.id %}"
+            >
+                Operations
+            </a>
+        </li>
+        {% endif %}
     </ul>
 </li></ul>
 {% endblock %}
