@@ -24,8 +24,9 @@ from .data_set import DataSetList
 from .data_set import DataSetDetail
 from .data_set import DataSetDelete
 from .data_set import DataSetMerge
-from .data_set import NormalizableMixin
+from .data_set import MenuMixin
 from .data_set import DataSetNormalization
+from .data_set import OperationList
 
 __all__ = [
   "CastViewSet", "DataTypeViewSet", "DataUnitViewSet", "DataValueViewSet",
@@ -33,5 +34,6 @@ __all__ = [
   "redirect_login", "dataSet", "crossover", "DataFileViewSet", "DataFileList",
   "DataFileCreate", "DataFileUpdate", "DataFileDelete", "DataFileDetail",
   "DataSetViewSet", "NestedDataSetViewSet", "DataSetList", "DataSetDetail",
-  "DataSetDelete", "DataSetMerge", "DataSetNormalization", "NormalizableMixin",
+  "DataSetDelete", "DataSetMerge", "DataSetNormalization", "MenuMixin",
+  "OperationList",
 ]

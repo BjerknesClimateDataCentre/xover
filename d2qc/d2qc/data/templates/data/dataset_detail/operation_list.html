@@ -1,0 +1,15 @@
+{% extends "data/dataset_detail.html" %}
+{% block content %}
+    <h3>Operations performed on data set {{ object.expocode }}</h3>
+    {% if operation_list %}
+    <p>Below is a list of operations performed on this data set</p>
+    <ul>
+    {% for obj in operation_list %}
+        <li>{{obj.operation_type.name}}: {{ obj.name }}
+        </li>
+    {% endfor %}
+    </ul>
+    {% else %}
+        <p>No operations have been performed on this data set.</p>
+    {% endif %}
+{% endblock %}

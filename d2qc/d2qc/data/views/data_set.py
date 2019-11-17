@@ -2,7 +2,7 @@ from rest_framework import viewsets
 
 import glodap.util.stats as stats
 
-from d2qc.data.models import DataSet, DataTypeName, DataType
+from d2qc.data.models import DataSet, DataTypeName, DataType, Operation
 from d2qc.data.serializers import DataSetSerializer
 from d2qc.data.serializers import NestedDataSetSerializer
 from d2qc.data.forms import MergeForm, NormalizeForm
@@ -28,24 +28,19 @@ import subprocess
 import pandas as pd
 
 
-class NormalizableMixin:
+class MenuMixin:
     ALKALINITY = 'SDN:P01::ALKYZZXX'
     CO2 = 'SDN:P01::PCO2XXXX'
-
-    def normalizableParameters(self):
-        profile = self.request.user.profile
-        params = []
-        data_types = self.object.get_data_type_names(
-            min_depth = profile.min_depth,
-            only_qc_controlled_data = profile.only_qc_controlled_data,
-            in_area = settings.ARCTIC_REGION
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_normalizable'] = (
+            True if self.object.getNormalizableParameters(
+                self.request.user.profile
+            ) else False
         )
-        for obj in data_types:
-            if obj['identifier'] == self.ALKALINITY:
-                params.append((obj['id'], obj['name']))
-            if obj['identifier'] == self.CO2:
-                params.append((obj['id'], obj['name']))
-        return params
+        context['has_operations'] = self.object.operations.exists()
+        return context
+
 
 class DataSetViewSet(viewsets.ModelViewSet):
 
@@ -67,7 +62,7 @@ class DataSetList(ListView):
             queryset = DataSet.objects.filter(owner_id=self.request.user.id)
         return queryset
 
-class DataSetDetail(DetailView, NormalizableMixin,):
+class DataSetDetail(MenuMixin, DetailView,):
     model = DataSet
     profile_form = None
     template_name = 'data/dataset_detail/detail.html'
@@ -299,9 +294,6 @@ class DataSetDetail(DetailView, NormalizableMixin,):
                 )
                 if stats:
                     context['dataset_stats'] = json.dumps(stats, allow_nan=False)
-        context['is_normalizable'] = (
-            True if self.normalizableParameters() else False
-        )
         return context
 
 class DataSetDelete(DeleteView):
@@ -320,7 +312,7 @@ class DataSetDelete(DeleteView):
         data_file.save()
         return retval
 
-class DataSetMerge(DetailView, NormalizableMixin,):
+class DataSetMerge(MenuMixin, DetailView,):
     model = DataSet
     template_name = 'data/dataset_detail/dataset_merge.html'
     profile_form = None
@@ -425,15 +417,12 @@ class DataSetMerge(DetailView, NormalizableMixin,):
             context['slope'] = slope
             context['intercept'] = intercept
         context['merge_form'] = self.merge_form
-        context['is_normalizable'] = (
-            True if self.normalizableParameters() else False
-        )
         return context
 
 class DataSetNormalization(
+    MenuMixin,
     FormView,
     SingleObjectMixin,
-    NormalizableMixin,
 ):
     model = DataSet
     template_name = 'data/dataset_detail/dataset_normalize.html'
@@ -445,7 +434,9 @@ class DataSetNormalization(
         kwargs = super().get_form_kwargs()
         kwargs['data_set_id'] = self.object.id
         profile = self.request.user.profile
-        kwargs['params_opts'] = self.normalizableParameters()
+        kwargs['params_opts'] = self.object.getNormalizableParameters(
+            self.request.user.profile
+        )
         if kwargs['params_opts']:
             self.is_normalizable = True
         return kwargs
@@ -481,5 +472,25 @@ class DataSetNormalization(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['is_normalizable'] = self.is_normalizable
+        return context
+
+
+class OperationList(MenuMixin, ListView):
+    model = Operation
+    context_object_name = 'operation_list'
+    template_name = 'data/dataset_detail/operation_list.html'
+
+    def get(self, request, *args, **kwargs):
+        self.object = DataSet.objects.get(pk=kwargs['pk'])
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self, *args, **kwargs):
+        queryset = Operation.objects.none()
+        if self.request.user.is_authenticated:
+            queryset = Operation.objects.filter(data_set=self.object)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['object'] = self.object
         return context
