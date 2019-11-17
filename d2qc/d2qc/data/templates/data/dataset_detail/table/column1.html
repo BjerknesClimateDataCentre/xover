@@ -5,9 +5,6 @@
   width: 200px;
   justify-content: center;
 }
-.info {
-  width: 100%
-}
 .column {
   display: flex;
   width: 35px;
@@ -36,10 +33,4 @@
 </style>
 <div class="variables">
   {% include "util/data_type_name_list.html" %}
-  <div class="info">
-    <p>
-      To merge sensordata with bottle data, go to the
-      <a href="{% url 'data_set_merge' object.id %}">Merge data</a> interface.
-    </p>
-  </div>
 </div>
