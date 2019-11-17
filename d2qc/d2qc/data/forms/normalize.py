@@ -66,12 +66,16 @@ class NormalizeForm(forms.Form):
             data_type = DataTypeName.objects.get(pk = parameter)
             norm_name = "NORM#{}".format(data_type.name)
             data_type_norm = DataTypeName.objects.filter(name=norm_name)
+            operation_type = OperationType.objects.filter(
+                name='normalization'
+            ).first()
             if data_type_norm.exists():
                 data_type_norm = data_type_norm.first()
             else:
                 data_type_norm = copy.copy(data_type)
                 data_type_norm.id = None
                 data_type_norm.name = norm_name
+                data_type_norm.operation_type = operation_type
                 data_type_norm.save()
 
             value_list = []
@@ -84,9 +88,6 @@ class NormalizeForm(forms.Form):
             DataValue.objects.bulk_create(value_list)
 
             # Update operations table if successful
-            operation_type = OperationType.objects.filter(
-                name='normalization'
-            ).first()
             operation = Operation(
                 operation_type = operation_type,
                 data_type_name = data_type_norm,

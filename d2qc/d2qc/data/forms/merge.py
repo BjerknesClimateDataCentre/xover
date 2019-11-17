@@ -139,12 +139,15 @@ class MergeForm(forms.Form):
             min_depth = self.cleaned_data['merge_min_depth'],
         )
 
+        operation_type = OperationType.objects.filter(name='merge').first()
+
         if DataTypeName.objects.filter(name=name).exists():
             data_type_name = DataTypeName.objects.filter(name=name).first()
         else:
             data_type_name = copy.copy(primary)
             data_type_name.id = None
             data_type_name.name = name
+            data_type_name.operation_type = operation_type
             data_type_name.save()
 
         merge_type = int(self.cleaned_data['merge_type'])
@@ -155,6 +158,7 @@ class MergeForm(forms.Form):
         if merge_type == 6:
             data['secondary'] = (data['secondary'] - intercept) / slope
 
+        new_values = []
         for i, row in data.iterrows():
             value = DataValue(qc_flag=2,data_type_name=data_type_name)
             value.depth_id = row['depth_id']
@@ -166,10 +170,10 @@ class MergeForm(forms.Form):
                 value.value = np.nanmean([row['primary'], row['secondary']])
 
             if not np.isnan(value.value):
-                value.save()
+                new_values.append(value)
+        DataValue.objects.bulk_create(new_values)
 
         # Update operations table if successful
-        operation_type = OperationType.objects.filter(name='merge').first()
         operation = Operation(
             operation_type = operation_type,
             data_type_name = data_type_name,
