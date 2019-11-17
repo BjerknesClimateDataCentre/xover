@@ -10,12 +10,13 @@
             <h4>{{operation_type |title}}</h4>
             <ul>
                 {% for operation in operations %}
-                <li>{{ operation.name }}</li>
-                <ul>
-                    {% for key, value in operation.data.items %}
-                    <li>{{ key }}: {{ value }}</li>
-                    {% endfor %}
-                </ul>
+                <li><h5>{{ operation.name }}</h5>
+                    <ul class="parameter_list">
+                        {% for key, value in operation.data.items %}
+                        <li>{{ key }}: {{ value }}</li>
+                        {% endfor %}
+                    </ul>
+                </li>
                 {% endfor %}
             </ul>
         </li>
