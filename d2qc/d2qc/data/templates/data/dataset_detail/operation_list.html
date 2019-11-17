@@ -4,8 +4,20 @@
     {% if operation_list %}
     <p>Below is a list of operations performed on this data set</p>
     <ul>
-    {% for obj in operation_list %}
-        <li>{{obj.operation_type.name}}: {{ obj.name }}
+    {% regroup operation_list by operation_type.name as type_list %}
+    {% for operation_type, operations in type_list %}
+        <li>
+            <h4>{{operation_type |title}}</h4>
+            <ul>
+                {% for operation in operations %}
+                <li>{{ operation.name }}</li>
+                <ul>
+                    {% for key, value in operation.data.items %}
+                    <li>{{ key }}: {{ value }}</li>
+                    {% endfor %}
+                </ul>
+                {% endfor %}
+            </ul>
         </li>
     {% endfor %}
     </ul>

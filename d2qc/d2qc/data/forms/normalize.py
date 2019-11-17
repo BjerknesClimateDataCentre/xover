@@ -29,7 +29,6 @@ class NormalizeForm(forms.Form):
 
     def save_normalization_data(self, data_set, user):
         output = []
-        #  [{'name':'ALKALI', 'id': '1'}, {'name':'TCARBN', 'id': '2'}]
         for parameter in self.cleaned_data['params']:
             intercept = DataSet.get_norm_regression_intercept(
                 parameter,
@@ -93,8 +92,7 @@ class NormalizeForm(forms.Form):
                 data_type_name = data_type_norm,
                 data_set = data_set,
                 name = (
-                    f"Normalization of {data_type.name} to "
-                    + f"{data_type_norm.name}"
+                    f"{data_type.name} to {data_type_norm.name}"
                 ),
                 data = {
                     'orig_parameter_id': data_type.id,
