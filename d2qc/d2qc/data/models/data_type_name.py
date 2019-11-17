@@ -15,6 +15,14 @@ class DataTypeName(models.Model):
     )
     name = models.CharField(max_length=255)
     is_reference = models.BooleanField(default=False)
+    operation_type = models.ForeignKey(
+        'OperationType',
+        related_name = 'data_type_names',
+        on_delete = models.PROTECT,
+        blank = True,
+        null = True,
+    )
+
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
