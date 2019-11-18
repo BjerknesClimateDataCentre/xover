@@ -64,7 +64,7 @@ class NormalizeForm(forms.Form):
                 + intercept
             )
             data_type = DataTypeName.objects.get(pk = parameter)
-            norm_name = "NORM#{}".format(data_type.name)
+            norm_name = data_type.get_normalization_name()
             data_type_norm = DataTypeName.objects.filter(name=norm_name)
             operation_type = OperationType.objects.filter(
                 name='normalization'

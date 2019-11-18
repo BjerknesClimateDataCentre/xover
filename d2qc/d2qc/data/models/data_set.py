@@ -1174,15 +1174,27 @@ class DataSet(models.Model):
         norm_operation_type = OperationType.objects.filter(
             name='normalization'
         ).first()
+        data_types = DataTypeName.objects.filter(
+            id__in=[dt['id'] for dt in data_types]
+        )
         for obj in data_types:
-            if obj['operation_type_id'] == norm_operation_type.id:
+            if obj.operation_type_id == norm_operation_type.id:
                 continue
-            if obj['identifier'] == data_type_dict.getIdentifier(
+            if obj.data_type.identifier == data_type_dict.getIdentifier(
                 'talk'
             ):
-                params.append((obj['id'], obj['name']))
-            if obj['identifier'] == data_type_dict.getIdentifier(
+                if not self.is_normalized(obj):
+                    params.append((obj.id, obj.name))
+            if obj.data_type.identifier == data_type_dict.getIdentifier(
                 'tco2'
             ):
-                params.append((obj['id'], obj['name']))
+                if not self.is_normalized(obj):
+                    params.append((obj.id, obj.name))
         return params
+
+    def is_normalized(self, data_type_name):
+        name = data_type_name.get_normalization_name()
+        return DataSet.objects.filter(
+            id=self.id,
+            stations__casts__depths__data_values__data_type_name__name=name
+        ).exists()
