@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.db import connection
 from django.core.cache import cache
 from .data_type_name import DataTypeName
+from .operation_type import OperationType
 from .profile import Profile
 from django.conf import settings
 
@@ -193,7 +194,8 @@ class DataSet(models.Model):
                 when (dtn.id = ds.press_aut_id) then 'pressure'
                 when (dtn.id = ds.salin_aut_id) then 'salinity'
                 else null
-            end as authoritative
+            end as authoritative,
+            dtn.operation_type_id
         """
         _from = """
             from d2qc_data_type_names dtn
@@ -240,6 +242,7 @@ class DataSet(models.Model):
             'identifier': type[1],
             'id': type[2],
             'authoritative': type[3],
+            'operation_type_id': type[4],
         } for type in DataSet._fetchall_query(sql)]
         # Set the cache
         self._typelist = typelist
@@ -1158,17 +1161,22 @@ class DataSet(models.Model):
         cache.set(cache_key, intercept)
         return intercept
 
-    def getNormalizableParameters(self, profile = None):
-        if not profile:
-            profile = Profile()
+    def getNormalizableParameters(self, user_profile = None):
+        if not user_profile:
+            user_profile = Profile()
         params = []
         data_types = self.get_data_type_names(
-            min_depth = profile.min_depth,
-            only_qc_controlled_data = profile.only_qc_controlled_data,
-            in_area = settings.ARCTIC_REGION
+            min_depth = user_profile.min_depth,
+            only_qc_controlled_data = user_profile.only_qc_controlled_data,
+            in_area = settings.ARCTIC_REGION,
         )
         data_type_dict = DataTypeDict()
+        norm_operation_type = OperationType.objects.filter(
+            name='normalization'
+        ).first()
         for obj in data_types:
+            if obj['operation_type_id'] == norm_operation_type.id:
+                continue
             if obj['identifier'] == data_type_dict.getIdentifier(
                 'talk'
             ):
