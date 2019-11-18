@@ -28,3 +28,6 @@ class DataTypeName(models.Model):
 
     def __str__(self):
         return str(self.name)
+
+    def get_normalization_name(self):
+        return f"NORM#{self.name}"
