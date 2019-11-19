@@ -1226,6 +1226,9 @@ class DataSet(models.Model):
         )
         # Calculate mean of available salinity values in stations with
         salm = profile['salin'].mean()
+        if math.isnan(salm):
+            raise ValueError(f"Average salinity cannot be {salm}")
+
         # Remove rows with missing values
         profile.dropna(
             inplace =True,
