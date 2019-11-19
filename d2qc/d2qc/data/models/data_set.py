@@ -9,7 +9,9 @@ from django.contrib.auth.models import User
 from django.db import connection
 from django.core.cache import cache
 from .data_type_name import DataTypeName
+from .data_value import DataValue
 from .operation_type import OperationType
+from .operation import Operation
 from .profile import Profile
 from django.conf import settings
 
@@ -1183,18 +1185,101 @@ class DataSet(models.Model):
             if obj.data_type.identifier == data_type_dict.getIdentifier(
                 'talk'
             ):
-                if not self.is_normalized(obj):
+                if not self.is_normalized(obj.id):
                     params.append((obj.id, obj.name))
             if obj.data_type.identifier == data_type_dict.getIdentifier(
                 'tco2'
             ):
-                if not self.is_normalized(obj):
+                if not self.is_normalized(obj.id):
                     params.append((obj.id, obj.name))
         return params
 
-    def is_normalized(self, data_type_name):
+    def is_normalized(self, data_type_name_id):
+        data_type_name = DataTypeName.objects.get(pk=data_type_name_id)
         name = data_type_name.get_normalization_name()
         return DataSet.objects.filter(
             id=self.id,
             stations__casts__depths__data_values__data_type_name__name=name
         ).exists()
+
+    def normalize_data(self, data_type_name_id, user):
+        if self.is_normalized(data_type_name_id):
+            return
+
+        intercept = DataSet.get_norm_regression_intercept(
+            data_type_name_id,
+            area_polygon = settings.ARCTIC_REGION
+        )
+        profile = self.get_profiles_data(
+            stations = self.get_stations(
+                parameter_id = data_type_name_id,
+                crossover_radius = user.profile.crossover_radius,
+                min_depth = user.profile.min_depth,
+                only_qc_controlled_data = (
+                    user.profile.only_qc_controlled_data
+                ),
+            ),
+            parameter_id = data_type_name_id,
+            min_depth = user.profile.min_depth,
+            only_qc_controlled_data = user.profile.only_qc_controlled_data,
+        )
+        # Calculate mean of available salinity values in stations with
+        salm = profile['salin'].mean()
+        # Remove rows with missing values
+        profile.dropna(
+            inplace =True,
+            subset = ['param', 'salin']
+        )
+        # Calculate normalized values
+        profile['param_norm']=(
+            (
+                (profile['param'] - intercept)
+                / profile['salin']
+                * salm
+            )
+            + intercept
+        )
+        data_type = DataTypeName.objects.get(pk = data_type_name_id)
+        norm_name = data_type.get_normalization_name()
+        data_type_norm = DataTypeName.objects.filter(name=norm_name)
+        operation_type = OperationType.objects.filter(
+            name='normalization'
+        ).first()
+        if data_type_norm.exists():
+            data_type_norm = data_type_norm.first()
+        else:
+            data_type_norm = copy.copy(data_type)
+            data_type_norm.id = None
+            data_type_norm.name = norm_name
+            data_type_norm.operation_type = operation_type
+            data_type_norm.save()
+
+        value_list = []
+        for index, row in profile.iterrows():
+            value = DataValue(qc_flag=2, data_type_name = data_type_norm)
+            value.depth_id = row['depth_id']
+            value.value = row['param_norm']
+            value_list.append(value)
+
+        DataValue.objects.bulk_create(value_list)
+
+        # Update operations table if successful
+        operation = Operation(
+            operation_type = operation_type,
+            data_type_name = data_type_norm,
+            data_set = self,
+            name = (
+                f"{data_type.name} to {data_type_norm.name}"
+            ),
+            data = {
+                'original_parameter_id': data_type.id,
+                'salinity_mean': salm,
+                'regression_intercept': intercept,
+                'min_depth': user.profile.min_depth,
+                'only_qc_controlled_data': (
+                    user.profile.only_qc_controlled_data
+                ),
+            }
+        )
+        operation.save()
+        return operation
