@@ -10,7 +10,8 @@ class NormalizeForm(forms.Form):
     _params_opts = None
 
     def __init__(self, *args, **kwargs):
-        choices = kwargs.pop('params_opts')
+        data_type_names = kwargs.pop('params_opts')
+        choices = [(dtn.id, dtn.name) for dtn in data_type_names]
         data_set_id = int(kwargs.pop('data_set_id'))
         super().__init__(*args, **kwargs)
         self.fields['params'] = forms.MultipleChoiceField(
