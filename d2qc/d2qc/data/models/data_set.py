@@ -3,6 +3,7 @@ import gsw
 import pandas as pd
 import statistics as stat
 import re
+import copy
 
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
@@ -1186,12 +1187,12 @@ class DataSet(models.Model):
                 'talk'
             ):
                 if not self.is_normalized(obj.id):
-                    params.append((obj.id, obj.name))
+                    params.append(obj)
             if obj.data_type.identifier == data_type_dict.getIdentifier(
                 'tco2'
             ):
                 if not self.is_normalized(obj.id):
-                    params.append((obj.id, obj.name))
+                    params.append(obj)
         return params
 
     def is_normalized(self, data_type_name_id):
