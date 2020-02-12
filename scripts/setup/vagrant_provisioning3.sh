@@ -10,9 +10,11 @@
 # Go to the dev folder
 cd /vagrant
 
+ln -s ~/.env_vagrant .
+
 # Apache configuration:
 read -r -d '' apache <<'EOF'
-WSGIDaemonProcess django2qc python-home=~/.env_vagrant python-path=/vagrant/d2qc
+WSGIDaemonProcess django2qc python-home=/vagrant/.env_vagrant python-path=/vagrant/d2qc
 WSGIProcessGroup django2qc
 WSGIScriptAlias / /vagrant/d2qc/d2qc/wsgi.py process-group=django2qc
 
@@ -26,3 +28,4 @@ echo "$apache" > /etc/apache2/conf-available/wsgi.conf
 
 a2enconf wsgi
 service apache2 reload
+
