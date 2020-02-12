@@ -80,6 +80,7 @@ cloning the git repository to your server:
 
 * `sudo mkdir /vagrant`
 * `sudo chown ubuntu:ubuntu /vagrant`
+* `sudo chmod 755 /vagrant`
 * `git clone https://github.com/BjerknesClimateDataCentre/xover.git /vagrant`
 * `cd /vagrant`
 
