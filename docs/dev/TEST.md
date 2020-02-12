@@ -80,7 +80,7 @@ cloning the git repository to your server:
 
 * `sudo mkdir /vagrant`
 * `sudo chown ubuntu:ubuntu /vagrant`
-* `git clone https://github.com/jonasfh/xover.git /vagrant`
+* `git clone https://github.com/BjerknesClimateDataCentre/xover.git /vagrant`
 * `cd /vagrant`
 
 Most of the sofware setup is defined in /scripts/setup. Vagrant scripts here are supposed to be run on a vagrant instance, but should work equally well here. Script 1 and 3 needs root access, while script 2 and the dev-script runs unprivileged.
