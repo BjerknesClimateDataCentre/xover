@@ -157,6 +157,13 @@ class Glodap:
             'qcname': 'talkf',
             'qc2name': 'talkqc',
         },
+        'fco2': {
+            'index': 48,
+            'qcindex': 49,
+            'qc2index': 50,
+            'qcname': 'fco2f',
+            'qc2name': 'fco2temp',
+        },
         'phts25p0': {
             'index': 51,
             'qcindex': 52,
