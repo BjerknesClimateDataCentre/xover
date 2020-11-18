@@ -393,6 +393,7 @@ class Glodap:
                         is_reference - flag set to true.
         """
         line_no = 1
+        start = datetime.datetime.now()
 
         try:
             filesize = os.path.getsize(self.data_file_path)
@@ -690,7 +691,9 @@ class Glodap:
 
         except FileNotFoundError:
             print("Some error")
+        end = datetime.datetime.now()
 
+        print(f"Time elapsed: {end-start}")
     def glodapFileLayoutIsOK(self, headers):
 
         vars = self.glodap_vars
