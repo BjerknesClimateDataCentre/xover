@@ -393,6 +393,7 @@ class Glodap:
                         is_reference - flag set to true.
         """
         line_no = 1
+        errors = []
         start = datetime.datetime.now()
 
         try:
@@ -658,8 +659,10 @@ class Glodap:
                                 except Exception as e:
                                     pass
                     except Exception as e:
-                        print(f"Line no {line_count}: ", end='')
-                        print(e)
+                        error = e
+                        print(f"Line no {line_count}: {error}")
+                        errors += [f"Line no {line_count}: {error}"]
+
                         all_new = False
                         if value_list:
                             DataValue.objects.bulk_create(value_list)
@@ -690,10 +693,13 @@ class Glodap:
                 ))
 
         except FileNotFoundError:
-            print("Some error")
-        end = datetime.datetime.now()
+            print("File not found")
+        print('\n'.join(errors))
 
+        end = datetime.datetime.now()
         print(f"Time elapsed: {end-start}")
+
+
     def glodapFileLayoutIsOK(self, headers):
 
         vars = self.glodap_vars
