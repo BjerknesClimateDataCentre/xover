@@ -428,11 +428,11 @@ class Glodap:
                         )
 
                 # Import data types
-                vars = self.glodap_vars
+                variables = self.glodap_vars
                 idents = self.glodap_identificators
                 data_type_names = {}
                 data_type_dict = DataTypeDict()
-                for var in vars:
+                for var in variables:
                     data_type, created = DataType.objects.get_or_create(
                         identifier = data_type_dict.getIdentifier(var),
                         original_label = var,
@@ -508,119 +508,94 @@ class Glodap:
                             current_cast.save()
                             all_new = True
 
-                        # Create date object from current line
+                        # Date object
+                        time_modifier = datetime.timedelta(0)
+                        # If hour is 24 or more, we subtract 24, and add 24 hours afterwards to the created date object
+                        # Similarly, if day is more than number of days for a given month, we subtract the number of days in
+                        # the month, and add the same value to the date object.
+                        # Assumed time NaNs are set to 0
+
+                        year   = int(float(data[idents['year']]))
+                        month  = int(float(data[idents['month']]))
+                        day    = int(float(data[idents['day']]))
+                        hour   = int(float(data[idents['hour']]))
+                        minute = int(float(data[idents['minute']]))
+
+                        days_in_month = calendar.monthrange(year,month)
+                        if day < 1:
+                            day = 1
+                            time_modifier += datetime.timedelta(days=day-1)
+                            print(f"Error day {day}, line {line_count}")
+
+                        if day > days_in_month[1]:
+                            day = days_in_month[1]
+                            time_modifier += datetime.timedelta(days=(day-days_in_month[1]))
+                            print(f"Error day {day}, line {line_count}")
+
+
+                        if hour < 0: # Assumed NaN, set to 0
+                            print(f"Error hour {hour}, line {line_count}, adjusted to 0")
+                            hour = 0
+                        if hour > 23:
+                            print(f"Error hour {hour}, line {line_count}")
+                            if hour < 48:
+                                hour = hour-24
+                                time_modifier += datetime.timedelta(hour=24)
+                            else:
+                                hour = 0
+
+                        if minute == 81 or minute < 0: # Known random error | assumed NaN; set minute to 0
+                            print(f"Error minute {minute}, line {line_count}, adjusted to 0")
+                            minute = 0
+
                         try:
-                            thetime = datetime.datetime(
-                                    year=int(float(data[idents['year']])),
-                                    month=int(float(data[idents['month']])),
-                                    day=int(float(data[idents['day']])),
-                                    hour=int(float(data[idents['hour']])),
-                                    minute=int(float(data[idents['minute']])),
+                            time = datetime.datetime(
+                                    year=year,
+                                    month=month,
+                                    day=day,
+                                    hour=hour,
+                                    minute=minute,
                                     second=0,
                                     tzinfo=datetime.timezone.utc
                             )
+                            time = time + time_modifier
                         except ValueError as e:
-                            print(str(line_count), end='|', flush=True)
-                            print(e)
-                            # If hour is 24 or more, we subtract 24, and add 24
-                            # hours afterwards to the created date object
-                            # Similarly, if day is more than number of days for
-                            # a given month, we subtract the number of days in
-                            # the month, and add the same value to the date
-                            # object.
-                            mon_days = calendar.monthrange(
-                                    int(float(data[idents['year']])),
-                                    int(float(data[idents['month']])),
-                            )[1]
-                            if int(float(data[idents['hour']])) > 23:
-                                print(
-                                        "Error hour {}, line {}" . format(
-                                                data[idents['hour']],
-                                                line_count
-                                        )
-                                )
-                                thetime = datetime.datetime(
-                                        year=int(float(data[idents['year']])),
-                                        month=int(float(data[idents['month']])),
-                                        day=int(float(data[idents['day']])),
-                                        hour=int(float(data[idents['hour']])) - 24,
-                                        minute=int(float(data[idents['minute']])),
-                                        second=0,
-                                        tzinfo=datetime.timezone.utc
-                                )
-                                thetime += datetime.timedelta(hours=24)
-                            elif int(float(data[idents['day']])) > mon_days:
-                                print(
-                                        "Error day {}, line {}" . format(
-                                                data[idents['day']],
-                                                line_count
-                                        )
-                                )
-                                thetime = datetime.datetime(
-                                        year=int(float(data[idents['year']])),
-                                        month=int(float(data[idents['month']])),
-                                        day=int(float(data[idents['day']])) - mon_days,
-                                        hour=int(float(data[idents['hour']])),
-                                        minute=int(float(data[idents['minute']])),
-                                        second=0,
-                                        tzinfo=datetime.timezone.utc
-                                )
-                                thetime += datetime.timedelta(days=mon_days)
-                            elif int(float(data[idents['minute']])) == 81:
-                                # Random error, set minute to 0
-                                print(
-                                        "Error minute {}, line {}" . format(
-                                                data[idents['minute']],
-                                                line_count
-                                        )
-                                )
-                                thetime = datetime.datetime(
-                                        year=int(float(data[idents['year']])),
-                                        month=int(float(data[idents['month']])),
-                                        day=int(float(data[idents['day']])),
-                                        hour=int(float(data[idents['hour']])),
-                                        minute=0,
-                                        second=0,
-                                        tzinfo=datetime.timezone.utc
-                                )
-                            else:
-                                print("UNHANDLED ERROR, line {}".format(
-                                        line_count
-                                ))
+                            print(f"UNHANDLED ERROR, line {line_count} | {e}")
 
-
-
-                        depth = float(data[idents['depth']])
-                        bottle = int(float(data[idents['bottle']]))
 
                         # Depth
+                        depth = float(data[idents['depth']])
+                        bottle = int(float(data[idents['bottle']]))
                         if (
-                                all_new
-                                or depth != current_depth.depth
-                                or bottle != current_depth.bottle
-                                or thetime != current_depth.date_and_time
+                          all_new
+                          or depth != current_depth.depth
+                          or bottle != current_depth.bottle
+                          or time != current_depth.date_and_time
                         ):
                             model_depth = Depth(
                                     cast = current_cast,
                                     depth = depth,
                                     bottle = bottle,
-                                    date_and_time = thetime,
+                                    date_and_time = time,
                             )
                             current_depth = model_depth
                             model_depth.save()
                             all_new = True
 
-                            temp_val = salin_val = press_val = None
+                            temp_val = None
+                            salin_val = None
+                            press_val = None
                             # Now insert the actual data
-                            append_to_list = []
+                            model_value_list = []
                             for key, var in self.glodap_vars.items():
                                 value = float(data[var['index']])
                                 qc_flag = None
-                                if var['qcindex']:
+                                if var['qcindex']: 
                                     qc_flag = int(float(data[var['qcindex']]))
                                 qc2_flag = None
                                 if var['qc2index']:
                                     qc2_flag = int(float(data[var['qc2index']]))
+
                                 model_value = DataValue(
                                         depth = current_depth,
                                         value = value,
@@ -628,11 +603,10 @@ class Glodap:
                                         qc2_flag = qc2_flag,
                                         data_type_name = data_type_names[key]
                                 )
-                                current_value = model_value
-                                append_to_list.append(model_value)
+                                model_value_list.append(model_value)
                                 # collect temp, press, salin values
                                 # value = -999 or similar means missing value
-                                value = value if value > -8 else None
+                                if value < -8: value =  None
                                 if key == temp_aut.name:
                                     temp_val = value
                                 if key == salin_aut.name:
@@ -654,7 +628,7 @@ class Glodap:
                                     )
                                     current_depth.sigma4 = sigma4
                                     current_depth.save()
-                                    value_list += append_to_list
+                                    value_list += model_value_list
 
                                 except Exception as e:
                                     pass
