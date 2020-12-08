@@ -169,7 +169,7 @@ class DataFile(models.Model):
             the variables as data types for them to be treated. Unhandled
             variables in the data set: {}
             """.format(
-                ', '.join(missing_vars)
+                '\n  - '.join(missing_vars)
             )
             self._messages.append(message)
 

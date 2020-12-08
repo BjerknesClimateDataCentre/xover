@@ -525,19 +525,19 @@ class Glodap:
                         if day < 1:
                             day = 1
                             time_modifier += datetime.timedelta(days=day-1)
-                            print(f"Error day {day}, line {line_count}")
+                            #print(f"Error day {day}, line {line_count}")
 
                         if day > days_in_month[1]:
                             day = days_in_month[1]
                             time_modifier += datetime.timedelta(days=(day-days_in_month[1]))
-                            print(f"Error day {day}, line {line_count}")
+                            #print(f"Error day {day}, line {line_count}")
 
 
                         if hour < 0: # Assumed NaN, set to 0
-                            print(f"Error hour {hour}, line {line_count}, adjusted to 0")
+                            #print(f"Error hour {hour}, line {line_count}, adjusted to 0")
                             hour = 0
                         if hour > 23:
-                            print(f"Error hour {hour}, line {line_count}")
+                            #print(f"Error hour {hour}, line {line_count}")
                             if hour < 48:
                                 hour = hour-24
                                 time_modifier += datetime.timedelta(hour=24)
@@ -545,7 +545,7 @@ class Glodap:
                                 hour = 0
 
                         if minute == 81 or minute < 0: # Known random error | assumed NaN; set minute to 0
-                            print(f"Error minute {minute}, line {line_count}, adjusted to 0")
+                            #print(f"Error minute {minute}, line {line_count}, adjusted to 0")
                             minute = 0
 
                         try:
