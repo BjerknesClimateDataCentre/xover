@@ -30,6 +30,6 @@ find the current production or development servers.
 6.  Now to import the reference data. This might take some hours. Eg:
     ```
     $ m import_refdata \
-    https://www.glodap.info/glodap_files/v2.2019/GLODAPv2.2019_Merged_Master_File.csv.zip \
-    https://www.glodap.info/glodap_files/v2.2019/EXPOCODES.txt
+    https://www.glodap.info/glodap_files/v2.2020/GLODAPv2.2020_Merged_Master_File.csv.zip \
+    https://www.glodap.info/glodap_files/v2.2020/EXPOCODES.txt
     ```
