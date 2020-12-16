@@ -53,8 +53,8 @@ urlpatterns = [
     path(px + ids + types + min_depth, views.dataSet),
     path(px + ids + types + min_depth + max_depth, views.dataSet),
     path(cx + id + types, views.crossover),
-    #path(file + detail + '/<int:pk>/' + 'import_status', views.data_file.import_status, name='import_status'),
-    path(file + detail + '/<int:pk>' + import_ + '/import_status', views.data_file.import_status, name='import_status'),
+    path(file + detail + '/<int:pk>/' + 'import_status', views.data_file.import_status_pre_import, name='import_status_pre_import'),
+    path(file + detail + '/<int:pk>' + import_ + '/import_status', views.data_file.import_status_post_import, name='import_status_post_import'),
     #url(r'^', include(router.urls)),
     path(
             file + detail + '/<int:pk>/',
