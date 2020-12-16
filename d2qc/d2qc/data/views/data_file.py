@@ -18,6 +18,7 @@ from django.views.generic import DetailView
 from django.views.generic.edit import CreateView
 from django.views.generic.edit import UpdateView
 from django.views.generic.edit import DeleteView
+from django.http import HttpResponse
 
 class DataFileViewSet(viewsets.ModelViewSet):
 
@@ -173,3 +174,23 @@ class DataFileDetail(DetailView):
             ).total_seconds()
 
         return context
+
+
+def import_status(request, **kwargs):
+
+    file_id = kwargs['pk']
+
+    import_status = "File not imported. Click <Import file> to initiate import."
+    object = DataFile.objects.filter(id=file_id)[0]
+
+    if object.import_finnished:
+        import_status = f"Imported. "
+
+    elif object.import_started:
+        import_status = f"Import in progress"
+
+    if object.import_errors:
+        import_status += f"Encounterd: {object.import_errors}"
+
+
+    return HttpResponse(import_status)
