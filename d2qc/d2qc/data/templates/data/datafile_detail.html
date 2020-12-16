@@ -11,11 +11,11 @@
   $('#import_status').html('<h4>' + data + '</h4>');
   });
 
-  var counter = 0;
+  var counter = 1;
   const interval = setInterval(function() {
     $.get('import_status', {file_id: {{object.id}}},function(data){
-      
-      if (data.substring(0,19) == 'Import in progress'){
+
+      if (data.includes('Import in progress')){
         data = data + ' .'.repeat(counter);
       }
 
@@ -28,10 +28,14 @@
         clearInterval(interval);
       }
 
+      if (data.includes("Encountered:")){
+        clearInterval(interval);
+      }
+
       counter++;
+      counter = counter > 3 ? 1 : counter;
     });  
   }, 2000);
-    
     
   
 </script>
