@@ -190,12 +190,19 @@ def import_status(request, kwargs):
 
     import_status = ""
 
+    object = DataFile.objects.filter(id=file_id)[0]
+
     if import_actually_started: import_status = "Import in progress"
     else: import_status = "File not imported. Click [Import file] to initiate import." 
 
-    object = DataFile.objects.filter(id=file_id)[0]
-    if object.import_finnished: import_status = f"Imported. "
-    if object.import_errors: import_status += f"Encounterd: {object.import_errors}"
+    if object.import_finnished:
+        import_status = f"Imported. "
+
+    elif object.import_started:
+        import_status = f"Import in progress "
+
+    if object.import_errors:
+        import_status += f"Encountered: {object.import_errors}"
 
 
     return HttpResponse(import_status)
