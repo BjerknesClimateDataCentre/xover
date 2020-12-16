@@ -5,6 +5,25 @@
   color: red;
 }
 </style>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script>
+
+  // On click?
+  const interval = setInterval(function() {
+    $.get('import_status', {file_id: {{object.id}}},function(data){
+      console.log(data)
+      $('#import_status').html('<h4>' + data + '</h4>');
+      if (data.substring(0, 8) === 'Imported') {
+        clearInterval(interval);
+      }
+    });  
+  }, 2000);
+    
+    
+  
+</script>
+
+
     <div>
         <h3>
             ID: {{ object.id }} -
@@ -14,19 +33,9 @@
             {{ object.filepath }}
             {% endif %}
         </h3>
-        <div class="import">
-          {% if object.import_finnished %}
-          <h4>Imported {{ object.import_finnished }} UTC,
-            took {{ import_time }} sek
-          </h4>
-          <p class="message">{{ object.import_errors }}</p>
-          {% elif object.import_started %}
-          <h4>Import started at {{ object.import_started }} UTC</h4>
-          <p class="message">{{ object.import_errors }}</p>
-          {% else %}
-          <h4>File not imported yet</h4>
-          {% endif %}
+        <div id = 'import_status' class='import'>       
         </div>
+        <div class="import">
         <dl>
             <dt>Filepath</dt>
             <dd>{{ object.filepath }}</dd>
