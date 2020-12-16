@@ -7,15 +7,28 @@
 </style>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
 <script>
+  $.get('import_status', {file_id: {{object.id}}},function(data){
+  $('#import_status').html('<h4>' + data + '</h4>');
+  });
 
-  // On click?
+  var counter = 0;
   const interval = setInterval(function() {
     $.get('import_status', {file_id: {{object.id}}},function(data){
-      console.log(data)
+      
+      if (data.substring(0,19) == 'Import in progress'){
+        data = data + ' .'.repeat(counter);
+      }
+
       $('#import_status').html('<h4>' + data + '</h4>');
+
       if (data.substring(0, 8) === 'Imported') {
         clearInterval(interval);
       }
+      if (data.substring(0,17) === 'File not imported'){
+        clearInterval(interval);
+      }
+
+      counter++;
     });  
   }, 2000);
     
