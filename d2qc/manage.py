@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os
 import sys
+import cProfile
+import re
 
 if __name__ == '__main__':
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'd2qc.setup.development')
