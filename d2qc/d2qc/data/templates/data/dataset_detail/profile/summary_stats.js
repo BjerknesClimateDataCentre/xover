@@ -1,3 +1,4 @@
+// Plots summary stats
 var summary_stats = JSON.parse('{{ summary_stats | escapejs }}');
 w_mean = {
   x: summary_stats.date.map(date => new Date(date)),

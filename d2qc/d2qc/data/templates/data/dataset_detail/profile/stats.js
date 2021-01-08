@@ -1,4 +1,4 @@
-// Plot stats
+// Plot profile stats; Weighted mean and standard deviation, not working?
 var xtype_title = xtype == 'depth' ? 'Depth' : 'Sigma 4';
 var mean = {
   x: stats.mean,
