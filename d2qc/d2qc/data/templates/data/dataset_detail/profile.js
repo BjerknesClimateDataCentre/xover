@@ -1,4 +1,4 @@
-// Profiles:
+// Plot cruise profiles:
 var data = [];
 var profiles = [];
 var interp_profiles = [];
