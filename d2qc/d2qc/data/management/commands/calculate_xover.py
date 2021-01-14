@@ -113,6 +113,8 @@ class Command(NewlineCommand):
             for ds in data_sets:
                 # Get stations from this data set that falls within the crossover
                 # radius of the original data set
+                print(f'Processing {data_sets.index(ds)} / {len(data_sets)}  Dataset: {ds[1]}')
+
                 crossover_stations = data_set.get_crossover_stations(
                     stations = data_set_stations,
                     parameter_id = parameter_id,
@@ -143,8 +145,6 @@ class Command(NewlineCommand):
                     xtype = xtype,
                     only_qc_controlled_data = only_qc_controlled_data,
                 )
-                print('stats \n')
-                print(stats)
                 if (
                         stats is not None
                         and 'w_mean' in stats
@@ -160,6 +160,8 @@ class Command(NewlineCommand):
                         stations=crossover_stations
                     )[0]
                     data['date'].append(_date.strftime("%Y-%m-%dT00:00:00.0Z"))
+
+            print('calculating statistics')
 
             mean = sum([ 0 if not s else m/pow(s, 2) for m, s in zip(data['w_mean'], data['w_stdev'])])
             mean = mean / sum([ 0 if not s else 1/pow(s, 2) for s in data['w_stdev']])
@@ -191,11 +193,11 @@ class Command(NewlineCommand):
             data['eval_dataset_date'] = _date.strftime("%Y-%m-%dT00:00:00.0Z")
 
             data = json.dumps(data)
-            print(data)
             cache.set(cache_key, data)
+            print('finished with calculations, building plot...')
 
         except Exception as e:
-            cache.set(cache_key,f'calculation failed:, {e}')
+            cache.set(cache_key,f'calculation failed, {e}')
 
 
         if data_return:
