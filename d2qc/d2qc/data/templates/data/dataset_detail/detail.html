@@ -35,6 +35,43 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
       padding: 10px;
     }
 </style>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script>
+  myFunction = function() {
+    console.log('{{cache_key_px}}');
+    $.get('get_summary_statistics_status/{{cache_key_px}}', function(){});
+
+    var counter = 1;
+    const interval = setInterval(function() {
+      $.get('get_summary_statistics_status/{{cache_key_px}}',function(data){
+        console.log(data)
+
+        if (data.substring(0, 19) === 'Calculation failed') {
+          $('#summary-status').html('<h4 style="color:red">' + data + '</h4>');
+          clearInterval(interval);
+        }
+
+        if (data.includes('Calculation in progress')){
+          data = data + ' .'.repeat(counter);
+          $('#summary-status').html('<h4>' + data + '</h4>');
+        }
+
+
+        if (data.substring(0, 20) === 'Calculation complete') {
+          $('#summary-status').html('<h4>' + data + '. Refresh page to view summary plot</h4>');
+          clearInterval(interval);
+        }
+        
+        counter++;
+        counter = counter > 3 ? 1 : counter;
+      });  
+    }, 2000);
+    
+  }
+  
+</script>
+
 <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
 {% endblock %}
 {% block js %}
@@ -99,26 +136,46 @@ href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.3
                 {% include "./table.html" %}
                 </dd>
                 <dd>
+                    <!-- Add auto refresh to summary-stats -->
                   <div class="summary-wrapper">
-                    {% if summary_stats %}
-                    <div id="summary-stats"
-                        style="width: 100%; height: 600px">
-                    </div>
-                    {% elif parameter %}
-                    <img src="https://i.gifer.com/8vEg.gif" width="100" />
-                    <p>Calculating summary statistics</p>
+                    <!-- 
+                    <p> calculation_started = {{calculation_started}} </p>
+                    <p> calculation_complete = {{calculation_complete}} </p>
+                    <p> cache_key  = {{cache_key_px}} </p>
+ -->
+                    <div id='summary-status'>
+
+                    {% if calculation_failed %}
+                        <h4 style="color:green"> {{calculation_failed}}</h4>
+                    
+                    {% elif calculation_complete %}
+                        <div id="summary-stats"
+                            style="width: 100%; height: 600px">
+                        </div>                    
+
+                    {% elif not calculation_started and summary_stats == None %}
+                        <!-- button to trigger calculation. start ajax page refresh routine -->
+                        <button onclick="myFunction()">Calculate summary statistics</button> 
+
+                    {% else %}
+                        <p> Calculating! </p>
+                        <script> myFunction(); </script>
                     {% endif %}
+                    
+                    </div>
+
                   </div>
                 </dd>
             </dl>
         </div>
+        <!-- ./profile.js triggers the summary plot summary_stats.js-->
         {% include "js/plot_colors.html" %}
         {% if dataset_profiles %}
           <script type="text/javascript">
             {% include "./profile.js" %}
           </script>
           {% if summary_stats %}
-          <div class="exports">
+          <div class="exports"> 
               {% include "./profile/data_table.html" %}
           </div>
           {% endif %}
