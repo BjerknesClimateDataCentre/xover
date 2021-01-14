@@ -13,7 +13,7 @@
 
   var counter = 1;
   const interval = setInterval(function() {
-    $.get('import_status', {file_id: {{object.id}}},function(data){
+    $.get('import_status',function(data){
 
       if (data.includes('Import in progress')){
         data = data + ' .'.repeat(counter);
