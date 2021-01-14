@@ -20,6 +20,7 @@ from django.views.generic import DetailView
 from django.views.generic import DeleteView
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic import FormView
+from django.http import HttpResponse
 
 import json
 import os
@@ -83,6 +84,35 @@ class DataSetDetail(MenuMixin, DetailView,):
             self.profile_form = DataSetDetailsProfileForm(instance = request.user.profile)
         return super().get(request, *args, **kwargs)
 
+    def get_cache_key_px(self,minimum_num_stations,only_qc_controlled_data):
+        return "_xover-{}-{}-{}-{}-{}-{}-{}".format(
+                self.get_object().id,
+                self.kwargs.get('parameter_id'),
+                self.request.user.profile.crossover_radius,
+                self.request.user.profile.min_depth,
+                minimum_num_stations,
+                self.request.user.profile.depth_metric,
+                only_qc_controlled_data,
+            )
+
+    def calculate_summary_statistics(self,data_set,minimum_num_stations,only_qc_controlled_data,calculating_key):
+        args = [
+            settings.PYTHON_ENV,
+            os.path.join(settings.BASE_DIR,"manage.py"),
+            'calculate_xover',
+            str(data_set.id),
+            str(self.kwargs.get('parameter_id')),
+            str(self.request.user.profile.crossover_radius),
+            str(self.request.user.profile.min_depth),
+            self.request.user.profile.depth_metric,
+            '--minimum_num_stations', str(minimum_num_stations),
+        ]
+        if only_qc_controlled_data:
+            args.append('--only_qc_controlled_data')
+        subprocess.Popen(args)
+
+        cache.set(calculating_key, True)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         data_set = self.get_object()
@@ -131,7 +161,6 @@ class DataSetDetail(MenuMixin, DetailView,):
         )
 
         # Get the positions of the data set stations
-
         if not context['stations_polygon']:
             context['stations_polygon'] = ''
         context['dataset_profiles'] = None
@@ -145,43 +174,35 @@ class DataSetDetail(MenuMixin, DetailView,):
                 data_set_stations
             )
 
+        # move if segment to separate function 'start calculation'
         if self.kwargs.get('parameter_id'):
-            cache_key_px = "_xover-{}-{}-{}-{}-{}-{}-{}".format(
-                data_set.id,
-                self.kwargs.get('parameter_id'),
-                self.request.user.profile.crossover_radius,
-                self.request.user.profile.min_depth,
-                minimum_num_stations,
-                self.request.user.profile.depth_metric,
-                only_qc_controlled_data,
-            )
+
+            cache_key_px = self.get_cache_key_px(minimum_num_stations,only_qc_controlled_data)  # extracted to separate function, remember to test!
+            context['cache_key_px'] = cache_key_px
 
             # Check if calculation has begun
             calculating_key = 'calculating' + cache_key_px
             calculating_value = cache.get(calculating_key, False)
+            context['calculation_started'] = calculating_value
 
             # Check if calculation is ready
+            context['summary_stats'] = None
             ready_key = 'calculate' + cache_key_px
             value = cache.get(ready_key, False)
-            context['summary_stats'] = None
-            if calculating_value is False:
-                # Spawn process to calculate weighted mean for parameter
-                args = [
-                    settings.PYTHON_ENV,
-                    os.path.join(settings.BASE_DIR,"manage.py"),
-                    'calculate_xover',
-                    str(data_set.id),
-                    str(self.kwargs.get('parameter_id')),
-                    str(self.request.user.profile.crossover_radius),
-                    str(self.request.user.profile.min_depth),
-                    self.request.user.profile.depth_metric,
-                    '--minimum_num_stations', str(minimum_num_stations),
-                ]
-                if only_qc_controlled_data:
-                    args.append('--only_qc_controlled_data')
-                subprocess.Popen(args)
-                cache.set(calculating_key, True)
-            elif value is not False:
+
+            if value:
+                print(value)
+                if value[0:18] == 'calculation failed':
+                    context['Calculation failed'] = value
+                else: 
+                    context['calculation_complete'] = bool(value)
+
+            #if calculating_value is False:  #show button
+                # Spawn process to calculate weighted mean for parameter, trigger by ajax button
+                # self.calculate_summary_statistics(data_set,minimum_num_stations,only_qc_controlled_data,calculating_key)
+
+            #elif
+            if value is not False:
                 context['summary_stats'] = value
 
             # Get the crossover stations, restricted to a specific dataset
@@ -295,6 +316,74 @@ class DataSetDetail(MenuMixin, DetailView,):
                 if stats:
                     context['dataset_stats'] = json.dumps(stats, allow_nan=False)
         return context
+
+def start_calculating_summary_statistics(cache_key_px):
+    if cache_key_px:
+        [_,data_set_id,parameter_id,crossover_radius,min_depth,minimum_num_stations,depth_metric,only_qc_controlled_data] = cache_key_px.split('-')
+        calculating_key = 'calculating' + cache_key_px
+        args = [
+            settings.PYTHON_ENV,
+            os.path.join(settings.BASE_DIR,"manage.py"),
+            'calculate_xover',
+            data_set_id,
+            parameter_id,
+            crossover_radius,
+            min_depth,
+            depth_metric,
+            '--minimum_num_stations', minimum_num_stations,
+        ]
+        if only_qc_controlled_data == 'True':
+            args.append('--only_qc_controlled_data')
+        print(args)
+        subprocess.Popen(args)
+
+        cache.set(calculating_key, True)
+    else:
+        cache.set(calculating_key, 'Failed to calculate summary statistics')
+
+
+
+def get_summary_statistics_status(request,**kwargs):
+
+    status = "" 
+
+    cache_key_px = kwargs['cache_key_px']
+    print(cache_key_px)
+    
+    # Check cache for status
+    if cache_key_px:
+        # Check if calculation has begun
+        calculating_key = 'calculating' + cache_key_px
+        calculating_value = cache.get(calculating_key, False)
+        calculation_started = calculating_value
+        print(calculation_started)
+
+        # Check if calculation is ready
+        ready_key = 'calculate' + cache_key_px
+        value = cache.get(ready_key, False)
+
+        if value:
+            if value[0:18] == 'calculation failed':
+                status = 'Calculation failed'
+
+            else: 
+                calculation_complete = bool(value)
+
+                print(type(value),value)
+
+
+                # calculation complete
+                if calculation_complete:
+                    status = 'Calculation complete'
+        else:
+            if calculation_started:
+                status = 'Calculation in progress'
+            else:
+                start_calculating_summary_statistics(cache_key_px)
+                status = 'Calculation in progress'
+    print (status)
+
+    return HttpResponse(status)
 
 class DataSetDelete(DeleteView):
     model = DataSet
