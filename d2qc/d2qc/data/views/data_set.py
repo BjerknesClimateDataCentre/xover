@@ -27,7 +27,9 @@ import os
 import re
 import subprocess
 import pandas as pd
+import logging
 
+logger = logging.getLogger(__name__)
 
 class MenuMixin:
     ALKALINITY = 'SDN:P01::ALKYZZXX'
@@ -170,6 +172,8 @@ class DataSetDetail(MenuMixin, DetailView,):
         context['dataset_ref_interp_profiles'] = None
         minimum_num_stations = 3
 
+        logging.debug(f'kwargs {self.kwargs}')
+
         if not self.kwargs.get('data_set_id'):
             context['station_positions'] = data_set.get_station_positions(
                 data_set_stations
@@ -195,6 +199,7 @@ class DataSetDetail(MenuMixin, DetailView,):
                 print(value)
                 if value[0:18] == 'calculation failed':
                     context['Calculation failed'] = value
+                    logging.debug(value)
                 else: 
                     context['calculation_complete'] = bool(value)
 
@@ -319,6 +324,7 @@ class DataSetDetail(MenuMixin, DetailView,):
         return context
 
 def start_calculating_summary_statistics(cache_key_px):
+    logging.info('Started calculating summary statistics')
     if cache_key_px:
         [_,data_set_id,parameter_id,crossover_radius,min_depth,minimum_num_stations,depth_metric,only_qc_controlled_data] = cache_key_px.split('-')
         calculating_key = 'calculating' + cache_key_px
@@ -335,7 +341,7 @@ def start_calculating_summary_statistics(cache_key_px):
         ]
         if only_qc_controlled_data == 'True':
             args.append('--only_qc_controlled_data')
-        print(args)
+        logging.debug(f'calculate_xover args: {args}')
         subprocess.Popen(args)
 
         cache.set(calculating_key, True)
@@ -349,7 +355,7 @@ def get_summary_statistics_status(request,**kwargs):
     status = "" 
 
     cache_key_px = kwargs['cache_key_px']
-    print(cache_key_px)
+    #logging.debug(f'CACHE_KEY_PX: {cache_key_px}')
     
     # Check cache for status
     if cache_key_px:
@@ -357,7 +363,7 @@ def get_summary_statistics_status(request,**kwargs):
         calculating_key = 'calculating' + cache_key_px
         calculating_value = cache.get(calculating_key, False)
         calculation_started = calculating_value
-        print(calculation_started)
+        #logging.debug(f'calculation_started: {calculation_started}')
 
         # Check if calculation is ready
         ready_key = 'calculate' + cache_key_px
@@ -370,9 +376,6 @@ def get_summary_statistics_status(request,**kwargs):
             else: 
                 calculation_complete = bool(value)
 
-                print(type(value),value)
-
-
                 # calculation complete
                 if calculation_complete:
                     status = 'Calculation complete'
@@ -382,7 +385,7 @@ def get_summary_statistics_status(request,**kwargs):
             else:
                 start_calculating_summary_statistics(cache_key_px)
                 status = 'Calculation in progress'
-    print (status)
+    logging.debug(status)
 
     return HttpResponse(status)
 
