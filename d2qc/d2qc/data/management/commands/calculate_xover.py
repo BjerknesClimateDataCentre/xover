@@ -4,7 +4,9 @@ import d2qc.data.models as models
 import os
 from django.core.cache import cache
 import json
+import logging
 
+logger = logging.getLogger(__name__)
 
 class Command(NewlineCommand):
     help = """
@@ -113,7 +115,7 @@ class Command(NewlineCommand):
             for ds in data_sets:
                 # Get stations from this data set that falls within the crossover
                 # radius of the original data set
-                print(f'Processing {data_sets.index(ds)} / {len(data_sets)}  Dataset: {ds[1]}')
+                logging.info(f'Processing {data_sets.index(ds)} / {len(data_sets)}  Dataset: {ds[1]}')
 
                 crossover_stations = data_set.get_crossover_stations(
                     stations = data_set_stations,
@@ -161,7 +163,7 @@ class Command(NewlineCommand):
                     )[0]
                     data['date'].append(_date.strftime("%Y-%m-%dT00:00:00.0Z"))
 
-            print('calculating statistics')
+            logging.debug('calculating statistics')
 
             mean = sum([ 0 if not s else m/pow(s, 2) for m, s in zip(data['w_mean'], data['w_stdev'])])
             mean = mean / sum([ 0 if not s else 1/pow(s, 2) for s in data['w_stdev']])
@@ -194,7 +196,7 @@ class Command(NewlineCommand):
 
             data = json.dumps(data)
             cache.set(cache_key, data)
-            print('finished with calculations, building plot...')
+            logging.debug('finished with calculations, building plot...')
 
         except Exception as e:
             cache.set(cache_key,f'calculation failed, {e}')
