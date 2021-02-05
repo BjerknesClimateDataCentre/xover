@@ -192,6 +192,9 @@ class DataSetDetail(MenuMixin, DetailView,):
 
             # Check if calculation is ready
             context['summary_stats'] = None
+            context['calculation_failed'] = None
+            context['calculation_complete'] = False
+
             ready_key = 'calculate' + cache_key_px
             value = cache.get(ready_key, False)
 
