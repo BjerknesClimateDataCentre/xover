@@ -179,10 +179,9 @@ class DataSetDetail(MenuMixin, DetailView,):
                 data_set_stations
             )
 
-        # move if segment to separate function 'start calculation'
         if self.kwargs.get('parameter_id'):
 
-            cache_key_px = self.get_cache_key_px(minimum_num_stations,only_qc_controlled_data)  # extracted to separate function, remember to test!
+            cache_key_px = self.get_cache_key_px(minimum_num_stations,only_qc_controlled_data)  
             context['cache_key_px'] = cache_key_px
 
             # Check if calculation has begun
@@ -199,18 +198,12 @@ class DataSetDetail(MenuMixin, DetailView,):
             value = cache.get(ready_key, False)
 
             if value:
-                print(value)
                 if value[0:18] == 'calculation failed':
-                    context['Calculation failed'] = value
+                    context['calculation_failed'] = value
                     logging.debug(value)
                 else: 
                     context['calculation_complete'] = bool(value)
 
-            #if calculating_value is False:  #show button
-                # Spawn process to calculate weighted mean for parameter, trigger by ajax button
-                # self.calculate_summary_statistics(data_set,minimum_num_stations,only_qc_controlled_data,calculating_key)
-
-            #elif
             if value is not False:
                 context['summary_stats'] = value
 
@@ -326,7 +319,9 @@ class DataSetDetail(MenuMixin, DetailView,):
                     context['dataset_stats'] = json.dumps(stats, allow_nan=False)
         return context
 
+
 def start_calculating_summary_statistics(cache_key_px):
+    """ Function triggering subprocess calculating summary statistics"""
     logging.info('Started calculating summary statistics')
     if cache_key_px:
         [_,data_set_id,parameter_id,crossover_radius,min_depth,minimum_num_stations,depth_metric,only_qc_controlled_data] = cache_key_px.split('-')
@@ -352,11 +347,9 @@ def start_calculating_summary_statistics(cache_key_px):
         cache.set(calculating_key, 'Failed to calculate summary statistics')
 
 
-
 def get_summary_statistics_status(request,**kwargs):
-
+    """ Returns current cached calculation status to template detail.html"""
     status = "" 
-
     cache_key_px = kwargs['cache_key_px']
     #logging.debug(f'CACHE_KEY_PX: {cache_key_px}')
     
