@@ -34,18 +34,18 @@ class Command(NewlineCommand):
         host = settings.DATABASES['default']['HOST']
         port = settings.DATABASES['default']['PORT']
         initdb_path = settings.INITDB_PATH
-        ip = settings.PROD_SERVER_IP
-        remote_db_file = settings.PROD_SERVER_DB_FILE
-        remote_data_folder = os.path.join(
-            settings.PROD_SERVER_USER_DATA_FOLDER,
-            ''
-        )
-        data_folder = settings.DATA_FOLDER
-        backup_folder = settings.BACKUP_FOLDER
-        backup_db_file = os.path.join(
-            backup_folder,
-            os.path.basename(remote_db_file)
-        )
+        # ip = settings.PROD_SERVER_IP
+        # remote_db_file = settings.PROD_SERVER_DB_FILE
+        # remote_data_folder = os.path.join(
+        #     settings.PROD_SERVER_USER_DATA_FOLDER,
+        #     ''
+        # )
+        # data_folder = settings.DATA_FOLDER
+        # backup_folder = settings.BACKUP_FOLDER
+        # backup_db_file = os.path.join(
+        #     backup_folder,
+        #     os.path.basename(remote_db_file)
+        # )
         # Terminate all connections:
         sql = """
             SELECT pg_terminate_backend(pg_stat_activity.pid)
