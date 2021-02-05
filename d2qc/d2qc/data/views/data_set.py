@@ -116,6 +116,7 @@ class DataSetDetail(MenuMixin, DetailView,):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         data_set = self.get_object()
+        data_set_id = self.kwargs.get('pk')
         crossover_radius = self.request.user.profile.crossover_radius
         min_depth = self.request.user.profile.min_depth
         only_qc_controlled_data = self.request.user.profile.only_qc_controlled_data
