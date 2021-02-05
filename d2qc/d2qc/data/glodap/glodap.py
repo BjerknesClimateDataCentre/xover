@@ -6,6 +6,9 @@ from django.contrib.gis.geos import Point
 import os
 import gsw
 from django.contrib.auth import authenticate, login
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Glodap:
     """
@@ -403,10 +406,10 @@ class Glodap:
             with open(self.data_file_path) as infile:
                 filename = os.path.basename(self.data_file_path)
                 if DataFile.objects.filter(filepath=filename).exists():
-                    print('File already exists')
+                    logging.info('File already exists')
                     return
                 else:
-                    print('Import file ' + filename)
+                    logging.info('Import file ' + filename)
 
                 name = os.path.splitext(filename)[0]
 
@@ -525,19 +528,19 @@ class Glodap:
                         if day < 1:
                             day = 1
                             time_modifier += datetime.timedelta(days=day-1)
-                            #print(f"Error day {day}, line {line_count}")
+                            logging.debug(f"Error day {day}, line {line_count}")
 
                         if day > days_in_month[1]:
                             day = days_in_month[1]
                             time_modifier += datetime.timedelta(days=(day-days_in_month[1]))
-                            #print(f"Error day {day}, line {line_count}")
+                            logging.debug(f"Error day {day}, line {line_count}")
 
 
                         if hour < 0: # Assumed NaN, set to 0
-                            #print(f"Error hour {hour}, line {line_count}, adjusted to 0")
+                            logging.debug(f"Error hour {hour}, line {line_count}, adjusted to 0")
                             hour = 0
                         if hour > 23:
-                            #print(f"Error hour {hour}, line {line_count}")
+                            logging.debug(f"Error hour {hour}, line {line_count}")
                             if hour < 48:
                                 hour = hour-24
                                 time_modifier += datetime.timedelta(hour=24)
@@ -560,7 +563,7 @@ class Glodap:
                             )
                             time = time + time_modifier
                         except ValueError as e:
-                            print(f"UNHANDLED ERROR, line {line_count} | {e}")
+                            logging.debug(f"UNHANDLED ERROR, line {line_count} | {e}")
 
 
                         # Depth
@@ -634,7 +637,7 @@ class Glodap:
                                     pass
                     except Exception as e:
                         error = e
-                        print(f"Line no {line_count}: {error}")
+                        logging.debug(f"Line no {line_count}: {error}")
                         errors += [f"Line no {line_count}: {error}"]
 
                         all_new = False
@@ -651,7 +654,7 @@ class Glodap:
 
                     # Progress
                     if line_count % 10000 == 0:
-                        print("Processed {}% of file {}".format(
+                        logging.info("Processed {}% of file {}".format(
                                 str(int(progress / filesize * 100)),
                                 filename
                         ))
@@ -661,17 +664,17 @@ class Glodap:
                     DataValue.objects.bulk_create(value_list)
                     value_list = []
 
-                print("Processed {}% of file {}".format(
+                logging.info("Processed {}% of file {}".format(
                         str(int(progress / filesize * 100)),
                         filename
                 ))
 
         except FileNotFoundError:
-            print("File not found")
-        print('\n'.join(errors))
+            logging.error("File not found")
+        logging.error('\n'.join(errors))
 
         end = datetime.datetime.now()
-        print(f"Time elapsed: {end-start}")
+        logging.info(f"Time elapsed: {end-start}")
 
 
     def glodapFileLayoutIsOK(self, headers):
@@ -681,19 +684,19 @@ class Glodap:
         ok = True
         for key in vars:
             if file_vars[vars[key]['index']].strip() != key:
-                print("Wrong file layout for variable " + key)
+                logging.info("Wrong file layout for variable " + key)
                 ok = False
             if (vars[key]['qcindex'] and
                     file_vars[vars[key]['qcindex']].strip() != vars[key]['qcname']):
-                print("Wrong file layout for variable " + vars[key]['qcname'])
+                logging.info("Wrong file layout for variable " + vars[key]['qcname'])
                 ok = False
             if (vars[key]['qc2index'] and
                     file_vars[vars[key]['qc2index']].strip() != vars[key]['qc2name']):
-                print("Wrong file layout for variable " + vars[key]['qc2name'])
+                logging.info("Wrong file layout for variable " + vars[key]['qc2name'])
                 ok = False
         idents = self.glodap_identificators
         for key in idents:
             if file_vars[idents[key]].strip() != key:
-                print("Wrong file layout for identificator " + key)
+                logging.info("Wrong file layout for identificator " + key)
                 ok = False
         return ok
