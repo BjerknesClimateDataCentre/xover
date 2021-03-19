@@ -5,7 +5,7 @@ Click==7.0
 cotede==0.19.2
 cycler==0.10.0
 django-mathfilters==0.4.0
-djangorestframework==3.9.4
+djangorestframework==3.11.2
 file-read-backwards==2.0.0
 filelock==3.0.8
 gsw==3.2.1
