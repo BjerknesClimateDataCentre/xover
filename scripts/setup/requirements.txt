@@ -18,7 +18,7 @@ netCDF4==1.4.1
 numpy==1.17.1
 oceansdb==0.8.4
 pandas==0.23.4
-Pillow==6.2.0
+Pillow==8.2.0
 pkg-resources==0.0.0
 psycopg2-binary==2.7.5
 pyArgo==0.0.4
