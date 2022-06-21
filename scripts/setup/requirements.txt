@@ -15,7 +15,7 @@ lazy-object-proxy==1.4.3
 matplotlib==2.2.3
 mccabe==0.6.1
 netCDF4==1.4.1
-numpy==1.17.1
+numpy==1.22.0
 oceansdb==0.8.4
 pandas==0.23.4
 Pillow==6.2.0
