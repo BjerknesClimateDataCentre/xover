@@ -15,15 +15,16 @@ services:
 
   web:
     build: .
-    command: gunicorn d2qc.wsgi:application --bind 0.0.0.0:8000
+    command: /app/entrypoint.sh gunicorn d2qc.wsgi:application --bind 0.0.0.0:8000
     environment:
-      - DJANGO_SETTINGS_MODULE=d2qc.setup.production
+      - DJANGO_SETTINGS_MODULE=d2qc.setup.development
       - DJANGO_DEBUG=True
     volumes:
-      - static_data:/app/static
-      - media_data:/app/media
+      - static_data:/static
     depends_on:
       - db
+    ports:
+      - "8000:8000"
 
   nginx:
     image: nginx:latest
@@ -31,12 +32,10 @@ services:
       - "80:80"
     volumes:
       - ./nginx:/etc/nginx
-      - static_data:/app/static
-      - media_data:/app/media
+      - static_data:/static
     depends_on:
       - web
 
 volumes:
   postgres_data:
   static_data:
-  media_data:

@@ -17,6 +17,7 @@ COPY requirements.txt /app/
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . /app/
+RUN chmod 755 /app/entrypoint.sh
 ENV PYTHONPATH="/app/d2qc:${PYTHONPATH}"
 
 EXPOSE 8000

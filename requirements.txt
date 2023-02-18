@@ -1,5 +1,7 @@
 astroid==2.3.2
 autopep8==1.4.4
+basemap==1.3.6
+basemap-data==1.3.2
 certifi==2022.12.7
 cftime==1.6.2
 Click==7.0
@@ -20,7 +22,7 @@ lazy-object-proxy==1.4.3
 matplotlib==3.6.3
 mccabe==0.6.1
 netCDF4==1.6.2
-numpy==1.24.2
+numpy==1.23.5
 oceansdb==0.8.4
 packaging==23.0
 pandas==1.3.5
