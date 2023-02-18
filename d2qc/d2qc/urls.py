@@ -14,8 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include, path, reverse_lazy
-from django.conf.urls import url
+from django.urls import include, path, reverse_lazy, re_path
 from django.views.generic import RedirectView
 
 
@@ -25,7 +24,7 @@ from django.views.generic import RedirectView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('mockup/', include('d2qc.mockup.urls')),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    re_path(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     path('data/', include('d2qc.data.urls')),
     path('account/', include('d2qc.account.urls')),

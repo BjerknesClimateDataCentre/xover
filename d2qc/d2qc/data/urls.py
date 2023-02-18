@@ -1,5 +1,5 @@
 from django.urls import path, register_converter
-from django.conf.urls import url, include
+from django.conf.urls import include
 
 from . import views
 from d2qc.data.views import *
@@ -57,7 +57,7 @@ urlpatterns = [
     path(data_set + detail + '/<int:pk>/' + parameter + '/<int:parameter_id>/'+ crossover + '/get_summary_statistics_status/<cache_key_px>', views.data_set.get_summary_statistics_status, name='get_summary_statistics_status'),
     path(file + detail + '/<int:pk>/' + 'import_status', views.data_file.import_status_pre_import, name='import_status_pre_import'),
     path(file + detail + '/<int:pk>' + import_ + '/import_status', views.data_file.import_status_post_import, name='import_status_post_import'),
-    #url(r'^', include(router.urls)),
+
     path(
             file + detail + '/<int:pk>/',
             DataFileDetail.as_view(),

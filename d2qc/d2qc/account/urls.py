@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.views import LogoutView, PasswordResetView
 from django.urls import include, path
-from django.conf.urls import url
 from d2qc.account.views import SignUp, UpdateUser, Login
 
 
