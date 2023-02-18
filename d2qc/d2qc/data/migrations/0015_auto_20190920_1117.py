@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False)),
                 ('name', models.CharField(max_length=255)),
-                ('data', django.contrib.postgres.fields.jsonb.JSONField(null=True)),
+                ('data', django.db.models.JSONField(null=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
                 ('data_set', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='operations', to='data.DataSet')),
