@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: d2qc
+      POSTGRES_PASSWORD: d2qc
+      POSTGRES_DB: d2qc
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    command: gunicorn d2qc.wsgi:application --bind 0.0.0.0:8000
+    environment:
+      - DJANGO_SETTINGS_MODULE=d2qc.setup.production
+      - DJANGO_DEBUG=True
+    volumes:
+      - static_data:/app/static
+      - media_data:/app/media
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx:/etc/nginx
+      - static_data:/app/static
+      - media_data:/app/media
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  static_data:
+  media_data:
