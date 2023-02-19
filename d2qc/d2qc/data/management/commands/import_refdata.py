@@ -74,9 +74,17 @@ class Command(NewlineCommand):
             expocode_filename, expocode_basename = self.get_and_unpack(
                 options['expocode_filename'][0]
             )
+            # Expocodes file changed from txt to csv in 2022, as well as
+            # format changes
+            expocodes = None
+            if expocode_filename.endswith('.txt'):
+                with open(expocode_filename) as f:
+                    expo = f.read().split()
+                    expocodes = dict(zip([int(f) for f in expo[0::2]], expo[1::2]))
+            elif expocode_filename.endswith('.csv'):
+                df = pd.read_csv(expocode_filename)
+                expocodes = dict(zip(df['cruise'].astype(int), df['expocode']))
 
-            df = pd.read_csv(expocode_filename)
-            expocodes = dict(zip(df['cruise'].astype(int), df['expocode']))
             if expocodes:
                 glodap = Glodap(data_filename, expocodes)
                 glodap.fileImport()
