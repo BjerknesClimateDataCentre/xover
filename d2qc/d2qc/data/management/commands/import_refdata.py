@@ -13,6 +13,8 @@ import sys
 import tempfile
 import zipfile
 
+import pandas as pd
+
 
 class Command(NewlineCommand):
     help = """
@@ -72,13 +74,14 @@ class Command(NewlineCommand):
             expocode_filename, expocode_basename = self.get_and_unpack(
                 options['expocode_filename'][0]
             )
-            expocodes = None
-            with open(expocode_filename) as f:
-                expo = f.read().split()
-                expocodes = dict(zip([int(f) for f in expo[0::2]], expo[1::2]))
+
+            df = pd.read_csv(expocode_filename)
+            expocodes = dict(zip(df['cruise'].astype(int), df['expocode']))
             if expocodes:
                 glodap = Glodap(data_filename, expocodes)
                 glodap.fileImport()
+
+
 
         finally:
             os.remove(expocode_filename)
