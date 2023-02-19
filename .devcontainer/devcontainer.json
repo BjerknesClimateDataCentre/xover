@@ -23,7 +23,10 @@
 	"mounts": [
 		"source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
 	],
-	"postCreateCommand": "apt-get update && apt-get install -y git && cd /app && git status"
+	"postCreateCommand": "apt-get update && apt-get install -y git && cd /app && git status",
+	"extensions": [
+		"ms-python.python"
+	],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
