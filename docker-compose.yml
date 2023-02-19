@@ -17,8 +17,8 @@ services:
     build: .
     command: /app/entrypoint.sh gunicorn d2qc.wsgi:application --bind 0.0.0.0:8000
     environment:
-      - DJANGO_SETTINGS_MODULE=d2qc.setup.development
-      - DJANGO_DEBUG=True
+      - DJANGO_SETTINGS_MODULE=d2qc.setup.production
+      - DJANGO_DEBUG=False
     volumes:
       - static_data:/static
     depends_on:
