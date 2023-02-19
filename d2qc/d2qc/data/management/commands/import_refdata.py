@@ -77,11 +77,11 @@ class Command(NewlineCommand):
             # Expocodes file changed from txt to csv in 2022, as well as
             # format changes
             expocodes = None
-            if expocode_filename.endswith('.txt'):
+            if expocode_basename.endswith('.txt'):
                 with open(expocode_filename) as f:
                     expo = f.read().split()
                     expocodes = dict(zip([int(f) for f in expo[0::2]], expo[1::2]))
-            elif expocode_filename.endswith('.csv'):
+            elif expocode_basename.endswith('.csv'):
                 df = pd.read_csv(expocode_filename)
                 expocodes = dict(zip(df['cruise'].astype(int), df['expocode']))
 
