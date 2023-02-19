@@ -388,6 +388,18 @@ class Glodap:
         self.data_file_path = data_file_path
         self.expocodes = expocodes
 
+    def remove_G2_prefix(self, headers):
+        word_list = headers.split(',')
+        new_word_list = []
+
+        for word in word_list:
+            if word.startswith("G2"):
+                word = word[2:]
+            new_word_list.append(word)
+
+        return ','.join(new_word_list)
+
+
     def fileImport(self, reference = True):
         """
         Import Glodap reference file to the database. This will take time ...
@@ -416,12 +428,13 @@ class Glodap:
 
                 # Read the file header line
                 headers = infile.readline()
+                headers_clean = self.remove_G2_prefix(headers)
                 line_count = 1 # actual line handled in the file.
 
                 progress += len(headers.encode('utf-8'))
 
                 # Check that file layout is OK
-                if not self.glodapFileLayoutIsOK(headers):
+                if not self.glodapFileLayoutIsOK(headers_clean):
                     return
 
                 current_data_file, created = DataFile.objects.get_or_create(
@@ -684,15 +697,18 @@ class Glodap:
         ok = True
         for key in vars:
             if file_vars[vars[key]['index']].strip() != key:
-                logging.info("Wrong file layout for variable " + key)
+                logging.info("Wrong index layout for variable " + key)
+                logging.info(f"Index is {vars[key]['index']}, name is {file_vars[vars[key]['index']]}")
                 ok = False
             if (vars[key]['qcindex'] and
                     file_vars[vars[key]['qcindex']].strip() != vars[key]['qcname']):
-                logging.info("Wrong file layout for variable " + vars[key]['qcname'])
+                logging.info("Wrong qcindex layout for variable " + vars[key]['qcname'])
+                logging.info(f"Index is {vars[key]['qcindex']}, name is {file_vars[vars[key]['qcindex']]}")
                 ok = False
             if (vars[key]['qc2index'] and
                     file_vars[vars[key]['qc2index']].strip() != vars[key]['qc2name']):
-                logging.info("Wrong file layout for variable " + vars[key]['qc2name'])
+                logging.info("Wrong qc2index layout for variable " + vars[key]['qc2name'])
+                logging.info(f"Index is {vars[key]['qc2index']}, name is {file_vars[vars[key]['qc2index']]}")
                 ok = False
         idents = self.glodap_identificators
         for key in idents:
