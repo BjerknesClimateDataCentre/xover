@@ -21,7 +21,8 @@
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 	"mounts": [
-		"source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
+		"source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
+		"source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached,optional"
 	],
 	"postCreateCommand": "apt-get update && apt-get install -y git && cd /app && git status",
 	"extensions": [
