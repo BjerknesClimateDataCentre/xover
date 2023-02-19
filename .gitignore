@@ -12,3 +12,4 @@ d2qc/d2qc/setup/production.py
 /d2qc/d2qc/data/glodap/data
 /d2qc/user_data
 /d2qc/d2qc/setup/development.py
+.DS_Store

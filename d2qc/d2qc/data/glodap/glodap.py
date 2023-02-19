@@ -593,7 +593,7 @@ class Glodap:
                             for key, var in self.glodap_vars.items():
                                 value = float(data[var['index']])
                                 qc_flag = None
-                                if var['qcindex']: 
+                                if var['qcindex']:
                                     qc_flag = int(float(data[var['qcindex']]))
                                 qc2_flag = None
                                 if var['qc2index']:
