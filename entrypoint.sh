@@ -4,7 +4,7 @@ set -e
 
 cd d2qc
 
-# Wait for database to
+# Wait for database to reply
 while ! nc -z db 5432; do
   sleep 1
   echo "Waiting for Postgresql"
