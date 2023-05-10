@@ -4,6 +4,7 @@ import pandas as pd
 import statistics as stat
 import re
 import copy
+import numpy as np
 
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
@@ -675,19 +676,42 @@ class DataSet(models.Model):
 
         _all = DataSet._fetchall_query(sql)
         dataframe = pd.DataFrame(_all, columns=columns)
+        ##dataframe = pd.DataFrame(_all,columns=columns).fillna(value=0,inplace=True)        
         # Use GSW to calculate sigma4
+       ## dataframe['sigma4'] = gsw.density.sigma4(
+       ##     gsw.conversions.SA_from_SP(
+       ##         dataframe['salin'],
+       ##         dataframe['press'],
+       ##         dataframe['longitude'],
+       ##         dataframe['latitude'],
+       ##     ),
+       ##     dataframe['temp'],
+       ## )
+       ## cache.set(cache_key, dataframe)
+
+       ## return dataframe
+
+        #dataframe['latitude'] = pd.to_numeric(dataframe['latitude'], errors='coerce')
+        #dataframe = dataframe.replace('?', np.nan)
+        #dataframe['latitude'] = dataframe['latitude'].astype(int)
+
+        ##dataframe.dtypes
+        ##dataframe['salin'].astype(float)
+
         dataframe['sigma4'] = gsw.density.sigma4(
             gsw.conversions.SA_from_SP(
-                dataframe['salin'],
-                dataframe['press'],
-                dataframe['longitude'],
-                dataframe['latitude'],
+                dataframe['salin'].astype(float),
+                dataframe['press'].astype(float),
+                dataframe['longitude'].astype(float),
+                dataframe['latitude'].astype(float),
             ),
-            dataframe['temp'],
+            dataframe['temp'].astype(float),
         )
         cache.set(cache_key, dataframe)
-
+        
         return dataframe
+         
+        
 
     @staticmethod
     def get_reference_parameter(identifier):

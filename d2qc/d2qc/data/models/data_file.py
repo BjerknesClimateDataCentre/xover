@@ -109,23 +109,24 @@ class DataFile(models.Model):
             self._messages = ["File data already beeing imported"]
             self._write_messages(append = True, save = True)
             return False
-
         self.import_started = timezone.now()
         self.save()
 
         datagrid = excread.excread(str(self.filepath))
-
+        print(datagrid)
         MANDATORY_VARS = (
             'EXPOCODE', 'EXC_DATETIME', 'EXC_CTDDEPTH', 'STNNBR', 'LATITUDE',
-            'LONGITUDE',
+            'LONGITUDE', 
         )
 
         # Variables not to be treated as data variables
         IGNORE = (
-            'EXPOCODE', 'EXC_DATETIME', 'EXC_CTDDEPTH', 'STNNBR', 'SECT_ID', 'DATE',
-            'TIME', 'LATITUDE', 'LONGITUDE', 'BTLNBR', 'BTLNBR_FLAG_W',
+            'SECT_ID','STNNBR','DELO18', 'BTLNBR', 'BTLNBR_FLAG_W',
             'SAMPNO', 'CASTNO', 'CTDDEPTH', 'CTDDEP', 'HOUR', 'MINUTE', 'DEPTH',
-            'HOUR','MINUTE',
+            'HOUR','MINUTE','NH4','POC','PON','CTDXMISS','CTDCHLORA','REVTMP','REVPRS',
+            'BTL_TIME','BTL_DATE','THETA','MCHFRM','INDEX','FLUOR','DOC','CTDRAW','DELHE3','DELHER',
+            'EXPOCODE', 'EXC_DATETIME', 'EXC_CTDDEPTH', 'STNNBR', 'LATITUDE',
+            'LONGITUDE','PH_TEMP','DATE','TIME','ORIGSTA','FUCO','ALPHA','BETA','CAR','ALLO','AMMONI',
         )
 
         QC_SUFFIX = '_FLAG_W'
