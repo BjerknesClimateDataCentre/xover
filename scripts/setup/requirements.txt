@@ -29,7 +29,7 @@ pyproj==1.9.5.1
 pyshp==1.2.12
 python-dateutil==2.7.3
 pytz==2018.4
-scipy==1.1.0
+scipy==1.10.0
 seabird==0.10.5
 six==1.12.0
 supportdata==0.1.2
